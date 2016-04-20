@@ -1,1 +1,1 @@
-Experimental code for 6lowPAN sensor network.
+RIOT-OS based applications.
