@@ -1,0 +1,41 @@
+1. Set up ATSAMR21ZLL-EK board
+    - standard usb to EDBG to program and then access shell via make clean all
+      flash term
+
+    - add FTDI to R232 connection (NB 3.3V NOT 5V!) between board and PC USB
+
+2. on PC - create IPv6 over SLIP
+
+    sudo ./tunslip6 affe::1/64 -t tun0 -s /dev/ttyUSB0 -B115200 
+    (assuming FTDI gizmo assigned /dev/ttyUSB0)
+
+    use ifconfig to verify there is now a tun0 interface with address affe::1/64
+
+3. set address on board via RIOT shell
+
+    ifconfig 8 add affe::2
+
+    NB use interface number that is the 'wired' link interface (not the
+    wireless one) in this example it is interface #8.
+    
+    Then use ipconfig to check the board now has an IPv6 6LoWPAN
+    interface with address affe::2.
+
+4. Set the neighbourhood cache manually to know about the PC address:
+
+    ncache add 8 affe::1
+
+5.  Test it works:
+
+    from PC ping board:
+        ping6 affe::2
+
+    from board ping PC
+        ping6 affe::1
+
+6. Test udp connection ATSAMR21ZZL-EK --> PC
+
+    - on PC do:
+        nc -ul 8808
+    - on board in shell do:
+        udp send affe::1 8808 hello!

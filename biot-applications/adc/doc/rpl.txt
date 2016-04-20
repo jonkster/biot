@@ -1,0 +1,48 @@
+IPv6 Routing Protocol for Low-Power and Lossy Networks
+(RPL, pronounced “ripple”)
+
+We have a lot of nodes in a sensor network.
+
+We need a root node in the network.  It is the IPv6 gateway to the outside
+world for the mesh of participating nodes.
+
+
+Setting up RPL (Routing between nodes)
+---------------------------------------
+
+1. for each member of the RPL dodag
+
+    get network interface id
+    assume it is "6" on all of them (adjust below if not)
+
+        rpl int 6
+
+
+2. one node must be the root node.  Give it a global ipv6 address and make it
+    root let it be "affe::2"
+??(need to add address using ifconfig first? eg ifconfig 6 add affe::2)??
+        rpl root 1 affe::2
+
+    ("1" is the "instance ID" - whatever that is...)    
+
+    Now each of the participating nodes will *magically* be assigned a global
+    ipv6 address in the "affe" range eg:
+        affe::5847:2c7d:4b62:c2a
+
+
+
+3. from any non root you should now be able to ping the root nodes global address
+
+        ping6 affe::2
+
+    from the root node you should be able to ping any of the member nodes on
+    their global address, eg
+
+        ping6 affe::5847:2c7d:4b62:c2a
+
+    
+TERMS
+-----
+
+DODAG: Direction Oriented Directed Acyclic Graph
+    - a map that lets any node now how to reach any other sensor in the network
