@@ -68,37 +68,30 @@ Assume the PC FTDI device connects to /dev/ttyUSB0
 # Setup steps:
 
 1. Set up rpl network interfaces
-
-..1. every node (including root) join the wireless interface as a member of the DODAG:
+  1. every node (including root) join the wireless interface as a member of the DODAG:
     ```
         rpl init 7
     ```
-
-..1. the root node wireless interface its address (ie only on root node):
+  2. the root node wireless interface its address (ie only on root node):
     ```
         ifconfig 7 add affe::2
     ```
-
-..1. the root node, set it as the DODAG root
+  3. the root node, set it as the DODAG root
     ```
         rpl root 1 affe::2
     ```
-
-..1. this, check the root node 6lowPAN interface now has an address of
+  4. this, check the root node 6lowPAN interface now has an address of
        affe::2 and each every other node now has an address in the affe:: range.  
 
 2. Configure edge router setup
-
-..1. the root node set the wired interface address:
+  1. the root node set the wired interface address:
     ```
         ifconfig 8 add affe::3
     ```
-
-..1. the root node inform set up the neighbourhood cache to know about the PC
+  2. the root node inform set up the neighbourhood cache to know about the PC
     ```
         ncache add 8 affe::1
     ```
-
 
 3. Configure the SLIP network interface on PC
     ```
@@ -107,23 +100,19 @@ Assume the PC FTDI device connects to /dev/ttyUSB0
 
 
 4. Tests:
-
-..1. On a non root node, get its address (eg might be affe::5847:2c7d:4b62:c2a)
-
-..1. on root node:
+  1. On a non root node, get its address (eg might be affe::5847:2c7d:4b62:c2a)
+  2. on root node:
     ```
     ping6 affe::1
     ping6 affe::5847:2c7d:4b62:c2a (or other non root node address)
     ```
-
-..1. on non root
+  3. on non root
     ```
     ping6 affe::1
     ping6 affe::2
     ping6 affe::3
     ```
-
-..1. on PC
+  4. on PC
     ```
     ping6 affe::2
     ping6 affe::3
