@@ -5,7 +5,7 @@ APPLICATION = ADC
 BOARD ?= samr21-zllk
 
 # This has to be the absolute path to the RIOT base directory:
-RIOTBASE ?= $(CURDIR)/../../RIOT
+RIOTBASE ?= $(CURDIR)/../../../RIOT
 
 ifeq (,$(SLIP_UART))
   # set default (last available UART)
