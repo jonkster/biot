@@ -68,32 +68,32 @@ Assume the PC FTDI device connects to /dev/ttyUSB0
 # Setup steps:
 
 1. Set up rpl network interfaces
-  1. every node (including root) join the wireless interface as a member of the DODAG:
+  1. for every node (including root), join the wireless interface as a member of the DODAG:
     ```
         rpl init 7
     ```
-  2. the root node wireless interface its address (ie only on root node):
+  2. give the root node's wireless interface an address (NB only the root node):
     ```
         ifconfig 7 add affe::2
     ```
-  3. the root node, set it as the DODAG root
+  3. on the root node, set it as the DODAG root
     ```
         rpl root 1 affe::2
     ```
-  4. this, check the root node 6lowPAN interface now has an address of
+  4. after this, check the root node 6lowPAN interface now has an address of
        affe::2 and each every other node now has an address in the affe:: range.  
 
 2. Configure edge router setup
-  1. the root node set the wired interface address:
+  1. set the root node set the *wired* interface address:
     ```
         ifconfig 8 add affe::3
     ```
-  2. the root node inform set up the neighbourhood cache to know about the PC
+  2. from the root node, inform the neighbourhood cache to know about the PC
     ```
         ncache add 8 affe::1
     ```
 
-3. Configure the SLIP network interface on PC
+3. Configure the SLIP network interface on the PC
     ```
     sudo ./tunslip6 affe::1/64 -t tun0 -s /dev/ttyUSB0 -B115200 &
     ```
