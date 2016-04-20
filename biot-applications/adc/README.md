@@ -81,7 +81,7 @@ Assume the PC FTDI device connects to /dev/ttyUSB0
         rpl root 1 affe::2
     ```
   4. after this, check the root node 6lowPAN interface now has an address of
-       affe::2 and each every other node now has an address in the affe:: range.  
+       affe::2 and that every other node now has an address in the affe:: range.  
 
 2. Configure edge router setup
   1. set the root node set the *wired* interface address:
