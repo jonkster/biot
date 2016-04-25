@@ -6,7 +6,7 @@ Rough code for 6lowPAN nodes.
 
 It experiments with udp wireless communication between samr21z-llk boards.
 
-See ../adcREDAME.md for details on archtitecture etc
+See ../adcREADME.md for details on archtitecture etc
 
 # summary:
 
