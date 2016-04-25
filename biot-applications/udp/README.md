@@ -24,5 +24,5 @@ See ../adcREADME.md for details on archtitecture etc
 
 The targetted board should change led colour and also fire a return message to
 change led colour on the original board (which will respond in kind - basically
-like a UNIX 'finger war'.
+like a UNIX 'finger war' but with changing colours :)
 
