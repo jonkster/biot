@@ -65,7 +65,19 @@ Assume the PC FTDI device connects to /dev/ttyUSB0
 +------------------+---------------------------------------------------+
 ```
 
+The nodes should 'auto' setup on power up except for the root node which
+requires its SW0 switch to be pressed.  When pressed, all powered nodes in
+range will join the DODAG with the selected node as the root.
+
 # Setup steps:
+
+*NB some of these steps should be done by the node code itself:
+step 1.i by every node on startup, steps 1.ii, 1.iii, 2.i and 2.ii after the
+node SW0 switch is pressed.  This means all that is required is for the nodes
+to be powered, the edge node to have its button pressed and the SLIP interface
+(step 3) to be made manually.*
+
+
 
 1. Set up rpl network interfaces
   1. for every node (including root), join the wireless interface as a member of the DODAG:

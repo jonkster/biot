@@ -21,15 +21,20 @@
 #include "thread.h"
 #include "coap_common.h"
 #include "udp_common.h"
+#include "periph/gpio.h"
+#include "net/gnrc/ipv6/nc.h"
+#include "net/gnrc/ipv6/netif.h"
 
 #define PRIO    (THREAD_PRIORITY_MAIN - 1)
 #define Q_SZ    (8)
+#define COAP_CONTENTTYPE_APPLICATION_JSON 60
 static msg_t msg_q[Q_SZ];
 bool led_status = false;
 static char coap_stack[THREAD_STACKSIZE_MAIN];
-static char udp_stack[THREAD_STACKSIZE_DEFAULT];
-
+//static char udp_stack[THREAD_STACKSIZE_DEFAULT-100];
 uint8_t response[MAX_RESPONSE_LEN] = { 0 };
+
+static const shell_command_t shell_commands[];
 
 static int handle_get_riot_board(coap_rw_buffer_t *scratch, const coap_packet_t *inpkt,
                                  coap_packet_t *outpkt, uint8_t id_hi, uint8_t id_lo)
@@ -78,6 +83,45 @@ static int handle_get_voltage(coap_rw_buffer_t *scratch, const coap_packet_t *in
                               &inpkt->tok, COAP_RSPCODE_CONTENT, COAP_CONTENTTYPE_TEXT_PLAIN);
 }
 
+static int handle_get_neighbours(coap_rw_buffer_t *scratch, const coap_packet_t *inpkt,
+                                 coap_packet_t *outpkt, uint8_t id_hi, uint8_t id_lo)
+{
+    char neighs[MAX_RESPONSE_LEN];
+    strcpy(neighs, "{");
+    int n = 0;
+
+    // get neighbours that are managed by this node
+    gnrc_ipv6_nc_t *entry;
+    for (entry = gnrc_ipv6_nc_get_next(NULL); entry != NULL; entry = gnrc_ipv6_nc_get_next(entry))
+    {
+        char buf[40];
+        ipv6_addr_to_str(buf, &entry->ipv6_addr, sizeof(buf));
+        if ((entry->flags & GNRC_IPV6_NC_STATE_MASK) != GNRC_IPV6_NC_STATE_UNMANAGED)
+        {
+            if (n > 0)
+                strcat(neighs, ",");
+            strcat(neighs, "\"");
+
+            strcat(neighs, buf);
+            strcat(neighs, "\"");
+            n++;
+        }
+        else
+        {
+        }
+    }
+    // add this node's address
+    if (n > 0)
+        strcat(neighs, ",");
+    strcat(neighs, "\"affe::2\"");
+    strcat(neighs, "}\n");
+    int len = strlen(neighs);
+    memcpy(response, neighs, len);
+
+    return coap_make_response(scratch, outpkt, (const uint8_t *)response, len, id_hi, id_lo,
+                              &inpkt->tok, COAP_RSPCODE_CONTENT, COAP_CONTENTTYPE_APPLICATION_JSON);
+}
+
 /* ########################################################################## */
 
 static const coap_endpoint_path_t path_well_known_core =
@@ -92,17 +136,23 @@ static const coap_endpoint_path_t path_led_status =
 static const coap_endpoint_path_t path_voltage =
         { 2, { "adc", "voltage" } };
 
+static const coap_endpoint_path_t path_neighbours =
+        { 2, { "net", "neigh" } };
+
 /* ########################################################################## */
 
 
 const coap_endpoint_t endpoints[] =
 {
     { COAP_METHOD_GET,	handle_get_well_known_core, &path_well_known_core, "ct=40" },
+
     { COAP_METHOD_GET,	handle_get_riot_board, &path_riot_board, "ct=0" },
 
-
     { COAP_METHOD_GET,	handle_get_led_status, &path_led_status, "ct=0" },
+
     { COAP_METHOD_GET,	handle_get_voltage, &path_voltage, "ct=0" },
+
+    { COAP_METHOD_GET,	handle_get_neighbours, &path_neighbours, "ct=50" },
 
     /* marks the end of the endpoints array: */
     { (coap_method_t)0, NULL, NULL, NULL }
@@ -149,6 +199,26 @@ int led_control(int argc, char **argv)
     return -1;
 }
 
+extern void batch(const shell_command_t *command_list, char *line);
+
+bool isRoot = false;
+void btnCallback(void* arg)
+{
+    if (! isRoot)
+    {
+        isRoot = true;
+        LED_RGB_R_ON;
+        LED0_ON;
+        batch(shell_commands, "ifconfig 6 add affe::2");
+        batch(shell_commands, "rpl root 1 affe::2");
+        batch(shell_commands, "ifconfig 7 add affe::3");
+        batch(shell_commands, "ncache add 7 affe::1");
+        LED_RGB_OFF;
+        LED0_ON;
+    }
+}
+
+
 /* ########################################################################## */
 extern int adc_cmd(int argc, char **argv);
 
@@ -166,6 +236,7 @@ static const shell_command_t shell_commands[] = {
     { NULL, NULL, NULL }
 };
 
+
 int main(void)
 {
     msg_init_queue(msg_q, Q_SZ);
@@ -176,10 +247,16 @@ int main(void)
     LED1_ON;
     LED_RGB_OFF;
 
+    printf("Biotz\n");
+    batch(shell_commands, "rpl init 7");
+    gpio_init_int(BUTTON_GPIO, GPIO_IN_PU, GPIO_RISING, (gpio_cb_t)btnCallback, NULL);
+
     thread_create(coap_stack, sizeof(coap_stack), PRIO, THREAD_CREATE_STACKTEST, microcoap_server,
                   NULL, "coap");
-    thread_create(udp_stack, sizeof(udp_stack), PRIO, THREAD_CREATE_STACKTEST, udp_server,
-                  NULL, "udp");
+    /*thread_create(udp_stack, sizeof(udp_stack), PRIO, THREAD_CREATE_STACKTEST, udp_server,
+                  NULL, "udp");*/
+
+
 
     char line_buf[SHELL_DEFAULT_BUFSIZE];
     shell_run(shell_commands, line_buf, SHELL_DEFAULT_BUFSIZE);

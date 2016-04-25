@@ -29,7 +29,7 @@ USEMODULE += auto_init_gnrc_netif
 USEMODULE += gnrc_ipv6_router_default
 # Include SLIP package for IP over Serial communication
 USEMODULE += gnrc_slip
-#USEMODULE += gnrc_udp
+USEMODULE += gnrc_udp
 USEMODULE += gnrc_sixlowpan_border_router_default
 # Add a routing protocol
 USEMODULE += gnrc_rpl
@@ -38,6 +38,7 @@ USEMODULE += gnrc_rpl
 # Add forwarding table
 USEMODULE += fib
 # Additional networking modules that can be dropped if not needed
+USEMODULE += gnrc_icmpv6
 USEMODULE += gnrc_icmpv6_echo
 # Add also the shell, some shell commands
 USEMODULE += shell
@@ -49,7 +50,7 @@ USE_MODULE += periph_adc
 #DISABLE_MODULE += gnrc_sixlowpan_iphc_nhc
 
 USEMODULE += gnrc_conn_udp
-USEPKG += microcoap
+#USEPKG += microcoap
 
 # Comment this out to disable code in RIOT that does safety checking
 # which is not needed in a production environment but helps in the

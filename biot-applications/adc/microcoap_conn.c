@@ -19,7 +19,7 @@
 #include <coap.h>
 #include "coap_common.h"
 
-static uint8_t _udp_buf[512];   /* udp read buffer (max udp payload size) */
+static uint8_t _udp_buf[1024];   /* udp read buffer (max udp payload size) */
 uint8_t scratch_raw[1024];      /* microcoap scratch buffer */
 
 coap_rw_buffer_t scratch_buf = { scratch_raw, sizeof(scratch_raw) };

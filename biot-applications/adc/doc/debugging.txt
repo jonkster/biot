@@ -1,0 +1,74 @@
+1. Set up board with USB connection to EDBG port.
+
+2. On PC, in one terminal, run openocd with appropriate openocd.cfg file
+    eg
+jonk@fred:~/KELLY/Projects/biotz/biot/biot-applications/adc/openocd$ openocd 
+    Open On-Chip Debugger 0.10.0-dev-00250-g9c37747 (2016-04-10-09:30)
+    Licensed under GNU GPL v2
+    For bug reports, read
+        http://openocd.org/doc/doxygen/bugs.html
+        Info : only one transport option; autoselect 'swd'
+        none separate
+        adapter speed: 400 kHz
+        cortex_m reset_config sysresetreq
+        Info : CMSIS-DAP: SWD  Supported
+        Info : CMSIS-DAP: Interface Initialised (SWD)
+        Info : CMSIS-DAP: FW Version = 03.0C.0191
+        Info : SWCLK/TCK = 1 SWDIO/TMS = 1 TDI = 1 TDO = 1 nTRST = 0 nRESET = 1
+        Info : CMSIS-DAP: Interface ready
+        Info : clock speed 400 kHz
+        Info : SWD IDCODE 0x0bc11477
+        Info : at91samr21g18.cpu: hardware has 4 breakpoints, 2 watchpoints
+        Info : accepting 'gdb' connection on tcp/3333
+        Error: attempted 'gdb' connection rejected
+        Info : accepting 'gdb' connection on tcp/3333
+        Info : SAMD MCU: SAMR21G18A (256KB Flash, 32KB RAM)
+
+3. On another terminal:
+    arm-none-eabi-gdb PATH_TO_ELF_FILE/XXX.elf
+
+3. In gdb:
+
+    target remote localhost:3333
+
+    monitor reset halt
+
+    load
+
+    continue (this will get node running)
+
+ eg
+
+ jonk@fred:~/KELLY/Projects/biotz/biot/biot-applications/adc/bin/samr21-zllk$ arm-none-eabi-gdb ADC.elf 
+    GNU gdb (7.8-0ubuntu1+6) 7.8
+    Copyright (C) 2014 Free Software Foundation, Inc.
+    License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+    This is free software: you are free to change and redistribute it.
+    There is NO WARRANTY, to the extent permitted by law.  Type "show copying"
+    and "show warranty" for details.
+    This GDB was configured as "--host=x86_64-linux-gnu --target=arm-none-eabi".
+    Type "show configuration" for configuration details.
+    For bug reporting instructions, please see:
+    <http://www.gnu.org/software/gdb/bugs/>.
+    Find the GDB manual and other documentation resources online at:
+    <http://www.gnu.org/software/gdb/documentation/>.
+    For help, type "help".
+    Type "apropos word" to search for commands related to "word"...
+    Reading symbols from ADC.elf...done.
+ (gdb) target remote localhost:3333
+    Remote debugging using localhost:3333
+    0x00000000 in interrupt_vector ()
+ (gdb) monitor reset halt
+    at91samr21g18.cpu: target state: halted
+    target halted due to debug-request, current mode: Thread 
+    xPSR: 0x01000000 pc: 0x00000424 msp: 0x200076e8
+ (gdb) load
+    Loading section .text, size 0x14a74 lma 0x0
+    Loading section .ARM.exidx, size 0x8 lma 0x14a74
+    Loading section .eh_frame, size 0x28 lma 0x14a7c
+    Loading section .relocate, size 0xe0 lma 0x14aa4
+    Start address 0x0, load size 84868
+    Transfer rate: 4 KB/sec, 9429 bytes/write.
+ (gdb) continue
+    Continuing.
+
