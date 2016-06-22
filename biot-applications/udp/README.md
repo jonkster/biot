@@ -6,7 +6,7 @@ Rough code for 6lowPAN nodes.
 
 It experiments with udp wireless communication between samr21z-llk boards.
 
-See ../adc/REDAME.md for details on architecture etc
+See ../adc/README.md for details on architecture etc
 
 # summary:
 
@@ -24,7 +24,7 @@ See ../adc/REDAME.md for details on architecture etc
 
 The targetted board should change led colour and also fire a return message to
 change led colour on the original board (which will respond in kind - basically
-like a UNIX 'finger war'.
+like a UNIX 'finger war' but with changing colours :)
 
 
 
