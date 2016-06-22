@@ -21,8 +21,7 @@ int getVoltage(void)
     }
 
     int value = adc_sample_local(ADC_IN_USE, ADC_CHANNEL_USE);
-    value  /= 30;
-    return value;
+    return value/33;
 }
 
 int adc_cmd(int argc, char **argv)

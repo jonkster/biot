@@ -31,7 +31,6 @@ static char udp_stack[THREAD_STACKSIZE_DEFAULT];
 static char housekeeping_stack[THREAD_STACKSIZE_DEFAULT];
 
 static const shell_command_t shell_commands[];
-uint16_t lastV = 0;
 
 
 /* Add the shell command function here ###################################### */
@@ -42,32 +41,35 @@ int led_control(int argc, char **argv)
         if (strcmp(argv[1], "on") == 0) {
             led_status = true;
             LED0_ON;
-            LED1_OFF;
+            //LED1_OFF;
             return 0;
         }
         else if (strcmp(argv[1], "off") == 0) {
             led_status = false;
             LED0_OFF;
-            LED1_ON;
-            LED_RGB_OFF;
+            //LED1_ON;
+            //LED_RGB_OFF;
             return 0;
         }
         else if (strcmp(argv[1], "red") == 0) {
             led_status = false;
-            LED_RGB_OFF;
-            LED_RGB_R_ON;
+            LED0_ON;
+            //LED_RGB_OFF;
+            //LED_RGB_R_ON;
             return 0;
         }
         else if (strcmp(argv[1], "green") == 0) {
             led_status = false;
-            LED_RGB_OFF;
-            LED_RGB_G_ON;
+            LED0_ON;
+            //LED_RGB_OFF;
+            //LED_RGB_G_ON;
             return 0;
         }
         else if (strcmp(argv[1], "blue") == 0) {
             led_status = false;
-            LED_RGB_OFF;
-            LED_RGB_B_ON;
+            LED0_ON;
+            //LED_RGB_OFF;
+            //LED_RGB_B_ON;
             return 0;
         }
     }
@@ -84,7 +86,7 @@ void btnCallback(void* arg)
     if (! isRoot)
     {
         isRoot = true;
-        LED_RGB_R_ON;
+        //LED_RGB_R_ON;
         LED0_ON;
         isRootPending = true;
     }
@@ -93,7 +95,6 @@ void btnCallback(void* arg)
 
 /* ########################################################################## */
 extern int adc_cmd(int argc, char **argv);
-extern int getVoltage(void);
 
 static const shell_command_t shell_commands[] = {
 
@@ -119,7 +120,7 @@ void setRoot(void)
     // add wired interface
     batch(shell_commands, "ifconfig 7 add affe::3");
     batch(shell_commands, "ncache add 7 affe::1");
-    LED_RGB_OFF;
+    //LED_RGB_OFF;
     LED0_ON;
 }
 
@@ -140,12 +141,6 @@ void *housekeeping_handler(void *arg)
         LED0_OFF;
         xtimer_usleep_until(&last_wakeup, INTERVAL/factor);
         LED0_ON;
-        uint16_t v = getVoltage();
-        if (v != lastV)
-        {
-            printf("v=%d mV\n", v);
-            lastV = v;
-        }
     }
 }
 
@@ -157,8 +152,8 @@ int main(void)
     puts("Type 'help' for a list of available commands");
 
     LED0_OFF;
-    LED1_ON;
-    LED_RGB_OFF;
+    //LED1_ON;
+    //LED_RGB_OFF;
 
     printf("Biotz\n");
     batch(shell_commands, "rpl init 7");
