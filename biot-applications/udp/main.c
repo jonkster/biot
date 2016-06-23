@@ -94,6 +94,7 @@ void btnCallback(void* arg)
 /* ########################################################################## */
 extern int adc_cmd(int argc, char **argv);
 extern int getVoltage(void);
+extern int oled_cmd(int argc, char **argv);
 
 static const shell_command_t shell_commands[] = {
 
@@ -104,6 +105,8 @@ static const shell_command_t shell_commands[] = {
     { "udp", "send a message: udp <IPv6-address> <message>", udp_cmd },
 
     { "adc", "read value of ADC", adc_cmd },
+
+    { "oled", "test oled display", oled_cmd },
 
     /* ########################################################################## */
     { NULL, NULL, NULL }
