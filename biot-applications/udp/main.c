@@ -140,12 +140,12 @@ void *housekeeping_handler(void *arg)
         LED0_OFF;
         xtimer_usleep_until(&last_wakeup, INTERVAL/factor);
         LED0_ON;
-        uint16_t v = getVoltage();
+        /*uint16_t v = getVoltage();
         if (v != lastV)
         {
             printf("v=%d mV\n", v);
             lastV = v;
-        }
+        }*/
     }
 }
 
