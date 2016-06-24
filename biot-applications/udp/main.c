@@ -31,7 +31,6 @@ static char udp_stack[THREAD_STACKSIZE_DEFAULT];
 static char housekeeping_stack[THREAD_STACKSIZE_DEFAULT];
 
 static const shell_command_t shell_commands[];
-uint16_t lastV = 0;
 
 
 /* Add the shell command function here ###################################### */
@@ -143,12 +142,6 @@ void *housekeeping_handler(void *arg)
         LED0_OFF;
         xtimer_usleep_until(&last_wakeup, INTERVAL/factor);
         LED0_ON;
-        uint16_t v = getVoltage();
-        if (v != lastV)
-        {
-            printf("v=%d mV\n", v);
-            lastV = v;
-        }
     }
 }
 

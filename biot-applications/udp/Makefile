@@ -49,7 +49,8 @@ USEMODULE += posix_sockets
 USE_MODULE += periph_adc
 #DISABLE_MODULE += gnrc_sixlowpan_iphc_nhc
 
-#FEATURES_REQUIRED = periph_i2c
+FEATURES_REQUIRED = periph_spi
+FEATURES_REQUIRED += periph_gpio
 
 USEMODULE += gnrc_conn_udp
 #USEPKG += microcoap
