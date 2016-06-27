@@ -19,6 +19,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
+#include <thread.h>
 #include <unistd.h>
 #include "msg.h"
 #include "udp_common.h"
@@ -62,6 +63,7 @@ static void *udp_server_loop(void)
     socklen_t src_len = sizeof(struct sockaddr_in6);
     while (1)
     {
+        thread_yield();
         memset(server_buffer, 0, SERVER_BUFFER_SIZE);
         res = recvfrom(server_socket, server_buffer, sizeof(server_buffer), 0, (struct sockaddr *)&src, &src_len);
 
@@ -96,33 +98,33 @@ static void *udp_server_loop(void)
                 LED0_OFF;
                 LED1_OFF;
                 LED_RGB_OFF;
-xtimer_usleep(100000);
-puts("got off sending blue");
-udp_send_jk(src_addr, "blue");
+                xtimer_usleep(100000);
+                puts("got off sending blue");
+                udp_send_jk(src_addr, "blue");
             }
             else if (strcmp(server_buffer, "red") == 0)
             {
                 LED_RGB_OFF;
                 LED_RGB_R_ON;
-xtimer_usleep(100000);
-puts("got red sending off");
-udp_send_jk(src_addr, "off");
+                xtimer_usleep(100000);
+                puts("got red sending off");
+                udp_send_jk(src_addr, "off");
             }
             else if (strcmp(server_buffer, "green") == 0)
             {
                 LED_RGB_OFF;
                 LED_RGB_G_ON;
-xtimer_usleep(100000);
-puts("got green sending red");
-udp_send_jk(src_addr, "red");
+                xtimer_usleep(100000);
+                puts("got green sending red");
+                udp_send_jk(src_addr, "red");
             }
             else if (strcmp(server_buffer, "blue") == 0)
             {
                 LED_RGB_OFF;
                 LED_RGB_B_ON;
-xtimer_usleep(100000);
-puts("got blue sending green");
-udp_send_jk(src_addr, "green");
+                xtimer_usleep(100000);
+                puts("got blue sending green");
+                udp_send_jk(src_addr, "green");
             }
         }
     }

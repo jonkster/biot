@@ -3,6 +3,7 @@
 
 #include <inttypes.h>
 #include <stdio.h>
+#include <string.h>
 #include <xtimer.h>
 
 #include "periph/spi.h"
@@ -15,11 +16,11 @@ extern "C" {
 #endif
 
 #define     SSD1306_CS_PORT   PB
-#define     SSD1306_CS_PIN    22     // PB22 
+#define     SSD1306_CS_PIN    22 
 #define     SSD1306_DATA_PORT PB
-#define     SSD1306_DATA_PIN   2     // PB02 
+#define     SSD1306_DATA_PIN  02
 #define     SSD1306_CLK_PORT  PB
-#define     SSD1306_CLK_PIN   23     // PB23 
+#define     SSD1306_CLK_PIN   03
 
 #define     SSD1306_DC_PORT      PA
 #define     SSD1306_DC_PIN       22   // PA22
@@ -29,9 +30,9 @@ extern "C" {
 #define     SSD1306_DISPLAY_CONTRAST_MAX   40
 #define     SSD1306_DISPLAY_CONTRAST_MIN   30
 
-#define SSD1306_LATENCY 30
+#define SSD1306_LATENCY 10
 
-#define delay_us xtimer_usleep
+//#define delay_us xtimer_usleep
 
 
 #define SSD1306_CMD_SET_LOW_COL(column)             (0x00 | (column))
@@ -72,23 +73,21 @@ extern "C" {
 #define SSD1306_CMD_SET_VERTICAL_SCROLL_AREA        0xA3
 
 
-#define ssd1306_unselectChip()  gpio_set(spi_cs)
+#define ssd1306_unselectChip()  gpio_set(spi_cs);
 #define ssd1306_selectChip()    gpio_clear(spi_cs);
 
 #define ssd1306_setDataMode()   gpio_set(oled_dc);
 #define ssd1306_setCmdMode()    gpio_clear(oled_dc);
 
-    mutex_t ssd1306mtx = MUTEX_INIT;
+#define BUFFER_SIZE 30
 
-    static int spi_dev = -1;
-    static int spi_mode = -1;
-    static int spi_speed = -1;
-    static gpio_t spi_cs = -1;
-    static gpio_t oled_dc = -1;
     static gpio_t oled_reset = -1;
+
+
 
     int ssd1306_write_command(uint8_t command);
     int ssd1306_write_data(uint8_t data);
+    void delay_us(uint16_t us);
 
     static inline uint8_t ssd1306_read_data(void)
     {
@@ -193,27 +192,6 @@ extern "C" {
         }
     }
 
-
-    int ssd1306_init(void);
-
-
-    void ssd1306_write_text(const char *string);
-
-    int oled_cmd(int argc, char **argv)
-    {
-        if (spi_dev == -1)
-        {
-            printf("init spi\n");
-            int status = ssd1306_init();
-            if (status != 0)
-            {
-                return status;
-            }
-            ssd1306_display_on();
-        }
-        ssd1306_write_text("UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU");
-        return 0;
-    }
 
 #ifdef __cplusplus
 }

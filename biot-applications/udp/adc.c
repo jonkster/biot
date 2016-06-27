@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <inttypes.h>
 
-#include <xtimer.h>
 #include <periph/adc.h>
 //#include <periph/gpio.h>
 
