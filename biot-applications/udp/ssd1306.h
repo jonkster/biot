@@ -105,6 +105,8 @@ extern "C" {
 
     static inline void ssd1306_hard_reset(void)
     {
+	gpio_set(oled_reset);
+	delay_us(SSD1306_LATENCY); // At least 3us
 	gpio_clear(oled_reset);
 	delay_us(SSD1306_LATENCY); // At least 3us
 	gpio_set(oled_reset);

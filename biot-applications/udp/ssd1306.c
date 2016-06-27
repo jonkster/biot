@@ -267,8 +267,8 @@ int ssd1306_write_command(uint8_t command)
     spi_acquire(spi_dev);
     int res = spi_transfer_byte(spi_dev, (char) command, (char*) NULL);
     spi_release(spi_dev);
+    delay_us(10*SSD1306_LATENCY); // At least 3us
     ssd1306_unselectChip();
-    delay_us(SSD1306_LATENCY); // At least 3us
     printf("done:%i\n", command);
 
     /* look at the results */
@@ -292,8 +292,8 @@ int ssd1306_write_data(uint8_t command)
     spi_acquire(spi_dev);
     int res = spi_transfer_byte(spi_dev, (char) command, (char*) NULL);
     spi_release(spi_dev);
+    delay_us(10*SSD1306_LATENCY); // At least 3us
     ssd1306_unselectChip();
-    delay_us(SSD1306_LATENCY); // At least 3us
 
     /* look at the results */
     if (res < 0) {

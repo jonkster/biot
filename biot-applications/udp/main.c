@@ -147,9 +147,11 @@ void *housekeeping_handler(void *arg)
         thread_yield();
         xtimer_usleep_until(&last_wakeup, INTERVAL/(2*factor));
         LED0_OFF;
+        //LED_RGB_OFF;
         thread_yield();
         xtimer_usleep_until(&last_wakeup, INTERVAL/factor);
         LED0_ON;
+        //LED_RGB_R_ON;
     }
 }
 
@@ -166,11 +168,11 @@ int main(void)
 
     puts("Biotz\n");
     //batch(shell_commands, "rpl init 7");
-    gpio_init_int(BUTTON_GPIO, GPIO_IN_PU, GPIO_RISING, (gpio_cb_t)btnCallback, NULL);
+    //gpio_init_int(BUTTON_GPIO, GPIO_IN_PU, GPIO_RISING, (gpio_cb_t)btnCallback, NULL);
 
     puts("make houeskeeping\n");
 
-    kernel_pid_t hkpid = thread_create(housekeeping_stack, sizeof(housekeeping_stack), PRIO + 3, THREAD_CREATE_SLEEPING, housekeeping_handler,
+    kernel_pid_t hkpid = thread_create(housekeeping_stack, sizeof(housekeeping_stack), PRIO + 1, THREAD_CREATE_SLEEPING, housekeeping_handler,
                   NULL, "housekeeping");
 
     puts("make display\n");
