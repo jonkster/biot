@@ -59,6 +59,24 @@ static int setupPins(void)
     return 0;
 }
 
+void ssd1306_clearAll(void)
+{
+    uint8_t page_address;
+    for (page_address = 0; page_address <= 8; page_address++)
+    {
+        ssd1306_set_page_address(page_address);
+        uint8_t column_address;
+        for (column_address = 0; column_address < 128; column_address++)
+        {
+            ssd1306_set_column_address(column_address);
+            ssd1306_write_data(0x00);
+        }
+    }
+    ssd1306_set_page_address(0);
+    ssd1306_set_column_address(0);
+    ssd1306_write_text("Hello:");
+}
+
 static int ssd1306_interface_init(void)
 {
     spi_dev = SPI_1;
@@ -251,6 +269,9 @@ int ssd1306_init(void)
         //mutex_unlock(&ssd1306mtx);
         return status;
     }
+    
+    //ssd1306_display_invert_enable();
+    ssd1306_clearAll();
 
     ssd1306_display_on();
     puts("ready to use...\n");
@@ -261,15 +282,13 @@ int ssd1306_init(void)
 
 int ssd1306_write_command(uint8_t command)
 {
-    printf("command:%i\n", command);
     ssd1306_setCmdMode()
     ssd1306_selectChip();
     spi_acquire(spi_dev);
     int res = spi_transfer_byte(spi_dev, (char) command, (char*) NULL);
     spi_release(spi_dev);
-    delay_us(10*SSD1306_LATENCY); // At least 3us
+    delay_us(25*SSD1306_LATENCY); // At least 3us
     ssd1306_unselectChip();
-    printf("done:%i\n", command);
 
     /* look at the results */
     if (res < 0) {
@@ -277,7 +296,7 @@ int ssd1306_write_command(uint8_t command)
         return 1;
     }
     else {
-        printf("command %i bytes:%i:\n", command, res);
+        //printf("command %i bytes:%i:\n", command, res);
         return 0;
     }
     return 0;
@@ -292,7 +311,7 @@ int ssd1306_write_data(uint8_t command)
     spi_acquire(spi_dev);
     int res = spi_transfer_byte(spi_dev, (char) command, (char*) NULL);
     spi_release(spi_dev);
-    delay_us(10*SSD1306_LATENCY); // At least 3us
+    delay_us(25*SSD1306_LATENCY); // At least 3us
     ssd1306_unselectChip();
 
     /* look at the results */

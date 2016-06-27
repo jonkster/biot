@@ -63,7 +63,6 @@ extern "C" {
 #define SSD1306_CMD_NOP                             0xE3
 
 
-
 #define SSD1306_CMD_SCROLL_H_RIGHT                  0x26
 #define SSD1306_CMD_SCROLL_H_LEFT                   0x27
 #define SSD1306_CMD_CONTINUOUS_SCROLL_V_AND_H_RIGHT 0x29
@@ -85,6 +84,7 @@ extern "C" {
 
 
 
+    void ssd1306_write_text(const char *string);
     int ssd1306_write_command(uint8_t command);
     int ssd1306_write_data(uint8_t data);
     void delay_us(uint16_t us);
