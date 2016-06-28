@@ -9,6 +9,7 @@ static gpio_t spi_cs = -1;
 static gpio_t oled_dc = -1;
 char displayBuffer[BUFFER_SIZE];
 bool displayBufferReady = false;
+static mutex_t mutex = MUTEX_INIT;
 
 void delayUsec(uint16_t us)
 {
@@ -244,12 +245,14 @@ int oledDeviceInit(void)
 int oledWriteCommand(uint8_t command)
 {
     oledSetCommandMode()
+    mutex_lock(&mutex);
     oledSelectChip();
     spi_acquire(spi_dev);
     int res = spi_transfer_byte(spi_dev, (char) command, (char*) NULL);
     spi_release(spi_dev);
-    delayUsec(25*SSD1306_LATENCY); // At least 3us
+    delayUsec(2*SSD1306_LATENCY); // At least 3us
     oledUnselectChip();
+    mutex_unlock(&mutex);
 
     /* look at the results */
     if (res < 0) {
@@ -267,13 +270,14 @@ int oledWriteData(uint8_t command)
 {
 
     oledSetDataMode()
-    
+    mutex_lock(&mutex);
     oledSelectChip();
     spi_acquire(spi_dev);
     int res = spi_transfer_byte(spi_dev, (char) command, (char*) NULL);
     spi_release(spi_dev);
-    delayUsec(25*SSD1306_LATENCY); // At least 3us
+    delayUsec(2*SSD1306_LATENCY); // At least 3us
     oledUnselectChip();
+    mutex_unlock(&mutex);
 
     /* look at the results */
     if (res < 0) {

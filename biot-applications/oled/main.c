@@ -24,6 +24,8 @@
 #include "periph/gpio.h"
 
 #define PRIO    (THREAD_PRIORITY_MAIN + 1)
+#define Q_SZ    (8)
+static msg_t msg_q[Q_SZ];
 bool led_status = false;
 
 static char housekeeping_stack[THREAD_STACKSIZE_DEFAULT];
@@ -127,6 +129,8 @@ void *housekeeping_handler(void *arg)
 
 int main(void)
 {
+    msg_init_queue(msg_q, Q_SZ);
+
     puts("Type 'help' for a list of available commands");
 
     LED0_OFF;
