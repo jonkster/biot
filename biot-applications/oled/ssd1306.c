@@ -74,7 +74,6 @@ static int oledInterfaceInit(void)
     int res = spi_init_master(spi_dev, spi_mode, spi_speed);
     spi_release(spi_dev);
 
-    spi_conf_pins(spi_dev);
     if (res < 0)
     {
         printf("spi_init_master: error init SPI_%i device (code %i)\n", spi_dev, res);
