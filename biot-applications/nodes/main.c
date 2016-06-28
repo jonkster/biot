@@ -16,18 +16,17 @@
 #include "msg.h"
 #include <stdbool.h>
 #include <string.h>
+#include <xtimer.h>
 #include "board.h"
 #include "thread.h"
 #include "udp_common.h"
 #include "periph/gpio.h"
-#include "net/gnrc/ipv6/nc.h"
-#include "net/gnrc/ipv6/netif.h"
 
 #define PRIO    (THREAD_PRIORITY_MAIN - 1)
 #define Q_SZ    (8)
 static msg_t msg_q[Q_SZ];
 bool led_status = false;
-//static char udp_stack[THREAD_STACKSIZE_DEFAULT];
+static char udp_stack[THREAD_STACKSIZE_DEFAULT];
 static char housekeeping_stack[THREAD_STACKSIZE_DEFAULT];
 
 static const shell_command_t shell_commands[];
@@ -155,8 +154,8 @@ int main(void)
     batch(shell_commands, "rpl init 7");
     gpio_init_int(BUTTON_GPIO, GPIO_IN_PU, GPIO_RISING, (gpio_cb_t)btnCallback, NULL);
 
-    /*thread_create(udp_stack, sizeof(udp_stack), PRIO, THREAD_CREATE_STACKTEST, udp_server,
-                  NULL, "udp");*/
+    thread_create(udp_stack, sizeof(udp_stack), PRIO, THREAD_CREATE_STACKTEST, udp_server,
+                  NULL, "udp");
 
     thread_create(housekeeping_stack, sizeof(housekeeping_stack), PRIO, THREAD_CREATE_STACKTEST, housekeeping_handler,
                   NULL, "housekeeping");
