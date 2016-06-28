@@ -1,0 +1,32 @@
+1. start openocd (openocd -f openocd.cfg)
+
+2. start gdb
+   arm-none-eabi-gdb -tui ../bin/samr21-zllk/ADC.elf
+
+3. in gdb, target the remote board via openocd   
+    target remote localhost:3333
+
+
+    to reset cpu:
+         monitor reset init
+
+    other bits:
+        monitor resume (starts it running)
+        monitor halt (stops it)
+
+
+    show file:
+        list main.c:1
+
+    set breakpoint(s)
+        b main.c:35
+    
+    show breakpoints:
+        i b
+
+    dump trace of stack after crash:
+        bt
+
+    eg 
+
+

@@ -1,3 +1,0 @@
-to set up PC network
-
-sudo ./tunslip6 affe::1/64 -t tun0 -s /dev/ttyUSB0 -B115200 &
