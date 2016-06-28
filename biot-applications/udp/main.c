@@ -19,9 +19,10 @@
 #include "board.h"
 #include "thread.h"
 #include "udp_common.h"
+#include "ssd1306.h"
 #include "periph/gpio.h"
-#include "net/gnrc/ipv6/nc.h"
-#include "net/gnrc/ipv6/netif.h"
+//#include "net/gnrc/ipv6/nc.h"
+//#include "net/gnrc/ipv6/netif.h"
 
 #define PRIO    (THREAD_PRIORITY_MAIN - 1)
 #define Q_SZ    (8)
@@ -29,6 +30,9 @@ static msg_t msg_q[Q_SZ];
 bool led_status = false;
 static char udp_stack[THREAD_STACKSIZE_DEFAULT];
 static char housekeeping_stack[THREAD_STACKSIZE_DEFAULT];
+
+extern  void *display_handler(void *arg);
+static char display_stack[THREAD_STACKSIZE_DEFAULT];
 
 static const shell_command_t shell_commands[];
 uint16_t lastV = 0;
@@ -94,12 +98,17 @@ void btnCallback(void* arg)
 /* ########################################################################## */
 extern int adc_cmd(int argc, char **argv);
 extern int getVoltage(void);
+extern int oledCmd(int argc, char **argv);
+extern int oledClearAll(void);
+extern void oledWriteText(const char *string);
 
 static const shell_command_t shell_commands[] = {
 
 /* Add a new shell command here ############################################# */
 
     { "led", "use 'led on' to turn the LED on and 'led off' to turn the LED off", led_control },
+
+    { "oled", "test oled display", oledCmd },
 
     { "udp", "send a message: udp <IPv6-address> <message>", udp_cmd },
 
@@ -128,6 +137,7 @@ void setRoot(void)
 void *housekeeping_handler(void *arg)
 {
    int factor = 1; 
+   int i = 0;
     while(1)
     {
         if (isRootPending)
@@ -146,6 +156,10 @@ void *housekeeping_handler(void *arg)
             printf("v=%d mV\n", v);
             lastV = v;
         }*/
+        char st[10];
+        sprintf(st, "%d", i++);
+        oledClearAll();
+        oledWriteText(st);
     }
 }
 
@@ -167,8 +181,12 @@ int main(void)
     thread_create(udp_stack, sizeof(udp_stack), PRIO, THREAD_CREATE_STACKTEST, udp_server,
                   NULL, "udp");
 
-    thread_create(housekeeping_stack, sizeof(housekeeping_stack), THREAD_PRIORITY_MAIN - 3, THREAD_CREATE_STACKTEST, housekeeping_handler,
+    thread_create(housekeeping_stack, sizeof(housekeeping_stack), PRIO, THREAD_CREATE_STACKTEST, housekeeping_handler,
                   NULL, "housekeeping");
+
+    thread_create(display_stack, sizeof(display_stack), PRIO, THREAD_CREATE_STACKTEST, display_handler,
+                  NULL, "display");
+
 
 
     char line_buf[SHELL_DEFAULT_BUFSIZE];
