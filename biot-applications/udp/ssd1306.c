@@ -41,21 +41,6 @@ static int setupPins(void)
     // bring high to enable run mode
     gpio_set(oled_reset);
 
-    /*gpio_t spi_clk = GPIO_PIN(SSD1306_CLK_PORT, SSD1306_CLK_PIN);
-    res = gpio_init(spi_clk, GPIO_OUT);
-    if (res < 0)
-    {
-        printf("gpio_init: error init GPIO_%ld (code %i)\n", (long)spi_clk, res);
-        return 1;
-    }
-    gpio_t spi_data = GPIO_PIN(SSD1306_DATA_PORT, SSD1306_DATA_PIN);
-    res = gpio_init(spi_data, GPIO_OUT);
-    if (res < 0)
-    {
-        printf("gpio_init: error init GPIO_%ld (code %i)\n", (long)spi_data, res);
-        return 1;
-    }*/
-
     return 0;
 }
 

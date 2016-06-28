@@ -20,7 +20,7 @@
 #include <xtimer.h>
 #include "board.h"
 #include "thread.h"
-//#include "udp_common.h"
+#include "udp_common.h"
 #include "ssd1306.h"
 #include "periph/gpio.h"
 //#include "net/gnrc/ipv6/nc.h"
@@ -31,7 +31,7 @@
 static msg_t msg_q[Q_SZ];
 bool led_status = false;
 
-//static char udp_stack[THREAD_STACKSIZE_DEFAULT];
+static char udp_stack[THREAD_STACKSIZE_DEFAULT];
 static char housekeeping_stack[THREAD_STACKSIZE_DEFAULT];
 
 static const shell_command_t shell_commands[];
@@ -80,7 +80,7 @@ int led_control(int argc, char **argv)
     return -1;
 }
 
-//extern void batch(const shell_command_t *command_list, char *line);
+extern void batch(const shell_command_t *command_list, char *line);
 
 bool isRoot = false;
 bool isRootPending = false;
@@ -97,9 +97,10 @@ void btnCallback(void* arg)
 
 
 /* ########################################################################## */
-/*extern int adc_cmd(int argc, char **argv);
-extern int getVoltage(void);*/
+extern int adc_cmd(int argc, char **argv);
+extern int getVoltage(void);
 extern int oled_cmd(int argc, char **argv);
+extern int ssd1306_clearAll(void);
 
 static const shell_command_t shell_commands[] = {
 
@@ -107,9 +108,9 @@ static const shell_command_t shell_commands[] = {
 
     { "led", "use 'led on' to turn the LED on and 'led off' to turn the LED off", led_control },
 
-    //{ "udp", "send a message: udp <IPv6-address> <message>", udp_cmd },
+    { "udp", "send a message: udp <IPv6-address> <message>", udp_cmd },
 
-    //{ "adc", "read value of ADC", adc_cmd },
+    { "adc", "read value of ADC", adc_cmd },
 
     { "oled", "test oled display", oled_cmd },
 
@@ -122,11 +123,11 @@ void setRoot(void)
 {
     isRootPending = false;
     // set up rpl root
-    //batch(shell_commands, "ifconfig 6 add affe::2");
-    //batch(shell_commands, "rpl root 1 affe::2");
+    batch(shell_commands, "ifconfig 6 add affe::2");
+    batch(shell_commands, "rpl root 1 affe::2");
     // add wired interface
-    //batch(shell_commands, "ifconfig 7 add affe::3");
-    //batch(shell_commands, "ncache add 7 affe::1");
+    batch(shell_commands, "ifconfig 7 add affe::3");
+    batch(shell_commands, "ncache add 7 affe::1");
     LED_RGB_OFF;
     LED0_ON;
 }
@@ -136,6 +137,7 @@ void setRoot(void)
 void *housekeeping_handler(void *arg)
 {
    int factor = 1; 
+   uint16_t i = 0;
     while(1)
     {
         if (isRootPending)
@@ -152,6 +154,11 @@ void *housekeeping_handler(void *arg)
         xtimer_usleep_until(&last_wakeup, INTERVAL/factor);
         LED0_ON;
         //LED_RGB_R_ON;
+        char st[10];
+        sprintf(st, "%d", i++);
+        ssd1306_clearAll();
+        char *myav[] = {"oled_cmd", st, NULL};
+        oled_cmd(2, myav);
     }
 }
 
@@ -167,25 +174,25 @@ int main(void)
     LED_RGB_OFF;
 
     puts("Biotz\n");
-    //batch(shell_commands, "rpl init 7");
-    //gpio_init_int(BUTTON_GPIO, GPIO_IN_PU, GPIO_RISING, (gpio_cb_t)btnCallback, NULL);
+    batch(shell_commands, "rpl init 7");
+    gpio_init_int(BUTTON_GPIO, GPIO_IN_PU, GPIO_RISING, (gpio_cb_t)btnCallback, NULL);
 
     puts("make houeskeeping\n");
 
-    kernel_pid_t hkpid = thread_create(housekeeping_stack, sizeof(housekeeping_stack), PRIO + 1, THREAD_CREATE_SLEEPING, housekeeping_handler,
+    kernel_pid_t hkpid = thread_create(housekeeping_stack, sizeof(housekeeping_stack), PRIO, THREAD_CREATE_SLEEPING, housekeeping_handler,
                   NULL, "housekeeping");
 
     puts("make display\n");
-    kernel_pid_t dhpid = thread_create(display_stack, sizeof(display_stack), PRIO + 1, THREAD_CREATE_SLEEPING, display_handler,
+    kernel_pid_t dhpid = thread_create(display_stack, sizeof(display_stack), PRIO, THREAD_CREATE_SLEEPING, display_handler,
                   NULL, "display");
 
-    /*puts("make udp\n");
-    kernel_pid_t udpid = thread_create(udp_stack, sizeof(udp_stack), PRIO + 1, THREAD_CREATE_SLEEPING, udp_server,
-                  NULL, "udp");*/
+    puts("make udp\n");
+    kernel_pid_t udpid = thread_create(udp_stack, sizeof(udp_stack), PRIO, THREAD_CREATE_SLEEPING, udp_server,
+                  NULL, "udp");
 
     thread_wakeup(hkpid);
     thread_wakeup(dhpid);
-    //thread_wakeup(udpid);
+    thread_wakeup(udpid);
 
     puts("make shell\n");
     char line_buf[SHELL_DEFAULT_BUFSIZE];
