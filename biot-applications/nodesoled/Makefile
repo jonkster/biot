@@ -1,5 +1,5 @@
 # name of your application
-APPLICATION = minimal_net
+APPLICATION = net_oled
 
 # If no BOARD is found in the environment, use this default:
 BOARD ?= samr21-zllk
@@ -20,15 +20,24 @@ USEMODULE += auto_init_gnrc_netif
 
 # Specify the minimum networking modules for IPv6
 USEMODULE += gnrc_ipv6
+#USEMODULE += gnrc_ipv6_router_default
 USEMODULE += gnrc_ndp
+#USEMODULE += gnrc_udp
+
+# Add a routing protocol
+#USEMODULE += gnrc_rpl
+#USEMODULE += auto_init_gnrc_rpl
+
+# This application dumps received packets to STDIO using the pktdump module
+#USEMODULE += gnrc_pktdump
 
 # Additional networking modules that can be dropped if not needed
 USEMODULE += gnrc_icmpv6_echo
 
 # Use minimal standard PRNG
 USEMODULE += prng_minstd
-#
-# Add also the shell, some shell commands
+
+# Add the shell and some shell commands
 USEMODULE += shell
 USEMODULE += shell_commands
 USEMODULE += ps

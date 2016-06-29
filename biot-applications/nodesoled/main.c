@@ -30,28 +30,41 @@
 
 #define PRIO    (THREAD_PRIORITY_MAIN + 1)
 static char housekeeping_stack[THREAD_STACKSIZE_DEFAULT];
+static char display_stack[THREAD_STACKSIZE_DEFAULT];
 
-static const shell_command_t shellCommands[] = {
+/* ########################################################################## */
+extern  void *display_handler(void *arg);
+extern int oledCmd(int argc, char **argv);
+extern int oledClearAll(void);
+extern void oledWriteText(const char *string);
+
+static const shell_command_t shell_commands[] = {
     /* Add a new shell commands here */
     { NULL, NULL, NULL }
 };
+
+
 
 /* set interval to 1 second */
 #define INTERVAL (1000000U)
 void *housekeeping_handler(void *arg)
 {
    int factor = 1; 
+   int i = 0;
     while(1)
     {
         uint32_t last_wakeup = xtimer_now();
         thread_yield();
         xtimer_usleep_until(&last_wakeup, INTERVAL/(2*factor));
         LED0_OFF;
-        //LED_RGB_OFF;
         thread_yield();
         xtimer_usleep_until(&last_wakeup, INTERVAL/factor);
         LED0_ON;
-        //LED_RGB_R_ON;
+
+        char st[10];
+        sprintf(st, "%d", i++);
+        oledClearAll();
+        oledWriteText(st);
     }
 }
 
@@ -59,10 +72,14 @@ int main(void)
 {
     kernel_pid_t ifs[GNRC_NETIF_NUMOF];
 
-    puts("RIOT network stack example application");
+    puts("Biotz Shell+UDP+OLED experiment\n");
 
     thread_create(housekeeping_stack, sizeof(housekeeping_stack), PRIO, THREAD_CREATE_STACKTEST, housekeeping_handler,
                   NULL, "housekeeping");
+
+    thread_create(display_stack, sizeof(display_stack), PRIO, THREAD_CREATE_STACKTEST, display_handler,
+                  NULL, "display");
+
 
     /* get the first IPv6 interface and prints its address */
     size_t numof = gnrc_netif_get(ifs);
@@ -76,8 +93,9 @@ int main(void)
             }
         }
     }
-    char lineBuffer[SHELL_DEFAULT_BUFSIZE];
-    shell_run(shellCommands, lineBuffer, SHELL_DEFAULT_BUFSIZE);
+
+    char line_buf[SHELL_DEFAULT_BUFSIZE];
+    shell_run(shell_commands, line_buf, SHELL_DEFAULT_BUFSIZE);
 
     /* never reached */
     return 0;
