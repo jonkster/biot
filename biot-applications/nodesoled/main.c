@@ -27,16 +27,19 @@
 #include "net/gnrc/netif.h"
 #include "net/gnrc/ipv6/netif.h"
 #include "shell.h"
-#include "../modules/ssd1306.h"
+#include "../modules/ssd1306/ssd1306.h"
+#include "../modules/biotUdp/udp.h"
 
 #define PRIO    (THREAD_PRIORITY_MAIN + 1)
 static char housekeeping_stack[THREAD_STACKSIZE_DEFAULT];
 static char display_stack[THREAD_STACKSIZE_DEFAULT];
+static char udp_stack[THREAD_STACKSIZE_DEFAULT];
 
 /* ########################################################################## */
 
 static const shell_command_t shell_commands[] = {
     /* Add a new shell commands here */
+    { "udp", "send a message: udp <IPv6-address> <message>", udp_cmd },
     { NULL, NULL, NULL }
 };
 
@@ -76,6 +79,9 @@ int main(void)
 
     thread_create(housekeeping_stack, sizeof(housekeeping_stack), PRIO, THREAD_CREATE_STACKTEST, housekeeping_handler,
                   NULL, "housekeeping");
+
+    thread_create(udp_stack, sizeof(udp_stack), PRIO, THREAD_CREATE_STACKTEST, udp_server,
+                  NULL, "udp");
 
     /* get the first IPv6 interface and prints its address */
     size_t numof = gnrc_netif_get(ifs);

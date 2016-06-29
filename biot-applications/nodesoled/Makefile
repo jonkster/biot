@@ -10,9 +10,14 @@ RIOTBASE ?= $(CURDIR)/../../../RIOT
 
 ## add current directory to the include path. Putting it in CFLAGS will make
 ## it go to the beginning, before the standard includes.
-INCLUDES += -I../modules/
 CFLAGS += -I$(CURDIR)
-DIRS += ../modules
+
+# adding biot specific modules
+DIRS += ../modules/ssd1306/
+#CFLAGS += -I../modules/ssd1306
+USEMODULE += ssd1306
+DIRS += ../modules/biotUdp/
+USEMODULE += biotUdp
 
 # Include packages that pull up and auto-init the link layer.
 # NOTE: 6LoWPAN will be included if IEEE802.15.4 devices are present
@@ -23,7 +28,8 @@ USEMODULE += auto_init_gnrc_netif
 USEMODULE += gnrc_ipv6
 #USEMODULE += gnrc_ipv6_router_default
 USEMODULE += gnrc_ndp
-#USEMODULE += gnrc_udp
+
+
 
 # Add a routing protocol
 #USEMODULE += gnrc_rpl
@@ -38,13 +44,18 @@ USEMODULE += gnrc_icmpv6_echo
 # Use minimal standard PRNG
 USEMODULE += prng_minstd
 
+USEMODULE += gnrc_udp
+USEMODULE += gnrc_conn_udp
+# needed by biotUdp
+USEMODULE += posix
+USEMODULE += posix_sockets
+
 # Add the shell and some shell commands
 USEMODULE += shell
 USEMODULE += shell_commands
 USEMODULE += ps
 USEMODULE += netstats_l2
 USEMODULE += netstats_ipv6
-USEMODULE += ssd1306
 
 CFLAGS += -DGNRC_PKTBUF_SIZE=512 -DGNRC_IPV6_NETIF_ADDR_NUMOF=4 -DGNRC_IPV6_NC_SIZE=1
 
