@@ -27,16 +27,13 @@
 #include "net/gnrc/netif.h"
 #include "net/gnrc/ipv6/netif.h"
 #include "shell.h"
+#include "../modules/ssd1306.h"
 
 #define PRIO    (THREAD_PRIORITY_MAIN + 1)
 static char housekeeping_stack[THREAD_STACKSIZE_DEFAULT];
 static char display_stack[THREAD_STACKSIZE_DEFAULT];
 
 /* ########################################################################## */
-extern  void *display_handler(void *arg);
-extern int oledCmd(int argc, char **argv);
-extern int oledClearAll(void);
-extern void oledWriteText(const char *string);
 
 static const shell_command_t shell_commands[] = {
     /* Add a new shell commands here */
@@ -63,8 +60,7 @@ void *housekeeping_handler(void *arg)
 
         char st[10];
         sprintf(st, "%d", i++);
-        oledClearAll();
-        oledWriteText(st);
+        oledPrint(2, st);
     }
 }
 
@@ -74,12 +70,12 @@ int main(void)
 
     puts("Biotz Shell+UDP+OLED experiment\n");
 
-    thread_create(housekeeping_stack, sizeof(housekeeping_stack), PRIO, THREAD_CREATE_STACKTEST, housekeeping_handler,
-                  NULL, "housekeeping");
 
-    thread_create(display_stack, sizeof(display_stack), PRIO, THREAD_CREATE_STACKTEST, display_handler,
+    thread_create(display_stack, sizeof(display_stack), PRIO, THREAD_CREATE_STACKTEST, (thread_task_func_t) display_handler,
                   NULL, "display");
 
+    thread_create(housekeeping_stack, sizeof(housekeeping_stack), PRIO, THREAD_CREATE_STACKTEST, housekeeping_handler,
+                  NULL, "housekeeping");
 
     /* get the first IPv6 interface and prints its address */
     size_t numof = gnrc_netif_get(ifs);
@@ -90,6 +86,7 @@ int main(void)
                 char ipv6_addr[IPV6_ADDR_MAX_STR_LEN];
                 ipv6_addr_to_str(ipv6_addr, &entry->addrs[i].addr, IPV6_ADDR_MAX_STR_LEN);
                 printf("My address is %s\n", ipv6_addr);
+                oledPrint(1, ipv6_addr);
             }
         }
     }

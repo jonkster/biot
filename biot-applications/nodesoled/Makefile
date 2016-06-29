@@ -10,8 +10,9 @@ RIOTBASE ?= $(CURDIR)/../../../RIOT
 
 ## add current directory to the include path. Putting it in CFLAGS will make
 ## it go to the beginning, before the standard includes.
-## That way xbee_params.h get's included and auto configuration can pick it up.
+INCLUDES += -I../modules/
 CFLAGS += -I$(CURDIR)
+DIRS += ../modules
 
 # Include packages that pull up and auto-init the link layer.
 # NOTE: 6LoWPAN will be included if IEEE802.15.4 devices are present
@@ -43,6 +44,7 @@ USEMODULE += shell_commands
 USEMODULE += ps
 USEMODULE += netstats_l2
 USEMODULE += netstats_ipv6
+USEMODULE += ssd1306
 
 CFLAGS += -DGNRC_PKTBUF_SIZE=512 -DGNRC_IPV6_NETIF_ADDR_NUMOF=4 -DGNRC_IPV6_NC_SIZE=1
 
