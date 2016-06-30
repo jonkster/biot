@@ -155,7 +155,7 @@ int main(void)
     //LED1_ON;
     //LED_RGB_OFF;
 
-    printf("Biotz\n");
+    printf("Biotz Border Router, RPL master\n");
     batch(shell_commands, "rpl init 7");
     gpio_init_int(BUTTON_GPIO, GPIO_IN_PU, GPIO_RISING, (gpio_cb_t)btnCallback, NULL);
 

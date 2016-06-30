@@ -1,1 +1,3 @@
-version for samr21-xpro board
+version for samr21-xpro board - no OLED.
+
+Can operate as border router using SLIP interface to IPv6 on PC Ethernet.
