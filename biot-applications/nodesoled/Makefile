@@ -32,7 +32,8 @@ USEMODULE += gnrc_ndp
 
 
 # Add a routing protocol
-#USEMODULE += gnrc_rpl
+USEMODULE += gnrc_rpl
+USEMODULE += fib
 #USEMODULE += auto_init_gnrc_rpl
 
 # This application dumps received packets to STDIO using the pktdump module
