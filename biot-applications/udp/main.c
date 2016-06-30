@@ -23,6 +23,16 @@
 #include "periph/gpio.h"
 //#include "net/gnrc/ipv6/nc.h"
 //#include "net/gnrc/ipv6/netif.h"
+#if BOARD == samr21-xpro
+    #define LED1_OFF do {} while (0)
+    #define LED1_ON do {} while (0)
+    #define LED_RGB_OFF do {} while (0)
+    #define LED_RGB_R_ON do {} while (0)
+    #define LED_RGB_G_ON do {} while (0)
+    #define LED_RGB_B_ON do {} while (0)
+#else
+#endif
+
 
 #define PRIO    (THREAD_PRIORITY_MAIN - 1)
 #define Q_SZ    (8)

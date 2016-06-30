@@ -24,6 +24,16 @@
 #include "udp_common.h"
 #include "board.h"
 
+#if BOARD == samr21-xpro
+    #define LED1_OFF do {} while (0)
+    #define LED1_ON do {} while (0)
+    #define LED_RGB_OFF do {} while (0)
+    #define LED_RGB_R_ON do {} while (0)
+    #define LED_RGB_G_ON do {} while (0)
+    #define LED_RGB_B_ON do {} while (0)
+#else
+#endif
+
 #define MUDP_Q_SZ           (8)
 #define SERVER_BUFFER_SIZE  (128)
 #define UDP_PORT            (8888)
