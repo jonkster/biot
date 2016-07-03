@@ -5,7 +5,7 @@ APPLICATION = gnrc_minimal
 BOARD ?= samr21-zllk
 
 # This has to be the absolute path to the RIOT base directory:
-RIOTBASE ?= $(CURDIR)/../../../RIOT
+RIOTBASE ?= $(CURDIR)/../../../../RIOT
 
 
 ## add current directory to the include path. Putting it in CFLAGS will make
@@ -26,6 +26,7 @@ USEMODULE += gnrc_icmpv6_echo
 USEMODULE += prng_minstd
 
 CFLAGS += -DGNRC_PKTBUF_SIZE=512 -DGNRC_IPV6_NETIF_ADDR_NUMOF=4 -DGNRC_IPV6_NC_SIZE=1
+LINKFLAGS += -Wl,--no-wchar-size-warning
 
 # Change this to 0 show compiler invocation lines by default:
 QUIET ?= 1

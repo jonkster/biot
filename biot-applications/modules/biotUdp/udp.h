@@ -20,6 +20,7 @@ extern "C" {
 extern bool led_status;
 void *udp_server(void *);
 int udp_cmd(int argc, char **argv);
+int udp_send(char *addr_str, char *data);
 
 #ifdef __cplusplus
 }

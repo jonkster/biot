@@ -28,7 +28,26 @@
 #include "msg.h"
 #include "udp.h"
 #include "board.h"
-#include "../modules/ssd1306/ssd1306.h"
+#include "../modules/identify/biotIdentify.h"
+
+#define XSTR(x) STR(x)
+#define STR(x) #x
+
+#if (defined NOOLED)
+#pragma message "Assuming no OLED available therefore samr21-xpro board"
+    #define LED1_OFF do {} while(0);
+    #define LED_RGB_OFF do {} while(0);
+    #define LED_RGB_R_ON do {} while(0);
+    #define LED_RGB_G_ON do {} while(0);
+    #define LED_RGB_B_ON do {} while(0);
+#else
+#pragma message "Assuming OLED available and samr21-zllk board"
+    #include "../modules/ssd1306/ssd1306.h"
+#endif
+
+
+
+
 
 #define MUDP_Q_SZ           (8)
 #define SERVER_BUFFER_SIZE  (128)
@@ -72,12 +91,6 @@ static void *udp_server_loop(void)
         res = recvfrom(server_socket, server_buffer, sizeof(server_buffer), 0, (struct sockaddr *)&src, &src_len);
 
         struct in6_addr src_addr = src.sin6_addr; 
-        printf("from: ");
-        for (int i = 0; i < 15; i++)
-        {
-            printf("%d:", src_addr.s6_addr[i]);
-        }
-        printf("%d\n", src_addr.s6_addr[15]);
 
         if (res < 0)
         {
@@ -89,13 +102,23 @@ static void *udp_server_loop(void)
         }
         else
         {
-            puts("Received data: ");
+            //puts("Received data: ");
             uint32_t rand = random_uint32();
-            printf("R=%lu\n", rand);
-            puts(server_buffer);
+            //puts(server_buffer);
             if (strcmp(server_buffer, "on") == 0)
             {
                 LED0_ON;
+            }
+            else if (strcmp(server_buffer, "identify") == 0)
+            {
+                identifyYourself();
+            }
+            else if (strcmp(server_buffer, "nudge") == 0)
+            {
+                char srcAdd[IPV6_ADDR_MAX_STR_LEN];
+                inet_ntop(AF_INET6, &(src_addr.s6_addr), srcAdd, IPV6_ADDR_MAX_STR_LEN);
+                //ipv6_addr_to_str(srcAdd, src_addr.s6_addr, sizeof(srcAdd));
+                printf("nudged from %s\n", srcAdd);
             }
             else if (strcmp(server_buffer, "off") == 0)
             {
@@ -105,12 +128,16 @@ static void *udp_server_loop(void)
                 xtimer_usleep(100000);
                 if (rand > 2000000000 )
                 {
+#if !defined NOOLED
                     oledPrint(1, "got off sending red");
+#endif
                     udp_send_jk(src_addr, "red");
                 }
                 else
                 {
+#if !defined NOOLED
                     oledPrint(1, "got off sending off");
+#endif
                     udp_send_jk(src_addr, "off");
                 }
             }
@@ -121,12 +148,16 @@ static void *udp_server_loop(void)
                 xtimer_usleep(100000);
                 if (rand > 2000000000)
                 {
+#if !defined NOOLED
                     oledPrint(1, "got red sending green");
+#endif
                     udp_send_jk(src_addr, "green");
                 }
                 else
                 {
+#if !defined NOOLED
                     oledPrint(1, "got red sending red");
+#endif
                     udp_send_jk(src_addr, "red");
                 }
             }
@@ -137,12 +168,16 @@ static void *udp_server_loop(void)
                 xtimer_usleep(100000);
                 if (rand > 2000000000)
                 {
+#if !defined NOOLED
                     oledPrint(1, "got green sending blue");
+#endif
                     udp_send_jk(src_addr, "blue");
                 }
                 else
                 {
+#if !defined NOOLED
                     oledPrint(1, "got green sending green");
+#endif
                     udp_send_jk(src_addr, "green");
                 }
             }
@@ -153,12 +188,16 @@ static void *udp_server_loop(void)
                 xtimer_usleep(100000);
                 if (rand > 2000000000)
                 {
+#if !defined NOOLED
                     oledPrint(1, "got blue sending off");
+#endif
                     udp_send_jk(src_addr, "off");
                 }
                 else
                 {
+#if !defined NOOLED
                     oledPrint(1, "got blue sending blue");
+#endif
                     udp_send_jk(src_addr, "blue");
                 }
             }
@@ -167,7 +206,7 @@ static void *udp_server_loop(void)
     return NULL;
 }
 
-static int udp_send(char *addr_str, char *data)
+int udp_send(char *addr_str, char *data)
 {
     struct sockaddr_in6 src, dst;
     size_t data_len = strlen(data);
@@ -197,7 +236,7 @@ static int udp_send(char *addr_str, char *data)
         return 1;
     }
 
-    printf("Success: send %u byte(s) to %s:%u\n", (unsigned)data_len, addr_str, UDP_PORT);
+    //printf("Success: send %u byte(s) to %s:%u\n", (unsigned)data_len, addr_str, UDP_PORT);
 
     close(s);
 

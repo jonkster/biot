@@ -1,22 +1,24 @@
 # name of your application
-APPLICATION = net_oled
+APPLICATION = net_oled_rpl
 
 # If no BOARD is found in the environment, use this default:
 BOARD ?= samr21-zllk
 
 # This has to be the absolute path to the RIOT base directory:
-RIOTBASE ?= $(CURDIR)/../../../RIOT
+RIOTBASE ?= $(CURDIR)/../../../../RIOT
 
+# create 2 network interfaces
+#GNRC_NETIF_NUMOF := 2
 
 ## add current directory to the include path. Putting it in CFLAGS will make
 ## it go to the beginning, before the standard includes.
 CFLAGS += -I$(CURDIR)
 
 # adding biot specific modules
-DIRS += ../modules/ssd1306/
+DIRS += ../../modules/ssd1306/
 #CFLAGS += -I../modules/ssd1306
 USEMODULE += ssd1306
-DIRS += ../modules/biotUdp/
+DIRS += ../../modules/biotUdp/
 USEMODULE += biotUdp
 
 # Include packages that pull up and auto-init the link layer.
@@ -25,31 +27,36 @@ USEMODULE += gnrc_netdev_default
 USEMODULE += auto_init_gnrc_netif
 
 # Specify the minimum networking modules for IPv6
-USEMODULE += gnrc_ipv6
+# we can have either gnrc_ipv6 or gnrc_ipv6_router_default depending on needs
 #USEMODULE += gnrc_ipv6_router_default
+USEMODULE += gnrc_ipv6
+USEMODULE += gnrc_icmpv6_echo
 USEMODULE += gnrc_ndp
 
 
-
-# Add a routing protocol
-USEMODULE += gnrc_rpl
-USEMODULE += fib
-#USEMODULE += auto_init_gnrc_rpl
-
-# This application dumps received packets to STDIO using the pktdump module
-#USEMODULE += gnrc_pktdump
-
-# Additional networking modules that can be dropped if not needed
-USEMODULE += gnrc_icmpv6_echo
-
-# Use minimal standard PRNG
-USEMODULE += prng_minstd
-
+GNRC_NETIF_NUMOF := 2
+INCLUDES += -I$(CURDIR)
+CFLAGS += -DSLIP_UART=$(SLIP_UART)
+CFLAGS += -DSLIP_BAUDRATE=$(SLIP_BAUDRATE)
+   
+# UDP communication stuff
 USEMODULE += gnrc_udp
 USEMODULE += gnrc_conn_udp
 # needed by biotUdp
 USEMODULE += posix
 USEMODULE += posix_sockets
+
+
+# Add a routing protocol
+USEMODULE += gnrc_rpl
+#USEMODULE += auto_init_gnrc_rpl
+# Add forwarding table
+USEMODULE += fib
+
+
+# Use minimal standard random number generator
+USEMODULE += prng_minstd
+
 
 # Add the shell and some shell commands
 USEMODULE += shell
@@ -58,7 +65,8 @@ USEMODULE += ps
 USEMODULE += netstats_l2
 USEMODULE += netstats_ipv6
 
-CFLAGS += -DGNRC_PKTBUF_SIZE=512 -DGNRC_IPV6_NETIF_ADDR_NUMOF=4 -DGNRC_IPV6_NC_SIZE=1
+#CFLAGS += -DGNRC_PKTBUF_SIZE=512 -DGNRC_IPV6_NETIF_ADDR_NUMOF=4 -DGNRC_IPV6_NC_SIZE=1
+LINKFLAGS += -Wl,--no-wchar-size-warning
 
 # Change this to 0 show compiler invocation lines by default:
 QUIET ?= 1

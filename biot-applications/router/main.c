@@ -18,10 +18,25 @@
 #include <string.h>
 #include "board.h"
 #include "thread.h"
-#include "udp_common.h"
 #include "periph/gpio.h"
 #include "net/gnrc/ipv6/nc.h"
 #include "net/gnrc/ipv6/netif.h"
+#include "../modules/biotUdp/udp.h"
+#include "../modules/identify/biotIdentify.h"
+
+#if (defined NOOLED)
+#pragma message "Assuming no OLED available therefore samr21-xpro board"
+    #define LED1_ON do {} while(0);
+    #define LED1_OFF do {} while(0);
+    #define LED_RGB_OFF do {} while(0);
+    #define LED_RGB_R_ON do {} while(0);
+    #define LED_RGB_G_ON do {} while(0);
+    #define LED_RGB_B_ON do {} while(0);
+#else
+#pragma message "Assuming OLED available and samr21-zllk board"
+    #include "../modules/ssd1306/ssd1306.h"
+#endif
+
 
 #define PRIO    (THREAD_PRIORITY_MAIN - 1)
 #define Q_SZ    (8)
@@ -34,6 +49,7 @@ static const shell_command_t shell_commands[];
 
 
 /* Add the shell command function here ###################################### */
+extern int udp_send(char *addr_str, char *data);
 
 int led_control(int argc, char **argv)
 {
@@ -41,35 +57,35 @@ int led_control(int argc, char **argv)
         if (strcmp(argv[1], "on") == 0) {
             led_status = true;
             LED0_ON;
-            //LED1_OFF;
+            LED1_OFF;
             return 0;
         }
         else if (strcmp(argv[1], "off") == 0) {
             led_status = false;
             LED0_OFF;
-            //LED1_ON;
-            //LED_RGB_OFF;
+            LED1_ON;
+            LED_RGB_OFF;
             return 0;
         }
         else if (strcmp(argv[1], "red") == 0) {
             led_status = false;
             LED0_ON;
-            //LED_RGB_OFF;
-            //LED_RGB_R_ON;
+            LED_RGB_OFF;
+            LED_RGB_R_ON;
             return 0;
         }
         else if (strcmp(argv[1], "green") == 0) {
             led_status = false;
             LED0_ON;
-            //LED_RGB_OFF;
-            //LED_RGB_G_ON;
+            LED_RGB_OFF;
+            LED_RGB_G_ON;
             return 0;
         }
         else if (strcmp(argv[1], "blue") == 0) {
             led_status = false;
             LED0_ON;
-            //LED_RGB_OFF;
-            //LED_RGB_B_ON;
+            LED_RGB_OFF;
+            LED_RGB_B_ON;
             return 0;
         }
     }
@@ -86,7 +102,7 @@ void btnCallback(void* arg)
     if (! isRoot)
     {
         isRoot = true;
-        //LED_RGB_R_ON;
+        LED_RGB_R_ON;
         LED0_ON;
         isRootPending = true;
     }
@@ -94,8 +110,6 @@ void btnCallback(void* arg)
 
 
 /* ########################################################################## */
-extern int adc_cmd(int argc, char **argv);
-
 static const shell_command_t shell_commands[] = {
 
 /* Add a new shell command here ############################################# */
@@ -103,8 +117,6 @@ static const shell_command_t shell_commands[] = {
     { "led", "use 'led on' to turn the LED on and 'led off' to turn the LED off", led_control },
 
     { "udp", "send a message: udp <IPv6-address> <message>", udp_cmd },
-
-    { "adc", "read value of ADC", adc_cmd },
 
     /* ########################################################################## */
     { NULL, NULL, NULL }
@@ -120,7 +132,7 @@ void setRoot(void)
     // add wired interface
     batch(shell_commands, "ifconfig 7 add affe::3");
     batch(shell_commands, "ncache add 7 affe::1");
-    //LED_RGB_OFF;
+    LED_RGB_OFF;
     LED0_ON;
 }
 
@@ -152,10 +164,10 @@ int main(void)
     puts("Type 'help' for a list of available commands");
 
     LED0_OFF;
-    //LED1_ON;
-    //LED_RGB_OFF;
+    LED1_ON;
+    LED_RGB_OFF;
 
-    printf("Biotz Border Router, RPL master\n");
+    printf("Biotz Border Router\n");
     batch(shell_commands, "rpl init 7");
     gpio_init_int(BUTTON_GPIO, GPIO_IN_PU, GPIO_RISING, (gpio_cb_t)btnCallback, NULL);
 

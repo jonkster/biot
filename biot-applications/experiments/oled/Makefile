@@ -5,7 +5,7 @@ APPLICATION = ADC
 BOARD ?= samr21-zllk
 
 # This has to be the absolute path to the RIOT base directory:
-RIOTBASE ?= $(CURDIR)/../../../RIOT
+RIOTBASE ?= $(CURDIR)/../../../../RIOT
 
 INCLUDES += -I$(CURDIR)
 
@@ -22,6 +22,7 @@ USEMODULE += ps
 # which is not needed in a production environment but helps in the
 # development process:
 CFLAGS += -DDEVELHELP
+LINKFLAGS += -Wl,--no-wchar-size-warning
 
 # Change this to 0 show compiler invocation lines by default:
 QUIET ?= 1
