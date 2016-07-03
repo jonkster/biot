@@ -34,7 +34,9 @@
 
 #define PRIO    (THREAD_PRIORITY_MAIN + 1)
 static char housekeeping_stack[THREAD_STACKSIZE_DEFAULT];
+#if !defined NOOLED
 static char display_stack[THREAD_STACKSIZE_DEFAULT];
+#endif
 static char udp_stack[THREAD_STACKSIZE_DEFAULT];
 
 char dodagRoot[IPV6_ADDR_MAX_STR_LEN];
@@ -102,15 +104,21 @@ void *housekeeping_handler(void *arg)
         {
             char msg[IPV6_ADDR_MAX_STR_LEN+10];
             sprintf(msg, "DODAG:%s", dodagRoot);
+#if !defined NOOLED
             oledPrint(1, "dodag");
+#endif
         }
         else
         {
+#if !defined NOOLED
             oledPrint(1, "orphan...");
+#endif
         }
         char st[10];
         sprintf(st, "%d", i++);
+#if !defined NOOLED
         oledPrint(2, st);
+#endif
     }
 }
 
@@ -121,8 +129,10 @@ int main(void)
     puts("Biotz Node\n");
 
 
+#if !defined NOOLED
     thread_create(display_stack, sizeof(display_stack), PRIO, THREAD_CREATE_STACKTEST, (thread_task_func_t) display_handler,
                   NULL, "display");
+#endif
 
     thread_create(housekeeping_stack, sizeof(housekeeping_stack), PRIO, THREAD_CREATE_STACKTEST, housekeeping_handler,
                   NULL, "housekeeping");

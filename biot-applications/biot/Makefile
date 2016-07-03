@@ -4,19 +4,22 @@ APPLICATION = net_oled_rpl
 # If no BOARD is found in the environment, use this default:
 BOARD ?= samr21-zllk
 
+ifeq ($(BOARD),samr21-xpro)
+    CFLAGS += -DNOOLED=true
+endif
+
 # This has to be the absolute path to the RIOT base directory:
 RIOTBASE ?= $(CURDIR)/../../../RIOT
-
-# create 2 network interfaces
-#GNRC_NETIF_NUMOF := 2
 
 ## add current directory to the include path. Putting it in CFLAGS will make
 ## it go to the beginning, before the standard includes.
 CFLAGS += -I$(CURDIR)
 
 # adding biot specific modules
-DIRS += ../modules/ssd1306/
-USEMODULE += ssd1306
+ifeq ($(BOARD),samr21-zllk)
+	DIRS += ../modules/ssd1306/
+	USEMODULE += ssd1306
+endif
 DIRS += ../modules/biotUdp/
 USEMODULE += biotUdp
 DIRS += ../modules/identify/
