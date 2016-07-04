@@ -53,6 +53,9 @@
 #define SERVER_BUFFER_SIZE  (128)
 #define UDP_PORT            (8888)
 
+extern uint32_t getCurrentTime(void);
+extern void setCurrentTime(uint32_t t);
+
 static int server_socket = -1;
 static char server_buffer[SERVER_BUFFER_SIZE];
 static msg_t msg_q[MUDP_Q_SZ];
@@ -117,8 +120,26 @@ static void *udp_server_loop(void)
             {
                 char srcAdd[IPV6_ADDR_MAX_STR_LEN];
                 inet_ntop(AF_INET6, &(src_addr.s6_addr), srcAdd, IPV6_ADDR_MAX_STR_LEN);
-                //ipv6_addr_to_str(srcAdd, src_addr.s6_addr, sizeof(srcAdd));
                 printf("nudged from %s\n", srcAdd);
+            }
+            else if (strcmp(server_buffer, "time-please") == 0)
+            {
+                char srcAdd[IPV6_ADDR_MAX_STR_LEN];
+                inet_ntop(AF_INET6, &(src_addr.s6_addr), srcAdd, IPV6_ADDR_MAX_STR_LEN);
+
+                char ts[25];
+                sprintf(ts, "ts:%lu", getCurrentTime());
+                udp_send("ff02::1", ts);
+                //udp_send(srcAdd, ts);
+            }
+            else if (strncmp(server_buffer, "ts:", 3) == 0)
+            {
+                uint32_t t = atoi(server_buffer+3);
+
+                char srcAdd[IPV6_ADDR_MAX_STR_LEN];
+                inet_ntop(AF_INET6, &(src_addr.s6_addr), srcAdd, IPV6_ADDR_MAX_STR_LEN);
+                printf("time received from %s : %s -> %lu\n", srcAdd, server_buffer, t);
+                setCurrentTime(t);
             }
             else if (strcmp(server_buffer, "off") == 0)
             {

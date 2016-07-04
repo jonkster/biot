@@ -50,6 +50,34 @@ static const shell_command_t shell_commands[];
 
 /* Add the shell command function here ###################################### */
 extern int udp_send(char *addr_str, char *data);
+extern uint32_t getCurrentTime(void);
+extern void setCurrentTime(uint32_t t);
+
+void sync(void)
+{
+    char ts[15];
+    sprintf(ts, "ts:%lu", getCurrentTime());
+    udp_send("ff02::1", ts);
+}
+
+int sync_cmd(int argc, char **argv)
+{
+    sync();
+    return 0;
+}
+
+int time_cmd(int argc, char **argv)
+{
+    printf("time: %lu\n", getCurrentTime());
+    return 0;
+}
+
+int resetTime_cmd(int argc, char **argv)
+{
+    setCurrentTime(0);
+    sync();
+    return 0;
+}
 
 int led_control(int argc, char **argv)
 {
@@ -106,6 +134,7 @@ void btnCallback(void* arg)
         LED0_ON;
         isRootPending = true;
     }
+    //sync();
 }
 
 
@@ -115,6 +144,12 @@ static const shell_command_t shell_commands[] = {
 /* Add a new shell command here ############################################# */
 
     { "led", "use 'led on' to turn the LED on and 'led off' to turn the LED off", led_control },
+
+    { "sync", "synchronise time across nodes", sync_cmd },
+
+    { "time", "show net time", time_cmd },
+
+    { "retime", "reset net time", resetTime_cmd },
 
     { "udp", "send a message: udp <IPv6-address> <message>", udp_cmd },
 

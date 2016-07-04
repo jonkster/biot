@@ -43,6 +43,10 @@ char dodagRoot[IPV6_ADDR_MAX_STR_LEN];
 
 extern void batch(const shell_command_t *command_list, char *line);
 extern int udp_send(char *addr_str, char *data);
+extern uint32_t getCurrentTime(void);
+extern bool isTimeSet(void);
+bool hasTimeChanged(void);
+extern void timeInit(void);
 /* ########################################################################## */
 
 int identify_cmd(int argc, char **argv)
@@ -50,6 +54,19 @@ int identify_cmd(int argc, char **argv)
     identifyYourself();
     return 0;
 }
+
+int sendTimeRequest(void)
+{
+    if (gnrc_rpl_instances[0].state == 0) {
+        return 1;
+    }
+
+    gnrc_rpl_dodag_t *dodag = &gnrc_rpl_instances[0].dodag;
+    ipv6_addr_to_str(dodagRoot, &dodag->dodag_id, sizeof(dodagRoot));
+    udp_send(dodagRoot, "time-please");
+    return 0;
+}
+
 
 int nudgeRoot(void)
 {
@@ -74,10 +91,21 @@ int callRoot_cmd(int argc, char **argv)
     return 1;
 }
 
+int callTime_cmd(int argc, char **argv)
+{
+    if (sendTimeRequest() == 0)
+    {
+        return 0;
+    }
+    puts("I have no DODAG");
+    return 1;
+}
+
 static const shell_command_t shell_commands[] = {
     /* Add a new shell commands here */
     { "identify", "visually identify board", identify_cmd },
     { "callRoot", "contact root node", callRoot_cmd },
+    { "timeAsk", "ask for current net time", callTime_cmd },
     { "udp", "send a message: udp <IPv6-address> <message>", udp_cmd },
     { NULL, NULL, NULL }
 };
@@ -88,44 +116,54 @@ static const shell_command_t shell_commands[] = {
 #define INTERVAL (1000000U)
 void *housekeeping_handler(void *arg)
 {
-   int factor = 1; 
-   int i = 0;
+    //int factor = 1; 
+    int counter = 30;
+    uint16_t lastSecs = 0;
     while(1)
     {
-        uint32_t last_wakeup = xtimer_now();
-        thread_yield();
-        xtimer_usleep_until(&last_wakeup, INTERVAL/(2*factor));
-        LED0_OFF;
-        thread_yield();
-        xtimer_usleep_until(&last_wakeup, INTERVAL/factor);
-        LED0_ON;
-
-        if (nudgeRoot() == 0)
+        uint16_t tsecs = getCurrentTime()/1500000;
+        if (tsecs != lastSecs)
         {
-            char msg[IPV6_ADDR_MAX_STR_LEN+10];
-            sprintf(msg, "DODAG:%s", dodagRoot);
+            if (tsecs % 2 == 0)
+            {
+                puts("off...");
+                LED0_OFF;
+                thread_yield();
+            }
+            else
+            {
+                puts("ON!");
+                LED0_ON;
+                thread_yield();
+            }
+            if (counter++ > 30)
+            {
+                oledPrint(1, "syncing" );
+                sendTimeRequest();
+                counter = 0;
+            }
+            else if (hasTimeChanged())
+            {
+                oledPrint(1, "changed");
+            }
+            else
+            {
+                oledPrint(1, "OK" );
+            }
 #if !defined NOOLED
-            oledPrint(1, "dodag");
+            char st[12];
+            sprintf(st, "T=%u", tsecs);
+            oledPrint(2, st);
+            //puts(st);
 #endif
         }
-        else
-        {
-#if !defined NOOLED
-            oledPrint(1, "orphan...");
-#endif
-        }
-        char st[10];
-        sprintf(st, "%d", i++);
-#if !defined NOOLED
-        oledPrint(2, st);
-#endif
+        lastSecs = tsecs;
+        thread_yield();
     }
 }
 
 int main(void)
 {
-//    kernel_pid_t ifs[GNRC_NETIF_NUMOF];
-
     puts("Biotz Node\n");
 
 
@@ -143,6 +181,8 @@ int main(void)
     batch(shell_commands, "rpl init 6");
 
     identifyYourself();
+
+    timeInit();
 
     char line_buf[SHELL_DEFAULT_BUFSIZE];
     shell_run(shell_commands, line_buf, SHELL_DEFAULT_BUFSIZE);

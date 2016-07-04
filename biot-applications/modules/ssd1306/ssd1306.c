@@ -7,8 +7,8 @@ static int spi_mode = -1;
 static int spi_speed = -1;
 static gpio_t spi_cs = -1;
 static gpio_t oled_dc = -1;
-char displayBuffer[BUFFER_SIZE];
-bool displayBufferReady = false;
+char displayBuffer[SSD1306_PAGECOUNT][BUFFER_SIZE];
+bool outputLineReady[SSD1306_PAGECOUNT] = {false, false, false, false};
 static mutex_t mutex = MUTEX_INIT;
 uint8_t bufferLineNo = 0;
 
@@ -322,16 +322,15 @@ static void *display_loop(void)
         oledDisplayOn();
         while(1)
         {
-            if (displayBufferReady)
+            for (uint8_t i = 0; i < SSD1306_PAGECOUNT; i++)
             {
-                oledClearLine(bufferLineNo);
-                oledWriteText(displayBuffer);
-                memset(&displayBuffer, 0, BUFFER_SIZE);
-                displayBufferReady = false;
-            }
-            else
-            {
-                delayUsec(SSD1306_LATENCY);
+                if (outputLineReady[i])
+                {
+                    oledClearLine(i);
+                    oledWriteText(displayBuffer[i]);
+                    memset(&displayBuffer[i], 0, BUFFER_SIZE);
+                    outputLineReady[i] = false;
+                }
                 thread_yield();
             }
         }
@@ -353,20 +352,20 @@ thread_task_func_t display_handler(char *arg)
 
 int oledCmd(int argc, char **argv)
 {
-    if (! displayBufferReady)
+    if (! outputLineReady[bufferLineNo])
     {
         if (argc < 2)
         {
-            displayBuffer[0] = '?';
+            displayBuffer[bufferLineNo][0] = '?';
         }
         else
         {
             for (int i = 0; i < strlen(argv[1]); i++)
             {
-                displayBuffer[i] = argv[1][i];
+                displayBuffer[bufferLineNo][i] = argv[1][i];
             }
         }
-        displayBufferReady = true;
+        outputLineReady[bufferLineNo] = true;
         return 0;
     }
     else
@@ -377,18 +376,18 @@ int oledCmd(int argc, char **argv)
 
 int oledPrint(uint8_t lineNo, char* text)
 {
-    if (! displayBufferReady)
+    if (! outputLineReady[lineNo])
     {
         for (int i = 0; i < strlen(text); i++)
         {
-            displayBuffer[i] = text[i];
+            displayBuffer[lineNo][i] = text[i];
         }
-        bufferLineNo = lineNo;
-        displayBufferReady = true;
+        outputLineReady[lineNo] = true;
         return 0;
     }
     else
     {
+        printf("buffer busy with %s, dropping %s\n", displayBuffer[lineNo], text);
         return 1;
     }
 }
