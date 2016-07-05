@@ -20,7 +20,7 @@ See ../adc/README.md for details on architecture etc
 4. from one of the boards, send a udp message to another board to change led
    colour from the shell eg
 
-    usb affe::2 red
+    udp affe::2 red
 
 The targetted board should change led colour and also fire a return message to
 change led colour on the original board (which will respond in kind - basically

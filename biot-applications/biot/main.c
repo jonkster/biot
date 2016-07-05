@@ -172,9 +172,9 @@ void *housekeeping_handler(void *arg)
     while(1)
     {
         uint16_t tsecs = getCurrentTime()/1500000;
-        sendNodeData(tsecs);
         if (tsecs != lastSecs)
         {
+sendNodeData(tsecs);
             if (tsecs % 2 == 0)
             {
                 LED0_OFF;

@@ -167,8 +167,8 @@ void setRoot(void)
 
     // add wired interface
     batch(shell_commands, "ifconfig 7 add affe::3");
-    // assume outside world is at affe::5
-    batch(shell_commands, "ncache add 7 affe::5");
+    // assume outside world is at affe::1
+    batch(shell_commands, "ncache add 7 affe::1");
     LED_RGB_OFF;
     LED0_ON;
 }
