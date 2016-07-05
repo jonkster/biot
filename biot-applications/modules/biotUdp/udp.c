@@ -129,8 +129,8 @@ static void *udp_server_loop(void)
 
                 char ts[25];
                 sprintf(ts, "ts:%lu", getCurrentTime());
-                udp_send("ff02::1", ts);
-                //udp_send(srcAdd, ts);
+                //udp_send("ff02::1", ts);
+                udp_send(srcAdd, ts);
             }
             else if (strncmp(server_buffer, "ts:", 3) == 0)
             {

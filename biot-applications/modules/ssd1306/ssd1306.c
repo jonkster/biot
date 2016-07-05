@@ -9,6 +9,8 @@ static gpio_t spi_cs = -1;
 static gpio_t oled_dc = -1;
 char displayBuffer[SSD1306_PAGECOUNT][BUFFER_SIZE];
 bool outputLineReady[SSD1306_PAGECOUNT] = {false, false, false, false};
+char overflowBuffer[SSD1306_PAGECOUNT][BUFFER_SIZE];
+bool overflowLineReady[SSD1306_PAGECOUNT] = {false, false, false, false};
 static mutex_t mutex = MUTEX_INIT;
 uint8_t bufferLineNo = 0;
 
@@ -324,7 +326,14 @@ static void *display_loop(void)
         {
             for (uint8_t i = 0; i < SSD1306_PAGECOUNT; i++)
             {
-                if (outputLineReady[i])
+                if (overflowLineReady[i])
+                {
+                    oledClearLine(i);
+                    oledWriteText(overflowBuffer[i]);
+                    memset(&overflowBuffer[i], 0, BUFFER_SIZE);
+                    overflowLineReady[i] = false;
+                }
+                else if (outputLineReady[i])
                 {
                     oledClearLine(i);
                     oledWriteText(displayBuffer[i]);
@@ -385,9 +394,19 @@ int oledPrint(uint8_t lineNo, char* text)
         outputLineReady[lineNo] = true;
         return 0;
     }
+    else if (! overflowLineReady[lineNo])
+    {
+        for (int i = 0; i < strlen(text); i++)
+        {
+            overflowBuffer[lineNo][i] = text[i];
+        }
+        overflowLineReady[lineNo] = true;
+        return 0;
+    }
     else
     {
-        printf("buffer busy with %s, dropping %s\n", displayBuffer[lineNo], text);
+        printf("buffer busy with %s, when doing %s, trying again...\n", displayBuffer[lineNo], text);
+        thread_yield();
         return 1;
     }
 }

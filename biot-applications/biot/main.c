@@ -40,6 +40,7 @@ static char display_stack[THREAD_STACKSIZE_DEFAULT];
 static char udp_stack[THREAD_STACKSIZE_DEFAULT];
 
 char dodagRoot[IPV6_ADDR_MAX_STR_LEN];
+char dodagParent[IPV6_ADDR_MAX_STR_LEN];
 
 extern void batch(const shell_command_t *command_list, char *line);
 extern int udp_send(char *addr_str, char *data);
@@ -55,36 +56,69 @@ int identify_cmd(int argc, char **argv)
     return 0;
 }
 
-int sendTimeRequest(void)
+bool knowsRoot(void)
+{
+    return (strlen(dodagRoot) > 0);
+}
+
+
+int findParent(void)
 {
     if (gnrc_rpl_instances[0].state == 0) {
+        puts("no parents...");
+        return 1;
+    }
+
+    gnrc_rpl_dodag_t *dodag = &gnrc_rpl_instances[0].dodag;
+    gnrc_rpl_parent_t *parents = dodag->parents;
+
+    ipv6_addr_to_str(dodagParent, &parents->addr, sizeof(dodagParent));
+    printf("parent: %s\n", dodagParent);
+    //udp_send(dodagRoot, "nudge");
+    return 0;
+}
+
+int findRoot(void)
+{
+    if (gnrc_rpl_instances[0].state == 0) {
+        puts("no dodag...");
+        return 1;
+    }
+
+    gnrc_rpl_dodag_t *dodag = &gnrc_rpl_instances[0].dodag;
+    ipv6_addr_to_str(dodagRoot, &dodag->dodag_id, sizeof(dodagRoot));
+    printf("dodag: %s\n", dodagRoot);
+    findParent();
+    //udp_send(dodagRoot, "nudge");
+    return 0;
+}
+
+
+int sendTimeRequest(void)
+{
+    if (findParent() == 0)
+    {
+        udp_send(dodagParent, "time-please");
+        return 0;
+    }
+    return 1;
+
+    /*if (gnrc_rpl_instances[0].state == 0) {
         return 1;
     }
 
     gnrc_rpl_dodag_t *dodag = &gnrc_rpl_instances[0].dodag;
     ipv6_addr_to_str(dodagRoot, &dodag->dodag_id, sizeof(dodagRoot));
     udp_send(dodagRoot, "time-please");
-    return 0;
+    return 0;*/
 }
 
-
-int nudgeRoot(void)
-{
-    if (gnrc_rpl_instances[0].state == 0) {
-        return 1;
-    }
-
-    gnrc_rpl_dodag_t *dodag = &gnrc_rpl_instances[0].dodag;
-    ipv6_addr_to_str(dodagRoot, &dodag->dodag_id, sizeof(dodagRoot));
-    udp_send(dodagRoot, "nudge");
-    return 0;
-}
 
 int callRoot_cmd(int argc, char **argv)
 {
-    if (nudgeRoot() == 0)
+    if (findRoot() == 0)
     {
-        printf("DODAG root: %s\n", dodagRoot);
+        findParent();
         return 0;
     }
     puts("I have no DODAG");
@@ -116,8 +150,7 @@ static const shell_command_t shell_commands[] = {
 #define INTERVAL (1000000U)
 void *housekeeping_handler(void *arg)
 {
-    //int factor = 1; 
-    int counter = 30;
+    int counter = 5;
     uint16_t lastSecs = 0;
     while(1)
     {
@@ -126,36 +159,60 @@ void *housekeeping_handler(void *arg)
         {
             if (tsecs % 2 == 0)
             {
-                puts("off...");
                 LED0_OFF;
                 thread_yield();
             }
             else
             {
-                puts("ON!");
                 LED0_ON;
                 thread_yield();
             }
-            if (counter++ > 30)
+            if (knowsRoot())
             {
-                oledPrint(1, "syncing" );
-                sendTimeRequest();
-                counter = 0;
-            }
-            else if (hasTimeChanged())
-            {
-                oledPrint(1, "changed");
+                if (counter++ > 30)
+                {
+#if !defined NOOLED
+                    oledPrint(1, "syncing" );
+#endif
+                    sendTimeRequest();
+                    counter = 0;
+                }
+                else if (hasTimeChanged())
+                {
+#if !defined NOOLED
+                    oledPrint(1, "changed");
+#endif
+                }
+                else
+                {
+#if !defined NOOLED
+                    oledPrint(1, "Node Member" );
+#endif
+                }
+#if !defined NOOLED
+                char st[12];
+                sprintf(st, "T=%u", tsecs);
+                oledPrint(2, st);
+#endif
             }
             else
             {
-                oledPrint(1, "OK" );
-            }
+                findRoot();
+                if (knowsRoot())
+                {
 #if !defined NOOLED
-            char st[12];
-            sprintf(st, "T=%u", tsecs);
-            oledPrint(2, st);
-            //puts(st);
+                    oledPrint(1, "Node Member" );
 #endif
+                    sendTimeRequest();
+                }
+                else
+                {
+#if !defined NOOLED
+                    oledPrint(1, "orphan..." );
+#endif
+                    //batch(shell_commands, "rpl init 6");
+                }
+            }
         }
         lastSecs = tsecs;
         thread_yield();
@@ -165,6 +222,7 @@ void *housekeeping_handler(void *arg)
 int main(void)
 {
     puts("Biotz Node\n");
+    LED0_OFF;
 
 
 #if !defined NOOLED
@@ -183,6 +241,7 @@ int main(void)
     identifyYourself();
 
     timeInit();
+    sendTimeRequest();
 
     char line_buf[SHELL_DEFAULT_BUFSIZE];
     shell_run(shell_commands, line_buf, SHELL_DEFAULT_BUFSIZE);

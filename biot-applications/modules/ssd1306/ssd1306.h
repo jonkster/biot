@@ -33,7 +33,7 @@ extern "C" {
 #define     SSD1306_PAGECOUNT               4 
 #define     SSD1306_COLCOUNT              128   
 
-#define SSD1306_LATENCY  5
+#define SSD1306_LATENCY  1
 
 
 
