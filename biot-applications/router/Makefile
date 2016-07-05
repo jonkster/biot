@@ -26,6 +26,8 @@ DIRS += ../modules/identify/
 USEMODULE += biotIdentify
 DIRS += ../modules/sendData/
 USEMODULE += sendData
+DIRS += ../modules/data/
+USEMODULE += dataCache
 #
 # create 2 network interfaces, one for 6lowPAN and one for SLIP
 GNRC_NETIF_NUMOF := 2

@@ -1,15 +1,11 @@
 /*
- * Copyright (C) 2015 Martine Lenders <mlenders@inf.fu-berlin.de>
+ * Copyright (C) 2016 Jon Kelly
  *
  * This file is subject to the terms and conditions of the GNU Lesser
  * General Public License v2.1. See the file LICENSE in the top level
  * directory for more details.
  */
 
-/**
- * @author      Martine Lenders <mlenders@inf.fu-berlin.de>
- * @author      Cenk Gündoğan <cnkgndgn@gmail.com>
- */
 
 #include <inttypes.h>
 #include <xtimer.h>
@@ -29,6 +25,7 @@
 #include "udp.h"
 #include "board.h"
 #include "../modules/identify/biotIdentify.h"
+#include "../modules/data/dataCache.h"
 
 #define XSTR(x) STR(x)
 #define STR(x) #x
@@ -55,6 +52,7 @@
 
 extern uint32_t getCurrentTime(void);
 extern void setCurrentTime(uint32_t t);
+//extern void addToDataCache(char *srcAdd, char* data);
 
 static int server_socket = -1;
 static char server_buffer[SERVER_BUFFER_SIZE];
@@ -119,7 +117,7 @@ static void *udp_server_loop(void)
             }
             else if (strncmp(server_buffer, "data:", 5) == 0)
             {
-                //printf("data from %s = %s\n", srcAdd, server_buffer+5);
+                addToDataCache(srcAdd, server_buffer+5);
             }
             else if (strcmp(server_buffer, "time-please") == 0)
             {

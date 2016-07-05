@@ -22,6 +22,8 @@
 #include "../modules/identify/biotIdentify.h"
 #include "../modules/sendData/sendData.h"
 
+#include "../modules/data/dataCache.h"
+
 #if (defined NOOLED)
 #pragma message "Assuming no OLED available therefore samr21-xpro board"
     #define LED1_ON do {} while(0);
@@ -146,6 +148,7 @@ void *housekeeping_handler(void *arg)
 {
     int counter = 0;
     uint16_t lastSecs = 0;
+    testHash();
     while(1)
     {
         uint16_t tsecs = getCurrentTime()/1500000;
@@ -206,6 +209,7 @@ int main(void)
     identifyYourself();
 
     timeInit();
+
 
     char line_buf[SHELL_DEFAULT_BUFSIZE];
     shell_run(shell_commands, line_buf, SHELL_DEFAULT_BUFSIZE);
