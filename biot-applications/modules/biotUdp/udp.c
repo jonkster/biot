@@ -105,9 +105,10 @@ static void *udp_server_loop(void)
         }
         else
         {
-            //puts("Received data: ");
             uint32_t rand = random_uint32();
-            //puts(server_buffer);
+            char srcAdd[IPV6_ADDR_MAX_STR_LEN];
+            inet_ntop(AF_INET6, &(src_addr.s6_addr), srcAdd, IPV6_ADDR_MAX_STR_LEN);
+            //printf("rx from %s %s\n", srcAdd, server_buffer);
             if (strcmp(server_buffer, "on") == 0)
             {
                 LED0_ON;
@@ -116,28 +117,20 @@ static void *udp_server_loop(void)
             {
                 identifyYourself();
             }
-            else if (strcmp(server_buffer, "nudge") == 0)
+            else if (strncmp(server_buffer, "data:", 5) == 0)
             {
-                char srcAdd[IPV6_ADDR_MAX_STR_LEN];
-                inet_ntop(AF_INET6, &(src_addr.s6_addr), srcAdd, IPV6_ADDR_MAX_STR_LEN);
-                printf("nudged from %s\n", srcAdd);
+                //printf("data from %s = %s\n", srcAdd, server_buffer+5);
             }
             else if (strcmp(server_buffer, "time-please") == 0)
             {
-                char srcAdd[IPV6_ADDR_MAX_STR_LEN];
-                inet_ntop(AF_INET6, &(src_addr.s6_addr), srcAdd, IPV6_ADDR_MAX_STR_LEN);
-
                 char ts[25];
                 sprintf(ts, "ts:%lu", getCurrentTime());
-                //udp_send("ff02::1", ts);
                 udp_send(srcAdd, ts);
             }
             else if (strncmp(server_buffer, "ts:", 3) == 0)
             {
                 uint32_t t = atoi(server_buffer+3);
 
-                char srcAdd[IPV6_ADDR_MAX_STR_LEN];
-                inet_ntop(AF_INET6, &(src_addr.s6_addr), srcAdd, IPV6_ADDR_MAX_STR_LEN);
                 printf("time received from %s : %s -> %lu\n", srcAdd, server_buffer, t);
                 setCurrentTime(t);
             }

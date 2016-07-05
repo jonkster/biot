@@ -24,6 +24,8 @@ DIRS += ../modules/biotUdp/
 USEMODULE += biotUdp
 DIRS += ../modules/identify/
 USEMODULE += biotIdentify
+DIRS += ../modules/sendData/
+USEMODULE += sendData
 
 # Include packages that pull up and auto-init the link layer.
 # NOTE: 6LoWPAN will be included if IEEE802.15.4 devices are present

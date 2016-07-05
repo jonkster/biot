@@ -40,35 +40,35 @@ int led_control(int argc, char **argv)
         if (strcmp(argv[1], "on") == 0) {
             led_status = true;
             LED0_ON;
-            LED1_OFF;
+            //LED1_OFF;
             return 0;
         }
         else if (strcmp(argv[1], "off") == 0) {
             led_status = false;
             LED0_OFF;
-            LED1_ON;
-            LED_RGB_OFF;
+            //LED1_ON;
+            //LED_RGB_OFF;
             return 0;
         }
         else if (strcmp(argv[1], "red") == 0) {
             led_status = false;
             LED0_ON;
-            LED_RGB_OFF;
-            LED_RGB_R_ON;
+            //LED_RGB_OFF;
+            //LED_RGB_R_ON;
             return 0;
         }
         else if (strcmp(argv[1], "green") == 0) {
             led_status = false;
             LED0_ON;
-            LED_RGB_OFF;
-            LED_RGB_G_ON;
+            //LED_RGB_OFF;
+            //LED_RGB_G_ON;
             return 0;
         }
         else if (strcmp(argv[1], "blue") == 0) {
             led_status = false;
             LED0_ON;
-            LED_RGB_OFF;
-            LED_RGB_B_ON;
+            //LED_RGB_OFF;
+            //LED_RGB_B_ON;
             return 0;
         }
     }
@@ -85,7 +85,7 @@ void btnCallback(void* arg)
     if (! isRoot)
     {
         isRoot = true;
-        LED_RGB_R_ON;
+        //LED_RGB_R_ON;
         LED0_ON;
         isRootPending = true;
     }
@@ -115,7 +115,7 @@ void setRoot(void)
     // add wired interface
     batch(shell_commands, "ifconfig 7 add affe::3");
     batch(shell_commands, "ncache add 7 affe::1");
-    LED_RGB_OFF;
+    //LED_RGB_OFF;
     LED0_ON;
 }
 
@@ -147,8 +147,8 @@ int main(void)
     puts("Type 'help' for a list of available commands");
 
     LED0_OFF;
-    LED1_ON;
-    LED_RGB_OFF;
+    //LED1_ON;
+    //LED_RGB_OFF;
 
     printf("Biotz\n");
     batch(shell_commands, "rpl init 7");

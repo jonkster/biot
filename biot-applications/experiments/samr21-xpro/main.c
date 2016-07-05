@@ -26,7 +26,7 @@
 #define Q_SZ    (8)
 static msg_t msg_q[Q_SZ];
 bool led_status = false;
-static char udp_stack[THREAD_STACKSIZE_DEFAULT];
+//static char udp_stack[THREAD_STACKSIZE_DEFAULT];
 static char housekeeping_stack[THREAD_STACKSIZE_DEFAULT];
 
 static const shell_command_t shell_commands[];
@@ -93,7 +93,7 @@ void btnCallback(void* arg)
 
 
 /* ########################################################################## */
-extern int adc_cmd(int argc, char **argv);
+//extern int adc_cmd(int argc, char **argv);
 
 static const shell_command_t shell_commands[] = {
 
@@ -101,9 +101,9 @@ static const shell_command_t shell_commands[] = {
 
     { "led", "use 'led on' to turn the LED on and 'led off' to turn the LED off", led_control },
 
-    { "udp", "send a message: udp <IPv6-address> <message>", udp_cmd },
+    //{ "udp", "send a message: udp <IPv6-address> <message>", udp_cmd },
 
-    { "adc", "read value of ADC", adc_cmd },
+    //{ "adc", "read value of ADC", adc_cmd },
 
     /* ########################################################################## */
     { NULL, NULL, NULL }
@@ -158,8 +158,8 @@ int main(void)
     batch(shell_commands, "rpl init 7");
     gpio_init_int(BUTTON_GPIO, GPIO_IN_PU, GPIO_RISING, (gpio_cb_t)btnCallback, NULL);
 
-    thread_create(udp_stack, sizeof(udp_stack), PRIO, THREAD_CREATE_STACKTEST, udp_server,
-                  NULL, "udp");
+    //thread_create(udp_stack, sizeof(udp_stack), PRIO, THREAD_CREATE_STACKTEST, udp_server,
+                  //NULL, "udp");
 
     thread_create(housekeeping_stack, sizeof(housekeeping_stack), THREAD_PRIORITY_MAIN - 3, THREAD_CREATE_STACKTEST, housekeeping_handler,
                   NULL, "housekeeping");

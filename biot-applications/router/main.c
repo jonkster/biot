@@ -164,9 +164,11 @@ void setRoot(void)
     // set up rpl root
     batch(shell_commands, "ifconfig 6 add affe::2");
     batch(shell_commands, "rpl root 1 affe::2");
+
     // add wired interface
     batch(shell_commands, "ifconfig 7 add affe::3");
-    batch(shell_commands, "ncache add 7 affe::1");
+    // assume outside world is at affe::5
+    batch(shell_commands, "ncache add 7 affe::5");
     LED_RGB_OFF;
     LED0_ON;
 }

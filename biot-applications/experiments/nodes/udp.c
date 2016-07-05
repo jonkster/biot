@@ -66,12 +66,12 @@ static void *udp_server_loop(void)
         res = recvfrom(server_socket, server_buffer, sizeof(server_buffer), 0, (struct sockaddr *)&src, &src_len);
 
         struct in6_addr src_addr = src.sin6_addr; 
-        printf("from: ");
+        //printf("from: ");
         for (int i = 0; i < 15; i++)
         {
-            printf("%d:", src_addr.s6_addr[i]);
+            //printf("%d:", src_addr.s6_addr[i]);
         }
-        printf("%d\n", src_addr.s6_addr[15]);
+        //printf("%d\n", src_addr.s6_addr[15]);
 
         if (res < 0)
         {
@@ -83,8 +83,8 @@ static void *udp_server_loop(void)
         }
         else
         {
-            puts("Received data: ");
-            puts(server_buffer);
+            //puts("Received data: ");
+            //puts(server_buffer);
             if (strcmp(server_buffer, "on") == 0)
             {
                 led_status = true;

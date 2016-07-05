@@ -9,6 +9,22 @@ RIOTBASE ?= $(CURDIR)/../../../../RIOT
 
 INCLUDES += -I$(CURDIR)
 
+ifeq (,$(SLIP_UART))
+  # set default (last available UART)
+  SLIP_UART="UART_DEV(UART_NUMOF-1)"
+endif
+ifeq (,$(SLIP_BAUDRATE))
+  # set default
+  SLIP_BAUDRATE=115200
+endif
+
+GNRC_NETIF_NUMOF := 2
+INCLUDES += -I$(CURDIR)
+CFLAGS += -DSLIP_UART=$(SLIP_UART)
+CFLAGS += -DSLIP_BAUDRATE=$(SLIP_BAUDRATE)
+
+USEMODULE += gnrc_slip
+
 # Include packages that pull up and auto-init the link layer.
 # NOTE: 6LoWPAN will be included if IEEE802.15.4 devices are present
 USEMODULE += gnrc_netdev_default

@@ -14,6 +14,7 @@ DIRS += ../modules/biotUdp/
 USEMODULE += biotUdp
 DIRS += ../modules/identify/
 USEMODULE += biotIdentify
+FEATURES_REQUIRED += periph_uart
 
 # create 2 network interfaces, one for 6lowPAN and one for SLIP
 GNRC_NETIF_NUMOF := 2
@@ -37,6 +38,7 @@ USEMODULE += gnrc_ipv6_router_default
 # Include SLIP package for IP over Serial communication
 USEMODULE += gnrc_slip
 USEMODULE += gnrc_udp
+USEMODULE += gnrc_sixlowpan_border_router_default
 # Add a routing protocol
 USEMODULE += gnrc_rpl
 # Add forwarding table

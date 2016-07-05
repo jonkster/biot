@@ -31,6 +31,7 @@
 #include "../modules/ssd1306/ssd1306.h"
 #include "../modules/biotUdp/udp.h"
 #include "../modules/identify/biotIdentify.h"
+#include "../modules/sendData/sendData.h"
 
 #define PRIO    (THREAD_PRIORITY_MAIN + 1)
 static char housekeeping_stack[THREAD_STACKSIZE_DEFAULT];
@@ -48,6 +49,7 @@ extern uint32_t getCurrentTime(void);
 extern bool isTimeSet(void);
 bool hasTimeChanged(void);
 extern void timeInit(void);
+extern void sendData(char *address, nodeData_t data);
 /* ########################################################################## */
 
 int identify_cmd(int argc, char **argv)
@@ -91,6 +93,21 @@ int findRoot(void)
     findParent();
     //udp_send(dodagRoot, "nudge");
     return 0;
+}
+
+void sendNodeData(uint32_t ts)
+{
+    if (strlen(dodagRoot) > 0)
+    {
+        nodeData_t data;
+        data.timeStamp = ts;
+        data.w = 1;
+        data.x = -1;
+        data.y = 0;
+        data.z = 0;
+        thread_yield();
+        sendData(dodagRoot, data);
+    }
 }
 
 
@@ -155,6 +172,7 @@ void *housekeeping_handler(void *arg)
     while(1)
     {
         uint16_t tsecs = getCurrentTime()/1500000;
+        sendNodeData(tsecs);
         if (tsecs != lastSecs)
         {
             if (tsecs % 2 == 0)
