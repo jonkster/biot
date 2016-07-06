@@ -8,6 +8,8 @@ ifeq ($(BOARD),samr21-xpro)
     CFLAGS += -DNOOLED=true
 endif
 
+CFLAGS += -DMAX_NODES=100
+
 # This has to be the absolute path to the RIOT base directory:
 RIOTBASE ?= $(CURDIR)/../../../RIOT
 
@@ -26,7 +28,7 @@ DIRS += ../modules/identify/
 USEMODULE += biotIdentify
 DIRS += ../modules/sendData/
 USEMODULE += sendData
-DIRS += ../modules/data/
+DIRS += ../modules/dataCache/
 USEMODULE += dataCache
 #
 # create 2 network interfaces, one for 6lowPAN and one for SLIP

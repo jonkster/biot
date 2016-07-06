@@ -18,11 +18,10 @@
 #include "net/gnrc/rpl/dodag.h"
 #include "shell.h"
 #include "../modules/ssd1306/ssd1306.h"
-#include "../modules/biotUdp/udp.h"
 #include "../modules/identify/biotIdentify.h"
 #include "../modules/sendData/sendData.h"
-
-#include "../modules/data/dataCache.h"
+#include "../modules/dataCache/dataCache.h"
+#include "../modules/biotUdp/udp.h"
 
 #if (defined NOOLED)
 #pragma message "Assuming no OLED available therefore samr21-xpro board"
@@ -89,6 +88,12 @@ int identify_cmd(int argc, char **argv)
     return 0;
 }
 
+int showNode_cmd(int argc, char **argv)
+{
+    dumpNodeData();
+    return 0;
+}
+
 
 
 bool isRoot = false;
@@ -117,6 +122,8 @@ static const shell_command_t shell_commands[] = {
     { "time", "show net time", time_cmd },
 
     { "retime", "reset net time", resetTime_cmd },
+
+    { "data", "show current node data", showNode_cmd },
 
     { "udp", "send a message: udp <IPv6-address> <message>", udp_cmd },
 
@@ -148,7 +155,6 @@ void *housekeeping_handler(void *arg)
 {
     int counter = 0;
     uint16_t lastSecs = 0;
-    testHash();
     while(1)
     {
         uint16_t tsecs = getCurrentTime()/1500000;
@@ -190,7 +196,6 @@ int main(void)
 {
     puts("Biotz Root Node\n");
     LED0_OFF;
-
 
 #if !defined NOOLED
     thread_create(display_stack, sizeof(display_stack), PRIO, THREAD_CREATE_STACKTEST, (thread_task_func_t) display_handler,

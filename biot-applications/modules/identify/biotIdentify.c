@@ -25,7 +25,7 @@
     #define LED_RGB_G_ON do {} while (0)
     #define LED_RGB_B_ON do {} while (0)
 #else
-    #include "../modules/ssd1306/ssd1306.h"
+    #include "../ssd1306/ssd1306.h"
 #endif
 
 

@@ -15,6 +15,8 @@ RIOTBASE ?= $(CURDIR)/../../../RIOT
 ## it go to the beginning, before the standard includes.
 CFLAGS += -I$(CURDIR)
 
+CFLAGS += -DMAX_NODES=100
+
 # adding biot specific modules
 ifeq ($(BOARD),samr21-zllk)
 	DIRS += ../modules/ssd1306/
@@ -26,6 +28,8 @@ DIRS += ../modules/identify/
 USEMODULE += biotIdentify
 DIRS += ../modules/sendData/
 USEMODULE += sendData
+DIRS += ../modules/dataCache/
+USEMODULE += dataCache
 
 # Include packages that pull up and auto-init the link layer.
 # NOTE: 6LoWPAN will be included if IEEE802.15.4 devices are present

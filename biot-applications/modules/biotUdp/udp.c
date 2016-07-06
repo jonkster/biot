@@ -22,10 +22,10 @@
 
 #include <unistd.h>
 #include "msg.h"
-#include "udp.h"
 #include "board.h"
-#include "../modules/identify/biotIdentify.h"
-#include "../modules/data/dataCache.h"
+#include "udp.h"
+#include "../identify/biotIdentify.h"
+#include "../dataCache/dataCache.h"
 
 #define XSTR(x) STR(x)
 #define STR(x) #x
@@ -52,12 +52,13 @@
 
 extern uint32_t getCurrentTime(void);
 extern void setCurrentTime(uint32_t t);
-//extern void addToDataCache(char *srcAdd, char* data);
 
 static int server_socket = -1;
 static char server_buffer[SERVER_BUFFER_SIZE];
 static msg_t msg_q[MUDP_Q_SZ];
 static int udp_send_jk(struct in6_addr destAdd, char *data);
+
+hash_t *nodeData;
 
 static void *udp_server_loop(void)
 {
@@ -105,7 +106,9 @@ static void *udp_server_loop(void)
         {
             uint32_t rand = random_uint32();
             char srcAdd[IPV6_ADDR_MAX_STR_LEN];
+            char selfAdd[IPV6_ADDR_MAX_STR_LEN];
             inet_ntop(AF_INET6, &(src_addr.s6_addr), srcAdd, IPV6_ADDR_MAX_STR_LEN);
+            inet_ntop(AF_INET6, &(server_addr.sin6_addr), selfAdd, IPV6_ADDR_MAX_STR_LEN);
             //printf("rx from %s %s\n", srcAdd, server_buffer);
             if (strcmp(server_buffer, "on") == 0)
             {
@@ -117,7 +120,8 @@ static void *udp_server_loop(void)
             }
             else if (strncmp(server_buffer, "data:", 5) == 0)
             {
-                addToDataCache(srcAdd, server_buffer+5);
+                setValue(nodeData, srcAdd, server_buffer+5);
+                //addToDataCache(srcAdd, server_buffer+5);
             }
             else if (strcmp(server_buffer, "time-please") == 0)
             {
@@ -127,10 +131,12 @@ static void *udp_server_loop(void)
             }
             else if (strncmp(server_buffer, "ts:", 3) == 0)
             {
-                uint32_t t = atoi(server_buffer+3);
-
-                printf("time received from %s : %s -> %lu\n", srcAdd, server_buffer, t);
-                setCurrentTime(t);
+                if (srcAdd != selfAdd)
+                {
+                    uint32_t t = atoi(server_buffer+3);
+                    printf("time received from %s : %s -> %lu\n", srcAdd, server_buffer, t);
+                    setCurrentTime(t);
+                }
             }
             else if (strcmp(server_buffer, "off") == 0)
             {
@@ -297,6 +303,7 @@ void *udp_server(void *arg)
     (void) arg;
     msg_init_queue(msg_q, MUDP_Q_SZ);
     random_init(12345);
+    nodeData = newHash(MAX_NODES);
 
     udp_server_loop();
 
@@ -312,6 +319,17 @@ int udp_cmd(int argc, char **argv)
 
     printf("usage: %s <IPv6-address> <message>\n", argv[0]);
     return 1;
+}
+
+void dumpNodeData(void)
+{
+    uint16_t count = nodeData->currentSize;
+    printf("hash has %d values\n", count);
+    for (uint8_t i = 0; i < count; i++)
+    {
+        char *key = nodeData->keySet[i];
+        printf("key:'%s' = '%s'\n", key, getValue(nodeData, key));
+    }
 }
 
 /** @} */
