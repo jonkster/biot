@@ -118,6 +118,14 @@ static void *udp_server_loop(void)
             {
                 identifyYourself();
             }
+            else if (strcmp(server_buffer, "get-data") == 0)
+            {
+                char *json = nodeDataJson();
+                thread_yield();
+                udp_send(srcAdd, json);
+                free(json);
+                thread_yield();
+            }
             else if (strncmp(server_buffer, "data:", 5) == 0)
             {
                 setValue(nodeData, srcAdd, server_buffer+5);
@@ -319,6 +327,27 @@ int udp_cmd(int argc, char **argv)
 
     printf("usage: %s <IPv6-address> <message>\n", argv[0]);
     return 1;
+}
+
+char *nodeDataJson(void)
+{
+    uint16_t count = nodeData->currentSize;
+    char json[MAX_MESSAGE_LENGTH];
+    sprintf(json, "{\"c\":%d,\"n\":[", count);
+    for (uint8_t i = 0; i < count; i++)
+    {
+        if (i != 0)
+        {
+            // add leading comma if not first line
+            strncat(json, ",", 1);
+        }
+        char *key = nodeData->keySet[i];
+        char jsonBit[MAX_MESSAGE_LENGTH/10];
+        sprintf(jsonBit, "{\"a\":\"%s\",\"v\":\"%s\"}", key, getValue(nodeData, key));
+        strncat(json, jsonBit, MAX_MESSAGE_LENGTH - strlen(json) - 1);
+    }
+    strncat(json, "]}", MAX_MESSAGE_LENGTH - strlen(json) - 1);
+    return strdup(json);
 }
 
 void dumpNodeData(void)

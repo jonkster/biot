@@ -22,6 +22,7 @@
 #include "../modules/sendData/sendData.h"
 #include "../modules/dataCache/dataCache.h"
 #include "../modules/biotUdp/udp.h"
+//#include "../modules/biotCoap/biotCoapHandler.h"
 
 #if (defined NOOLED)
 #pragma message "Assuming no OLED available therefore samr21-xpro board"
@@ -42,9 +43,11 @@ static char housekeeping_stack[THREAD_STACKSIZE_DEFAULT];
 #if !defined NOOLED
 static char display_stack[THREAD_STACKSIZE_DEFAULT];
 #endif
-static char udp_stack[THREAD_STACKSIZE_DEFAULT];
+static char udp_stack[2*THREAD_STACKSIZE_DEFAULT];
+//static char coap_stack[THREAD_STACKSIZE_DEFAULT];
 
 char dodagRoot[] = "affe::2";
+bool coapRunning = false;
 
 extern void batch(const shell_command_t *command_list, char *line);
 extern int udp_send(char *addr_str, char *data);
@@ -94,6 +97,16 @@ int showNode_cmd(int argc, char **argv)
     return 0;
 }
 
+int startCoap_cmd(int argc, char **argv)
+{
+    if (! coapRunning)
+    {
+        //thread_create(coap_stack, sizeof(coap_stack), PRIO, THREAD_CREATE_STACKTEST, biotcoap_server, NULL, "coap");
+        coapRunning = true;
+        return 0;
+    }
+    return 1;
+}
 
 
 bool isRoot = false;
@@ -116,6 +129,8 @@ void btnCallback(void* arg)
 static const shell_command_t shell_commands[] = {
     /* Add a new shell commands here */
     { "identify", "visually identify board", identify_cmd },
+
+    { "coap", "start coap server", startCoap_cmd },
 
     { "sync", "synchronise time across nodes", sync_cmd },
 
@@ -154,11 +169,11 @@ void setRoot(void)
 void *housekeeping_handler(void *arg)
 {
     int counter = 0;
-    uint16_t lastSecs = 0;
+    uint32_t lastSecs = 0;
     while(1)
     {
-        uint16_t tsecs = getCurrentTime()/1500000;
-        if (tsecs != lastSecs)
+        uint32_t secs = getCurrentTime()/1500000;
+        if (secs != lastSecs)
         {
             if (isRootPending)
             {
@@ -171,7 +186,7 @@ void *housekeeping_handler(void *arg)
                 counter = 0;
             }
 
-            if (tsecs % 2 == 0)
+            if (secs % 2 == 0)
             {
                 LED0_ON;
                 thread_yield();
@@ -183,11 +198,11 @@ void *housekeeping_handler(void *arg)
             }
 #if !defined NOOLED
             char st[12];
-            sprintf(st, "T=%u", tsecs);
+            sprintf(st, "T=%u", secs);
             oledPrint(2, st);
 #endif
         }
-        lastSecs = tsecs;
+        lastSecs = secs;
         thread_yield();
     }
 }
@@ -198,15 +213,13 @@ int main(void)
     LED0_OFF;
 
 #if !defined NOOLED
-    thread_create(display_stack, sizeof(display_stack), PRIO, THREAD_CREATE_STACKTEST, (thread_task_func_t) display_handler,
-                  NULL, "display");
+    thread_create(display_stack, sizeof(display_stack), PRIO, THREAD_CREATE_STACKTEST, (thread_task_func_t) display_handler, NULL, "display");
 #endif
 
-    thread_create(housekeeping_stack, sizeof(housekeeping_stack), PRIO, THREAD_CREATE_STACKTEST, housekeeping_handler,
-                  NULL, "housekeeping");
+    thread_create(housekeeping_stack, sizeof(housekeeping_stack), PRIO, THREAD_CREATE_STACKTEST, housekeeping_handler, NULL, "housekeeping");
 
-    thread_create(udp_stack, sizeof(udp_stack), PRIO, THREAD_CREATE_STACKTEST, udp_server,
-                  NULL, "udp");
+    thread_create(udp_stack, sizeof(udp_stack), PRIO, THREAD_CREATE_STACKTEST, udp_server, NULL, "udp");
+
 
     batch(shell_commands, "rpl init 6");
     gpio_init_int(BUTTON_GPIO, GPIO_IN_PU, GPIO_RISING, (gpio_cb_t)btnCallback, NULL);

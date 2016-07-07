@@ -30,6 +30,11 @@ DIRS += ../modules/sendData/
 USEMODULE += sendData
 DIRS += ../modules/dataCache/
 USEMODULE += dataCache
+#DIRS += ../modules/biotCoap/
+#USEMODULE += biotCoap
+
+
+
 #
 # create 2 network interfaces, one for 6lowPAN and one for SLIP
 GNRC_NETIF_NUMOF := 2
@@ -57,10 +62,10 @@ USEMODULE += auto_init_gnrc_netif
 #USEMODULE += gnrc_ipv6_router_default
 USEMODULE += gnrc_ipv6
 USEMODULE += gnrc_icmpv6_echo
-USEMODULE += gnrc_ndp
+#USEMODULE += gnrc_ndp
 
 # UDP communication stuff
-USEMODULE += gnrc_udp
+#USEMODULE += gnrc_udp
 USEMODULE += gnrc_conn_udp
 # needed by biotUdp
 USEMODULE += posix
@@ -76,6 +81,9 @@ USEMODULE += fib
 
 # Use minimal standard random number generator
 USEMODULE += prng_minstd
+
+# use COAP
+#USEPKG += microcoap
 
 
 # Add the shell and some shell commands

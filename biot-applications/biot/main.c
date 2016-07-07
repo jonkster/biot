@@ -18,6 +18,7 @@
  * @}
  */
 
+#include <random.h>
 #include <stdio.h>
 #include <thread.h>
 #include <xtimer.h>
@@ -101,10 +102,10 @@ void sendNodeData(uint32_t ts)
     {
         nodeData_t data;
         data.timeStamp = ts;
-        data.w = 1;
-        data.x = -1;
-        data.y = 0;
-        data.z = 0;
+        data.w = random_uint32();
+        data.x = random_uint32();
+        data.y = random_uint32();
+        data.z = random_uint32();
         thread_yield();
         sendData(dodagRoot, data);
     }
@@ -168,14 +169,20 @@ static const shell_command_t shell_commands[] = {
 void *housekeeping_handler(void *arg)
 {
     int counter = 5;
-    uint16_t lastSecs = 0;
+    uint32_t lastSecs = 0;
     while(1)
     {
-        uint16_t tsecs = getCurrentTime()/1500000;
-        if (tsecs != lastSecs)
+        uint32_t secs = getCurrentTime()/1500000;
+        uint32_t mSecs = getCurrentTime()/1500;
+        if (mSecs % 50 == 0)
         {
-sendNodeData(tsecs);
-            if (tsecs % 2 == 0)
+            sendNodeData(mSecs);
+            thread_yield();
+        }
+
+        if (secs != lastSecs)
+        {
+            if (secs % 2 == 0)
             {
                 LED0_OFF;
                 thread_yield();
@@ -209,7 +216,7 @@ sendNodeData(tsecs);
                 }
 #if !defined NOOLED
                 char st[12];
-                sprintf(st, "T=%u", tsecs);
+                sprintf(st, "T=%lu", secs);
                 oledPrint(2, st);
 #endif
             }
@@ -232,7 +239,7 @@ sendNodeData(tsecs);
                 }
             }
         }
-        lastSecs = tsecs;
+        lastSecs = secs;
         thread_yield();
     }
 }
