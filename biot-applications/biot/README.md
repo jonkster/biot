@@ -1,3 +1,1 @@
-# network stuff with OLED and RPL
-
-
+# Biot node code
