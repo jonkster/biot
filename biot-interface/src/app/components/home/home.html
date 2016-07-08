@@ -4,3 +4,32 @@
 This application is currently not intended to be used other than as an
 experimental platform. See: <a href="./#/about">About </a>
 </p>
+
+<div>Currently Monitoring Biotz Nodes: <b>{{ monitoring }}</b></div>
+<button [ngClass]="{'active': monitoring}" (click)="toggleMonitoring()">Toggle Monitor</button>
+
+<hr/>
+<div>Biotz Nodes detected: {{ biotzData.count }}</div>
+<table>
+    <thead>
+    <tr>
+        <th>Biotz Address</th>
+        <th>timestamp</th>
+        <th>w</th>
+        <th>x</th>
+        <th>y</th>
+        <th>z</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr *ngFor="let biot of biotzData.nodes">
+        <td>{{ biot.address }}</td>
+        <td>{{ biot.time }}</td>
+        <td>{{ biot.w }}</td>
+        <td>{{ biot.x }}</td>
+        <td>{{ biot.y }}</td>
+        <td>{{ biot.z }}</td>
+    </tr>
+    </tbody>
+</table>
+<hr/>

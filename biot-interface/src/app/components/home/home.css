@@ -1,0 +1,19 @@
+table {
+    border-collapse: collapse;
+    table-layout:fixed;
+}
+
+table, th, td {
+    border: 1px solid black;
+}
+
+tr:nth-child(even) {background-color: #f2f2f2}
+
+td {
+        width: 15em;
+}
+
+.active {
+    color: red;
+}
+
