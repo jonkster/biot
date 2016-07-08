@@ -66,6 +66,8 @@ function getRoot(req, res, next) {
 
 function getBiotData(req, res, next) {
     sendBiotzRouterMessage();
+    res.header("Access-Control-Allow-Origin", "*"); 
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
     res.setHeader('Content-Type', 'application/json');
 
     res.send(biotzData);
@@ -85,6 +87,8 @@ function getBiot(req, res, next) {
         }
     }
     sendBiotzRouterMessage();
+    res.header("Access-Control-Allow-Origin", "*"); 
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
     res.setHeader('Content-Type', 'application/json');
     res.send(value);
     next();
@@ -93,6 +97,8 @@ function getBiot(req, res, next) {
 function getBiotCount(req, res, next) {
 
     var addresses = [];
+    res.header("Access-Control-Allow-Origin", "*"); 
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
     res.setHeader('Content-Type', 'application/json');
     res.send(biotzData.c);
     sendBiotzRouterMessage();
@@ -125,6 +131,8 @@ function getBiotQuality(req, res, next) {
         }
     }
     sendBiotzRouterMessage();
+    res.header("Access-Control-Allow-Origin", "*"); 
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
     res.setHeader('Content-Type', 'application/json');
     res.send(value);
     next();
@@ -142,6 +150,8 @@ function getBiotz(req, res, next) {
         }
     }
     sendBiotzRouterMessage();
+    res.header("Access-Control-Allow-Origin", "*"); 
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
     res.setHeader('Content-Type', 'application/json');
     res.send(addresses);
     next();
