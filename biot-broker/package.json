@@ -1,0 +1,25 @@
+{
+  "name": "biotz-udp",
+  "version": "1.0.0",
+  "description": "Service for accessing Biotz data.",
+  "main": "biot-broker.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node ./biot-broker.js"
+  },
+  "contributors": [
+    "Jon Kelly <jonk@bigpond.com>"
+  ],
+  "license": "0BSD",
+  "dependencies": {
+    "restify": "^4.1.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jonkster/biotz-broker.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jonkster/biotz-broker/issues"
+  },
+  "homepage": "https://github.com/jonkster/biotz-broker#readme"
+}
