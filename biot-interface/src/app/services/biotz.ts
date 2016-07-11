@@ -22,4 +22,9 @@ export class Biotz {
     return this.http.get(url)
       .map((response) => response.json());
   }
+
+  synchronise() {
+    var result = this.makeBrokerRequest('biotz/synchronise');
+    return result;
+  }
 }

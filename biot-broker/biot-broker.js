@@ -64,12 +64,28 @@ function biotIdentify(req, res, next) {
     next();
 }
 
+function biotSync(req, res, next) {
+    var message = new Buffer('sync');
+    var client = dgram.createSocket('udp6');
+
+    client.send(message, 0, message.length, BIOTZ_UDP_PORT, BIOTZ_ROUTER_HOST, function(err, bytes) {
+        if (err)
+        {
+            console.log('Error:', err);
+        }
+        client.close();
+    });
+    res.send('OK');
+    next();
+}
+
 function getRoot(req, res, next) {
     res.setHeader('Content-Type', 'text/plain');
     res.send("Biotz Broker v0.0\n" + 
         "eg http://" + BROKER_HOST + ":" + BROKER_HTTP_PORT + "/\n" +
         "   http://" + BROKER_HOST + ":" + BROKER_HTTP_PORT + "/biotz\n" +
         "   http://" + BROKER_HOST + ":" + BROKER_HTTP_PORT + "/biotz/count\n" +
+        "   http://" + BROKER_HOST + ":" + BROKER_HTTP_PORT + "/biotz/synchronise\n" +
         "   http://" + BROKER_HOST + ":" + BROKER_HTTP_PORT + "/biotz/addresses\n" +
         "   http://" + BROKER_HOST + ":" + BROKER_HTTP_PORT + "/biotz/addresses/XXXXXX\n" +
         "   http://" + BROKER_HOST + ":" + BROKER_HTTP_PORT + "/biotz/addresses/XXXXXX/identify\n" +
@@ -178,6 +194,7 @@ var brokerListener = restify.createServer();
 brokerListener.get('/', getRoot);
 brokerListener.get('/biotz', getBiotData);
 brokerListener.get('/biotz/count', getBiotCount);
+brokerListener.get('/biotz/synchronise', biotSync);
 brokerListener.get('/biotz/addresses', getBiotz);
 brokerListener.get('/biotz/addresses/:address', getBiot);
 brokerListener.get('/biotz/addresses/:address/identify', biotIdentify);

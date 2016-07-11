@@ -113,6 +113,13 @@ static void *udp_server_loop(void)
             {
                     udp_send(server_buffer+6, "identify");
             }
+            else if (strcmp(server_buffer, "sync") == 0)
+            {
+                puts("Synchronising...");
+                char ts[15];
+                sprintf(ts, "ts:%lu", getCurrentTime());
+                udp_send("ff02::1", ts);
+            }
             else if (strcmp(server_buffer, "get-data") == 0)
             {
                 char *json = nodeDataJson();

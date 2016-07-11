@@ -25,10 +25,8 @@ void identifyYourself(void)
     {
         for (uint8_t j = 0; j < 10; j++)
         {
-            LED_RGB_G_ON;
             LED0_OFF;
             xtimer_usleep(50000);
-            LED_RGB_OFF;
             LED0_ON;
             xtimer_usleep(50000);
         }

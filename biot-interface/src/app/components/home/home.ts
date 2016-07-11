@@ -81,6 +81,10 @@ export class Home {
         this.biotz.identify(addr).subscribe();;
     }
 
+    synchronise() {
+        this.biotz.synchronise().subscribe();;
+    }
+
     toggleMonitoring() {
         this.monitoring = ! this.monitoring;
         if (this.monitoring) {
