@@ -13,6 +13,7 @@
 #include "../modules/biotUdp/udp.h"
 #include "../modules/identify/biotIdentify.h"
 #include "../modules/sendData/sendData.h"
+#include "../modules/position/position.h"
 
 #define PRIO    (THREAD_PRIORITY_MAIN + 1)
 static char housekeeping_stack[THREAD_STACKSIZE_DEFAULT];
@@ -31,6 +32,7 @@ extern bool isTimeSet(void);
 bool hasTimeChanged(void);
 extern void timeInit(void);
 extern void sendData(char *address, nodeData_t data);
+quat_t currentPosition;
 /* ########################################################################## */
 
 int identify_cmd(int argc, char **argv)
@@ -76,16 +78,30 @@ int findRoot(void)
     return 0;
 }
 
+void updatePosition(void)
+{
+    // make a rotation to apply - this will ultimately come from IMU unit be we
+    // will simulate it.
+    quat_t rot;
+    makeIdentityQuat(&rot);
+    rot.w = 0.5;
+    rot.x = 0.00001;
+    rot.y = 0.000002;
+    rot.z = getCurrentTime()/15000000;
+    quatNormalise(&rot);
+    currentPosition = quatMultiply(currentPosition, rot);
+}
+
 void sendNodeData(uint32_t ts)
 {
     if (strlen(dodagRoot) > 0)
     {
         nodeData_t data;
         data.timeStamp = ts;
-        data.w = random_uint32();
-        data.x = random_uint32();
-        data.y = random_uint32();
-        data.z = random_uint32();
+        data.w = currentPosition.w;
+        data.x = currentPosition.x;
+        data.y = currentPosition.y;
+        data.z = currentPosition.z;
         thread_yield();
         sendData(dodagRoot, data);
     }
@@ -156,6 +172,7 @@ void *housekeeping_handler(void *arg)
         uint32_t mSecs = getCurrentTime()/1500;
         if (mSecs % 50 == 0)
         {
+            updatePosition();
             sendNodeData(mSecs);
             thread_yield();
         }
@@ -225,10 +242,14 @@ void *housekeeping_handler(void *arg)
     }
 }
 
+
 int main(void)
 {
     puts("Biotz Node\n");
     LED0_OFF;
+
+    makeIdentityQuat(&currentPosition);
+    dumpQuat(currentPosition);
 
 
 #if !defined NOOLED
