@@ -120,7 +120,6 @@ void btnCallback(void* arg)
         LED0_ON;
         isRootPending = true;
     }
-    //sync();
 }
 
 
@@ -211,6 +210,7 @@ int main(void)
 {
     puts("Biotz Root Node\n");
     LED0_OFF;
+    setRoot();
 
 #if !defined NOOLED
     thread_create(display_stack, sizeof(display_stack), PRIO, THREAD_CREATE_STACKTEST, (thread_task_func_t) display_handler, NULL, "display");
@@ -227,6 +227,7 @@ int main(void)
     identifyYourself();
 
     timeInit();
+    sync();
 
 
     char line_buf[SHELL_DEFAULT_BUFSIZE];
