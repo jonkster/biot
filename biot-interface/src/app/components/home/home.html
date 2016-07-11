@@ -1,37 +1,43 @@
 <h3>Biotz</h3>
 
-<p>
-This application is currently not intended to be used other than as an
-experimental platform. See: <a href="./#/about">About </a>
-</p>
+<div home>
+    <p>
+    This application is currently not intended to be used other than as an
+    experimental platform. See: <a href="./#/about">About </a>
+    </p>
 
-<div>Currently Monitoring Biotz Nodes: <b>{{ monitoring }}</b></div>
-<button [ngClass]="{'active': monitoring}" (click)="toggleMonitoring()">Toggle Monitor</button>
+    <div>Currently Monitoring Biotz Nodes: <b>{{ monitoring }}</b></div>
+    <button [ngClass]="{'active': monitoring}" (click)="toggleMonitoring()">Toggle Monitor</button>
 
-<hr/>
-<div>Biotz Nodes detected: {{ biotzData.count }}</div>
-<table>
-    <thead>
-    <tr>
-        <th>Biotz Address</th>
-        <th>timestamp</th>
-        <th>w</th>
-        <th>x</th>
-        <th>y</th>
-        <th>z</th>
-        <th>Identify Node (unavailable if monitoring)</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr *ngFor="let biot of biotzData.nodes">
-        <td>{{ biot.address }}</td>
-        <td>{{ biot.time }}</td>
-        <td>{{ biot.w }}</td>
-        <td>{{ biot.x }}</td>
-        <td>{{ biot.y }}</td>
-        <td>{{ biot.z }}</td>
-        <td><button [disabled]="monitoring" (click)="identify(biot.address)">Identify</button></td>
-    </tr>
-    </tbody>
-</table>
-<hr/>
+    <hr/>
+    <h3>Node Position Data</h3>
+    <div>Biotz Nodes detected: {{ biotzData.count }}</div>
+    <table>
+        <thead>
+            <tr>
+                <th>Biotz Address</th>
+                <th>timestamp</th>
+                <th>w</th>
+                <th>x</th>
+                <th>y</th>
+                <th>z</th>
+                <th>Identify++</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let biot of biotzData.nodes">
+                <td><span [style.background]="'#' + biot.colour">&nbsp;&nbsp;</span>{{ biot.address }}</td>
+                <td>{{ biot.time }}</td>
+                <td>{{ biot.w }}</td>
+                <td>{{ biot.x }}</td>
+                <td>{{ biot.y }}</td>
+                <td>{{ biot.z }}</td>
+                <td><button [disabled]="monitoring" (click)="identify(biot.address)">Identify</button></td>
+            </tr>
+        </tbody>
+    </table>
+    <div style="float:right; clear:both; font-size:smaller;">++Identify can only be done if not actively monitoring nodes</div>
+
+    <div myThreeD>
+    </div>
+</div>

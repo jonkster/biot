@@ -1,1 +1,0 @@
-eog /home/jonk/Downloads/favicon.ico /home/jonk/KELLY/Projects/recogniser/interface/src/favicon.ico /home/jonk/KELLY/Projects/tracker/interface/favicon.ico /home/jonk/KELLY/skunk/angular2-seed/src/favicon.ico
