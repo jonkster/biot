@@ -81,13 +81,18 @@ int findRoot(void)
 void updatePosition(void)
 {
     // make a rotation to apply - this will ultimately come from IMU unit be we
-    // will simulate it.
+    // will simulate a rotation here for the time being.
     quat_t rot;
     makeIdentityQuat(&rot);
-    rot.w = 0.5;
-    rot.x = 0.00001;
-    rot.y = 0.000002;
-    rot.z = getCurrentTime()/15000000;
+    rot.w = getCurrentTime()/1500000;
+    rot.x = 0.0001;
+    rot.y = 0.00002;
+    rot.z = getCurrentTime()/150000000;
+    if (random_uint32() > 2000000000 )
+        rot.w = - rot.w;
+    else
+        rot.x = getCurrentTime()/15000;
+
     quatNormalise(&rot);
     currentPosition = quatMultiply(currentPosition, rot);
 }

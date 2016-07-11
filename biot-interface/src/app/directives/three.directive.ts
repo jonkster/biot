@@ -37,7 +37,7 @@ export class ThreeDirective {
         node.position.z = z;
         this.scene.add(node);
 	var labelName = name.replace(/:/g, ":\n");
-        var label = this.createLabel(labelName, x*2, -80, -100, 15, "white", "black", 10);
+        var label = this.createLabel(labelName, x*2, -80, -200, 15, "white", "black", 10);
         this.scene.add(label);
     }
 
@@ -95,8 +95,8 @@ export class ThreeDirective {
 
         this.scene = new THREE.Scene();
 
-        this.camera = new THREE.PerspectiveCamera( 75, this.sizeX/this.sizeY, 1, 10000 );
-        this.camera.position.z = 100;
+        this.camera = new THREE.PerspectiveCamera( 45, this.sizeX/this.sizeY, 1, 10000 );
+        this.camera.position.z = 200;
         this.camera.lookAt = new THREE.Vector3(0, 0, 0);
 
         var hemiLight = new THREE.HemisphereLight(0xddddff, 0xddffdd, 0.6);
