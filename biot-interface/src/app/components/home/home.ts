@@ -15,7 +15,7 @@ import {Biotz} from '../../services/biotz';
 export class Home {
     private biotzData:any = {};
     private monitoring:boolean = true;
-    private counter:integer = 0;
+    private counter:number = 0;
 
     constructor(public biotz:Biotz) {}
 
@@ -46,6 +46,10 @@ export class Home {
             });
     }
 
+    identify(addr) {
+        this.biotz.identify(addr).subscribe();;
+    }
+
     toggleMonitoring() {
         this.monitoring = ! this.monitoring;
         if (this.monitoring) {
@@ -56,7 +60,7 @@ export class Home {
     }
 
     updateData() {
-        if (this.counter % 10 == 0)
+        if (this.counter % 5 == 0)
             this.getData();
 
         if (this.monitoring) {

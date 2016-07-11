@@ -176,11 +176,12 @@ void *housekeeping_handler(void *arg)
             {
                 if (counter++ > 30)
                 {
+                    /*
 #if !defined NOOLED
                     oledPrint(1, "syncing" );
 #endif
                     sendTimeRequest();
-                    counter = 0;
+                    counter = 0;*/
                 }
                 else if (hasTimeChanged())
                 {

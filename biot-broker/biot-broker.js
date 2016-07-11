@@ -48,6 +48,22 @@ brokerUdpListener.on('message', function (message, remote) {
 // Listen for and act on Broker HTTP Requests
 var restify = require('restify');
 
+function biotIdentify(req, res, next) {
+    var address = req.params['address'];
+    var message = new Buffer('nudge:' + address);
+    var client = dgram.createSocket('udp6');
+
+    client.send(message, 0, message.length, BIOTZ_UDP_PORT, BIOTZ_ROUTER_HOST, function(err, bytes) {
+        if (err)
+        {
+            console.log('Error:', err);
+        }
+        client.close();
+    });
+    res.send('OK');
+    next();
+}
+
 function getRoot(req, res, next) {
     res.setHeader('Content-Type', 'text/plain');
     res.send("Biotz Broker v0.0\n" + 
@@ -56,6 +72,7 @@ function getRoot(req, res, next) {
         "   http://" + BROKER_HOST + ":" + BROKER_HTTP_PORT + "/biotz/count\n" +
         "   http://" + BROKER_HOST + ":" + BROKER_HTTP_PORT + "/biotz/addresses\n" +
         "   http://" + BROKER_HOST + ":" + BROKER_HTTP_PORT + "/biotz/addresses/XXXXXX\n" +
+        "   http://" + BROKER_HOST + ":" + BROKER_HTTP_PORT + "/biotz/addresses/XXXXXX/identify\n" +
         "   http://" + BROKER_HOST + ":" + BROKER_HTTP_PORT + "/biotz/addresses/XXXXXX/w\n" +
         "   http://" + BROKER_HOST + ":" + BROKER_HTTP_PORT + "/biotz/addresses/XXXXXX/x\n" +
         "   http://" + BROKER_HOST + ":" + BROKER_HTTP_PORT + "/biotz/addresses/XXXXXX/y\n" +
@@ -163,6 +180,7 @@ brokerListener.get('/biotz', getBiotData);
 brokerListener.get('/biotz/count', getBiotCount);
 brokerListener.get('/biotz/addresses', getBiotz);
 brokerListener.get('/biotz/addresses/:address', getBiot);
+brokerListener.get('/biotz/addresses/:address/identify', biotIdentify);
 brokerListener.get('/biotz/addresses/:address/:quality', getBiotQuality);
 
 brokerListener.listen(BROKER_HTTP_PORT, BROKER_HOST, function() {

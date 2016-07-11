@@ -11,6 +11,11 @@ export class Biotz {
     return result;
   }
 
+  identify(addr) {
+    var result = this.makeBrokerRequest('biotz/addresses/' + addr + '/identify');
+    return result;
+  }
+
   private makeBrokerRequest(path: string) {
     var url = "http://localhost:8889/" + path ;
 

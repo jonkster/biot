@@ -100,14 +100,18 @@ static void *udp_server_loop(void)
             char selfAdd[IPV6_ADDR_MAX_STR_LEN];
             inet_ntop(AF_INET6, &(src_addr.s6_addr), srcAdd, IPV6_ADDR_MAX_STR_LEN);
             inet_ntop(AF_INET6, &(server_addr.sin6_addr), selfAdd, IPV6_ADDR_MAX_STR_LEN);
-            //printf("rx from %s %s\n", srcAdd, server_buffer);
             if (strcmp(server_buffer, "on") == 0)
             {
                 LED0_ON;
             }
             else if (strcmp(server_buffer, "identify") == 0)
             {
+                puts("HERE I AM!");
                 identifyYourself();
+            }
+            else if (strncmp(server_buffer, "nudge:", 6) == 0)
+            {
+                    udp_send(server_buffer+6, "identify");
             }
             else if (strcmp(server_buffer, "get-data") == 0)
             {
@@ -217,6 +221,10 @@ static void *udp_server_loop(void)
 #endif
                     udp_send_jk(src_addr, "blue");
                 }
+            }
+            else
+            {
+                printf("rx unknown udp msg from %s : %s\n", srcAdd, server_buffer);
             }
         }
     }

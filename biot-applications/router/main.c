@@ -180,7 +180,7 @@ void *housekeeping_handler(void *arg)
                 setRoot();
             }
 
-            if (isRoot && counter++ > 10)
+            if (isRoot && counter++ > 30)
             {
                 sync();
                 counter = 0;
