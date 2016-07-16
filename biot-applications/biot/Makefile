@@ -2,7 +2,7 @@
 APPLICATION = net_oled_rpl
 
 # If no BOARD is found in the environment, use this default:
-BOARD ?= samr21-zllk
+BOARD ?= samr21-xpro
 
 ifeq ($(BOARD),samr21-xpro)
     CFLAGS += -DNOOLED=true

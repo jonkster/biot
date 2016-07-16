@@ -136,8 +136,8 @@ static void *udp_server_loop(void)
             else if (strcmp(server_buffer, "off") == 0)
             {
                 LED0_OFF;
-                LED1_OFF;
-                LED_RGB_OFF;
+                //LED1_OFF;
+                //LED_RGB_OFF;
                 xtimer_usleep(100000);
                 if (rand > 2000000000 )
                 {
@@ -150,8 +150,8 @@ static void *udp_server_loop(void)
             }
             else if (strcmp(server_buffer, "red") == 0)
             {
-                LED_RGB_OFF;
-                LED_RGB_R_ON;
+                //LED_RGB_OFF;
+                //LED_RGB_R_ON;
                 xtimer_usleep(100000);
                 if (rand > 2000000000)
                 {
@@ -164,8 +164,8 @@ static void *udp_server_loop(void)
             }
             else if (strcmp(server_buffer, "green") == 0)
             {
-                LED_RGB_OFF;
-                LED_RGB_G_ON;
+                //LED_RGB_OFF;
+                //LED_RGB_G_ON;
                 xtimer_usleep(100000);
                 if (rand > 2000000000)
                 {
@@ -178,8 +178,8 @@ static void *udp_server_loop(void)
             }
             else if (strcmp(server_buffer, "blue") == 0)
             {
-                LED_RGB_OFF;
-                LED_RGB_B_ON;
+                //LED_RGB_OFF;
+                //LED_RGB_B_ON;
                 xtimer_usleep(100000);
                 if (rand > 2000000000)
                 {
