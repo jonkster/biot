@@ -2,11 +2,7 @@
 APPLICATION = BIOT-Router
 
 # If no BOARD is found in the environment, use this default:
-BOARD ?= samr21-xpro
-
-ifeq ($(BOARD),samr21-xpro)
-    CFLAGS += -DNOOLED=true
-endif
+BOARD ?= samr21-zllk
 
 CFLAGS += -DMAX_NODES=100
 
@@ -18,10 +14,6 @@ RIOTBASE ?= $(CURDIR)/../../../RIOT
 CFLAGS += -I$(CURDIR)
 
 # adding biot specific modules
-ifeq ($(BOARD),samr21-zllk)
-	DIRS += ../modules/ssd1306/
-	USEMODULE += ssd1306
-endif
 DIRS += ../modules/biotUdp/
 USEMODULE += biotUdp
 DIRS += ../modules/identify/
@@ -30,10 +22,6 @@ DIRS += ../modules/sendData/
 USEMODULE += sendData
 DIRS += ../modules/dataCache/
 USEMODULE += dataCache
-#DIRS += ../modules/biotCoap/
-#USEMODULE += biotCoap
-
-
 
 #
 # create 2 network interfaces, one for 6lowPAN and one for SLIP
@@ -59,10 +47,8 @@ USEMODULE += auto_init_gnrc_netif
 
 # Specify the minimum networking modules for IPv6
 # we can have either gnrc_ipv6 or gnrc_ipv6_router_default depending on needs
-#USEMODULE += gnrc_ipv6_router_default
 USEMODULE += gnrc_ipv6
 USEMODULE += gnrc_icmpv6_echo
-#USEMODULE += gnrc_ndp
 
 # UDP communication stuff
 #USEMODULE += gnrc_udp
@@ -74,17 +60,12 @@ USEMODULE += posix_sockets
 
 # Add a routing protocol
 USEMODULE += gnrc_rpl
-#USEMODULE += auto_init_gnrc_rpl
 # Add forwarding table
 USEMODULE += fib
 
 
 # Use minimal standard random number generator
 USEMODULE += prng_minstd
-
-# use COAP
-#USEPKG += microcoap
-
 
 # Add the shell and some shell commands
 USEMODULE += shell

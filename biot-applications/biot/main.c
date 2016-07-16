@@ -14,12 +14,10 @@
 #include "../modules/identify/biotIdentify.h"
 #include "../modules/sendData/sendData.h"
 #include "../modules/position/position.h"
+#include "../modules/imu/imu.h"
 
 #define PRIO    (THREAD_PRIORITY_MAIN + 1)
 static char housekeeping_stack[THREAD_STACKSIZE_DEFAULT];
-#if !defined NOOLED
-static char display_stack[THREAD_STACKSIZE_DEFAULT];
-#endif
 static char udp_stack[THREAD_STACKSIZE_DEFAULT];
 
 char dodagRoot[IPV6_ADDR_MAX_STR_LEN];
@@ -32,8 +30,11 @@ extern bool isTimeSet(void);
 bool hasTimeChanged(void);
 extern void timeInit(void);
 extern void sendData(char *address, nodeData_t data);
-quat_t currentPosition;
+myQuat_t currentPosition;
+bool imuReady = false;
 /* ########################################################################## */
+
+mpu9150_t imuDev;
 
 int identify_cmd(int argc, char **argv)
 {
@@ -66,7 +67,6 @@ int findParent(void)
 int findRoot(void)
 {
     if (gnrc_rpl_instances[0].state == 0) {
-        puts("no dodag...");
         return 1;
     }
 
@@ -74,41 +74,45 @@ int findRoot(void)
     ipv6_addr_to_str(dodagRoot, &dodag->dodag_id, sizeof(dodagRoot));
     printf("dodag: %s\n", dodagRoot);
     findParent();
-    //udp_send(dodagRoot, "nudge");
     return 0;
 }
 
 void updatePosition(void)
 {
-    // make a rotation to apply - this will ultimately come from IMU unit be we
-    // will simulate a rotation here for the time being.
-    quat_t rot;
-    makeIdentityQuat(&rot);
-    rot.w = getCurrentTime()/1500000;
-    rot.x = 0.0001;
-    rot.y = 0.00002;
-    rot.z = getCurrentTime()/150000000;
-    if (random_uint32() > 2000000000 )
-        rot.w = - rot.w;
-    else
-        rot.x = getCurrentTime()/15000;
+    if (imuReady)
+    {
+        // currently just use accelerometer...
+        imuData_t imuData;
+        if (getIMUData(imuDev, &imuData))
+        {
+            double x = (double)imuData.accel.x_axis/1024;
+            double y = (double)imuData.accel.y_axis/1024;
+            double z = (double)imuData.accel.z_axis/1024;
 
-    quatNormalise(&rot);
-    currentPosition = quatMultiply(currentPosition, rot);
+            double from[3] = {0, 1, 0};
+            double to[3] = {x, y, z};
+            currentPosition = quatFrom2Vecs(from, to);
+            /*currentPosition = quatMultiply(currentPosition, rotQ);*/
+        }
+    }
 }
 
 void sendNodeData(uint32_t ts)
 {
+    nodeData_t data;
+    data.timeStamp = ts;
+    data.w = currentPosition.w;
+    data.x = currentPosition.x;
+    data.y = currentPosition.y;
+    data.z = currentPosition.z;
+    thread_yield();
     if (strlen(dodagRoot) > 0)
     {
-        nodeData_t data;
-        data.timeStamp = ts;
-        data.w = currentPosition.w;
-        data.x = currentPosition.x;
-        data.y = currentPosition.y;
-        data.z = currentPosition.z;
-        thread_yield();
         sendData(dodagRoot, data);
+    }
+    else
+    {
+        sendData("affe::2", data);
     }
 }
 
@@ -154,12 +158,69 @@ int callTime_cmd(int argc, char **argv)
     return 1;
 }
 
+int imu0_cmd(int argc, char **argv)
+{
+    if (initialiseIMU(&imuDev))
+    {
+        displayConfiguration(imuDev);
+        imuReady = true;
+        return 0;
+    }
+    else
+    {
+        puts("could not initialise IMU device");
+        return 1;
+    }
+}
+
+int imu_cmd(int argc, char **argv)
+{
+    imuData_t imuData;
+    if (getIMUData(imuDev, &imuData))
+    {
+        displayData(imuData);
+        return 0;
+    }
+    else
+    {
+        puts("could not read IMU device");
+        return 1;
+    }
+}
+
+
+
+int quat_cmd(int argc, char **argv)
+{
+    imuData_t imuData;
+    if (getIMUData(imuDev, &imuData))
+    {
+        double x = (double)imuData.accel.x_axis/1024;
+        double y = (double)imuData.accel.y_axis/1024;
+        double z = (double)imuData.accel.z_axis/1024;
+
+        double from[3] = {0, 1, 0};
+        double to[3] = {x, y, z};
+	myQuat_t q = quatFrom2Vecs(from, to);
+	dumpQuat(q);
+        return 0;
+    }
+    else
+    {
+        puts("could not read IMU device");
+        return 1;
+    }
+}
+
 static const shell_command_t shell_commands[] = {
     /* Add a new shell commands here */
     { "identify", "visually identify board", identify_cmd },
     { "callRoot", "contact root node", callRoot_cmd },
     { "timeAsk", "ask for current net time", callTime_cmd },
     { "udp", "send a message: udp <IPv6-address> <message>", udp_cmd },
+    { "imu0", "initialise IMU device", imu0_cmd },
+    { "imu", "get IMU position data", imu_cmd },
+    { "quat", "get position quaternion", quat_cmd },
     { NULL, NULL, NULL }
 };
 
@@ -198,47 +259,23 @@ void *housekeeping_handler(void *arg)
             {
                 if (counter++ > 30)
                 {
-                    /*
-#if !defined NOOLED
-                    oledPrint(1, "syncing" );
-#endif
-                    sendTimeRequest();
-                    counter = 0;*/
                 }
                 else if (hasTimeChanged())
                 {
-#if !defined NOOLED
-                    oledPrint(1, "changed");
-#endif
                 }
                 else
                 {
-#if !defined NOOLED
-                    oledPrint(1, "Node Member" );
-#endif
                 }
-#if !defined NOOLED
-                char st[12];
-                sprintf(st, "T=%lu", secs);
-                oledPrint(2, st);
-#endif
             }
             else
             {
                 findRoot();
                 if (knowsRoot())
                 {
-#if !defined NOOLED
-                    oledPrint(1, "Node Member" );
-#endif
                     sendTimeRequest();
                 }
                 else
                 {
-#if !defined NOOLED
-                    oledPrint(1, "orphan..." );
-#endif
-                    //batch(shell_commands, "rpl init 6");
                 }
             }
         }
@@ -256,11 +293,6 @@ int main(void)
     makeIdentityQuat(&currentPosition);
     dumpQuat(currentPosition);
 
-
-#if !defined NOOLED
-    thread_create(display_stack, sizeof(display_stack), PRIO, THREAD_CREATE_STACKTEST, (thread_task_func_t) display_handler,
-                  NULL, "display");
-#endif
 
     thread_create(housekeeping_stack, sizeof(housekeeping_stack), PRIO, THREAD_CREATE_STACKTEST, housekeeping_handler,
                   NULL, "housekeeping");

@@ -15,6 +15,9 @@ RIOTBASE ?= $(CURDIR)/../../../RIOT
 ## it go to the beginning, before the standard includes.
 CFLAGS += -I$(CURDIR)
 
+# gl matrix library is sloppy...
+CFLAGS += -Wno-error=maybe-uninitialized
+
 CFLAGS += -DMAX_NODES=100
 USEMODULE += printf_float
 
@@ -33,6 +36,10 @@ DIRS += ../modules/dataCache/
 USEMODULE += dataCache
 DIRS += ../modules/position/
 USEMODULE += position
+DIRS += ../modules/imu/
+USEMODULE += imu
+USEMODULE += mpu9150
+CFLAGS += -DPI=3.14159265
 
 # Include packages that pull up and auto-init the link layer.
 # NOTE: 6LoWPAN will be included if IEEE802.15.4 devices are present

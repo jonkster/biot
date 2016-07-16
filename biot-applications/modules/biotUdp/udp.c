@@ -21,21 +21,6 @@
 #define XSTR(x) STR(x)
 #define STR(x) #x
 
-#if (defined NOOLED)
-#pragma message "Assuming no OLED available therefore samr21-xpro board"
-    #define LED1_OFF do {} while(0);
-    #define LED_RGB_OFF do {} while(0);
-    #define LED_RGB_R_ON do {} while(0);
-    #define LED_RGB_G_ON do {} while(0);
-    #define LED_RGB_B_ON do {} while(0);
-#else
-#pragma message "Assuming OLED available and samr21-zllk board"
-    #include "../modules/ssd1306/ssd1306.h"
-#endif
-
-
-
-
 
 #define MUDP_Q_SZ           (8)
 #define SERVER_BUFFER_SIZE  (128)
@@ -156,16 +141,10 @@ static void *udp_server_loop(void)
                 xtimer_usleep(100000);
                 if (rand > 2000000000 )
                 {
-#if !defined NOOLED
-                    oledPrint(1, "got off sending red");
-#endif
                     udp_send_jk(src_addr, "red");
                 }
                 else
                 {
-#if !defined NOOLED
-                    oledPrint(1, "got off sending off");
-#endif
                     udp_send_jk(src_addr, "off");
                 }
             }
@@ -176,16 +155,10 @@ static void *udp_server_loop(void)
                 xtimer_usleep(100000);
                 if (rand > 2000000000)
                 {
-#if !defined NOOLED
-                    oledPrint(1, "got red sending green");
-#endif
                     udp_send_jk(src_addr, "green");
                 }
                 else
                 {
-#if !defined NOOLED
-                    oledPrint(1, "got red sending red");
-#endif
                     udp_send_jk(src_addr, "red");
                 }
             }
@@ -196,16 +169,10 @@ static void *udp_server_loop(void)
                 xtimer_usleep(100000);
                 if (rand > 2000000000)
                 {
-#if !defined NOOLED
-                    oledPrint(1, "got green sending blue");
-#endif
                     udp_send_jk(src_addr, "blue");
                 }
                 else
                 {
-#if !defined NOOLED
-                    oledPrint(1, "got green sending green");
-#endif
                     udp_send_jk(src_addr, "green");
                 }
             }
@@ -216,16 +183,10 @@ static void *udp_server_loop(void)
                 xtimer_usleep(100000);
                 if (rand > 2000000000)
                 {
-#if !defined NOOLED
-                    oledPrint(1, "got blue sending off");
-#endif
                     udp_send_jk(src_addr, "off");
                 }
                 else
                 {
-#if !defined NOOLED
-                    oledPrint(1, "got blue sending blue");
-#endif
                     udp_send_jk(src_addr, "blue");
                 }
             }

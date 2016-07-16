@@ -7,12 +7,71 @@
 
 #include "position.h"
 
-void dumpQuat(quat_t q)
+void dumpQuat(myQuat_t q)
 {
     printf("q{%f, %f, %f, %f}\n", q.w, q.x, q.y, q.z);
 }
 
-void makeIdentityQuat(quat_t *q)
+double vecDot(double *u, double *v)
+{
+    double d = u[0]*v[0] + u[1]+u[1] + u[2]*v[2]; 
+    return d; 
+}
+
+double *vecCross(double *u, double *v)
+{
+    double *dest = (double*)malloc(3 * sizeof(double));
+    dest[0] = u[1] * v[2] - u[2] * v[1];
+    dest[1] = u[2] * v[0] - u[0] * v[2];
+    dest[2] = u[0] * v[1] - u[1] * v[0];
+    return dest;
+}
+
+myQuat_t quatFrom2Vecs(double *u, double *v)
+{
+    double normUV = sqrt(abs(vecDot(u, u) * vecDot(v, v)));
+    double realPart = normUV + vecDot(u, v);
+    double vec[3];
+
+    if (realPart < 1.e-6f * normUV)
+    {
+	/* If u and v are exactly opposite, rotate 180 degrees
+	 * around an arbitrary orthogonal axis. Axis normalisation
+	 * can happen later, when we normalise the quaternion. */
+	realPart = 0.0f;
+	if (abs(u[0]) > abs(u[2]))
+	{
+	    vec[0] = -u[1];
+	    vec[1] = u[0];
+	    vec[2] = 0.f;
+	}
+	else
+	{
+	    vec[0] = 0.f;
+	    vec[1] = u[2];
+	    vec[2] = u[1];
+	} 
+    }
+    else
+    {
+	/* Otherwise, build quaternion the standard way. */
+	double *vTemp = vecCross(u, v);
+        vec[0] = vTemp[0];
+        vec[1] = vTemp[1];
+        vec[2] = vTemp[2];
+        free(vTemp);
+    }
+    myQuat_t q;
+    q.w = realPart;
+    q.x = vec[0];
+    q.y = vec[1];
+    q.z = vec[2];
+    quatNormalise(&q);
+    //dumpQuat(q);
+    return q;
+}
+
+void makeIdentityQuat(myQuat_t *q)
 {
     q->w = 1;
     q->x = 0;
@@ -21,9 +80,9 @@ void makeIdentityQuat(quat_t *q)
 }
 
 
-quat_t quatMultiply(quat_t p, quat_t q)
+myQuat_t quatMultiply(myQuat_t p, myQuat_t q)
 {
-    quat_t dest;
+    myQuat_t dest;
 
     dest.w = p.w * q.w - p.x * q.x - p.y * q.y - p.z * q.z;
     dest.x = p.x * q.w + p.w * q.x + p.y * q.z - p.z * q.y;
@@ -37,7 +96,7 @@ quat_t quatMultiply(quat_t p, quat_t q)
     return p;
 }
 
-void quatNormalise(quat_t *q)
+void quatNormalise(myQuat_t *q)
 {
     float w = q->w;
     float x = q->x;

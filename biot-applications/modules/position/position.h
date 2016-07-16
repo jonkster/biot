@@ -6,20 +6,22 @@ typedef struct {
     float x;
     float y;
     float z;
-} quat_t;
+} myQuat_t;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-    void dumpQuat(quat_t q);
+    void dumpQuat(myQuat_t q);
 
-    void makeIdentityQuat(quat_t *q);
+    void makeIdentityQuat(myQuat_t *q);
 
-    void quatNormalise(quat_t *q);
+    void quatNormalise(myQuat_t *q);
 
-    quat_t quatMultiply(quat_t p, quat_t q);
-    
+    myQuat_t quatMultiply(myQuat_t p, myQuat_t q);
+
+    myQuat_t quatFrom2Vecs(double *u, double *v);
+
 #ifdef __cplusplus
 }
 #endif
