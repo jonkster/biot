@@ -1,0 +1,11 @@
+rpl init 7
+
+ifconfig 7 add affe::2
+
+rpl root 1 affe::2
+
+ifconfig 8 add affe::3
+
+ncache add 8 affe::1
+
+ping6 affe::1

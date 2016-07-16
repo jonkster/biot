@@ -1,0 +1,2235 @@
+imu0
+imu0
+
+identify IMU
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+MPU9150 device detected...
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+x-axis self test: acceleration trim within : 0.676875% of factory value
+y-axis self test: acceleration trim within : 0.626875% of factory value
+z-axis self test: acceleration trim within : 0.786987% of factory value
+x-axis self test: gyration trim within : 0.248848% of factory value
+y-axis self test: gyration trim within : -0.231394% of factory value
+z-axis self test: gyration trim within : 0.258209% of factory value
+Pass Selftest!
+MPU9150 passes self test.  Calibrating...
+calibrating - please keep sensor still...
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 4 0
+bytes 1024 packet count 85
+reading 85 stationary values...Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+0:  FF  FF   0  A4   6  C8  C1  38  F4  AA  FF  AE
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 3 243
+bytes 1011 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+1:   2   0  A0   6  C8  C1  20  F4  86  FF  B7   0
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 3 230
+bytes 998 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+2:   0  9C   6  A8  C1  1C  F4  88  FF  B5   0  33
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 3 217
+bytes 985 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+3:  A2   6  96  C1  22  F4  88  FF  A7   0  45   0
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 3 204
+bytes 972 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+4:   6  98  C1   E  F4  6A  FF  96   0  42   0  AD
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 3 191
+bytes 959 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+5:  8E  C0  FE  F4  7A  FF  94   0  34   0  AA   6
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 3 178
+bytes 946 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+6:  C0  D6  F4  6A  FF  94   0  27   0  AA   6  88
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 3 165
+bytes 933 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+7:  D6  F4  3A  FF  9B   0  23   0  AD   6  E0  C0
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 3 152
+bytes 920 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+8:  F4  3C  FF  B0   0  27   0  B4   6  FA  C1   C
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 3 139
+bytes 907 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+9:  70  FF  B8   0  2F   0  B2   6  6A  C1  32  F4
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 3 126
+bytes 894 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+10:  FF  B9   0  39   0  AB   6  1C  C1  74  F4  50
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 3 113
+bytes 881 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+11:  B4   0  41   0  A6   6  4C  C1  70  F4  36  FF
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 3 100
+bytes 868 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+12:   0  46   0  A9   6  7C  C1   2  F4  22  FF  AB
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 3 87
+bytes 855 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+13:  48   0  B1   6  6A  C0  BC  F4   E  FF  A3   0
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 3 74
+bytes 842 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+14:   0  AF   6  28  C0  DE  F4  2E  FF  A3   0  3C
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 3 61
+bytes 829 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+15:  A5   6  42  C1  32  F4  92  FF  B2   0  34   0
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 3 48
+bytes 816 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+16:   6  56  C1  68  F4  F4  FF  BE   0  2A   0  9D
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 3 35
+bytes 803 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+17:  60  C1  5E  F4  B0  FF  B5   0  2E   0  A2   6
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 3 22
+bytes 790 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+18:  C1  32  F4  68  FF  A8   0  38   0  AA   6  60
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 3 9
+bytes 777 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+19:  36  F4  84  FF  A4   0  3C   0  AC   6  60  C1
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 2 252
+bytes 764 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+20:  F4  58  FF  A1   0  3B   0  AB   6  64  C1   6
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 2 239
+bytes 751 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+21:  60  FF  A3   0  39   0  A0   6  5E  C0  F0  F4
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 2 226
+bytes 738 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+22:  FF  A9   0  32   0  9B   6  5C  C1  14  F4  9E
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 2 213
+bytes 725 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+23:  AE   0  26   0  9C   6  82  C1  36  F5  2C  FF
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 2 200
+bytes 712 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+24:   0  19   0  A1   6  AC  C1  2A  F5  18  FF  B3
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 2 187
+bytes 699 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+25:   F   0  A6   6  A8  C1  1C  F4  80  FF  AD   0
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 2 174
+bytes 686 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+26:   0  A9   6  7E  C1  12  F4  52  FF  A7   0   F
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 2 161
+bytes 673 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+27:  A3   6  76  C1   C  F4  74  FF  9F   0  18   0
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 2 148
+bytes 660 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+28:   6  94  C1  30  F4  6C  FF  9E   0  1F   0  91
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 2 135
+bytes 647 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+29:  D8  C1  66  F4  6A  FF  9D   0  21   0  96   6
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 2 122
+bytes 634 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+30:  C1  6C  F4  A2  FF  9C   0  28   0  A0   6  50
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 2 109
+bytes 621 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+31:  1C  F4  CA  FF  9B   0  28   0  AA   6  66  C0
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 2 96
+bytes 608 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+32:  F5  20  FF  A0   0  28   0  B6   6  86  C0  FE
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 2 83
+bytes 595 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+33:  40  FF  A4   0  2A   0  BD   6  9A  C1  16  F4
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 2 70
+bytes 582 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+34:  FF  AB   0  2F   0  AF   6  B6  C1  2A  F4  A4
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 2 57
+bytes 569 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+35:  AC   0  3A   0  9C   6  A2  C1  5E  F4  82  FF
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 2 44
+bytes 556 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+36:   0  3E   0  9B   6  7C  C1  A8  F4  A8  FF  AD
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 2 31
+bytes 543 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+37:  3C   0  A5   6  96  C1  6E  F4  E8  FF  A8   0
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 2 18
+bytes 530 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+38:   0  AA   6  B8  C1  2A  F4  D0  FF  AE   0  2F
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 2 5
+bytes 517 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+39:  A8   6  86  C1  36  F4  80  FF  B9   0  2E   0
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 1 248
+bytes 504 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+40:   6  8E  C1  26  F4  70  FF  B1   0  3C   0  A1
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 1 235
+bytes 491 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+41:  CE  C1   C  F4  92  FF  A4   0  48   0  A6   6
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 1 222
+bytes 478 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+42:  C1   C  F4  A8  FF  9D   0  49   0  B0   6  D0
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 1 209
+bytes 465 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+43:  14  F4  A0  FF  A1   0  3F   0  B6   6  9A  C1
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 1 196
+bytes 452 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+44:  F4  A4  FF  A8   0  3B   0  B4   6  2E  C1  14
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 1 183
+bytes 439 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+45:  E8  FF  A6   0  36   0  AA   6  24  C0  EC  F5
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 1 170
+bytes 426 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+46:  FF  A9   0  36   0  A7   6  64  C1  14  F5  3A
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 1 157
+bytes 413 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+47:  AC   0  34   0  AC   6  86  C1  5A  F4  F4  FF
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 1 144
+bytes 400 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+48:   0  2B   0  AD   6  54  C1  2E  F4  F4  FF  A4
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 1 131
+bytes 387 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+49:  21   0  A7   6  36  C1  1C  F4  CC  FF  9E   0
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 1 118
+bytes 374 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+50:   0  9C   6  50  C1  1E  F4  9A  FF  A2   0  17
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 1 105
+bytes 361 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+51:  9A   6  4C  C1   E  F4  70  FF  A3   0  1F   0
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 1 92
+bytes 348 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+52:   6  4A  C1  10  F4  30  FF  A1   0  24   0  AB
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 1 79
+bytes 335 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+53:  9A  C1  2E  F4  1E  FF  9C   0  18   0  A3   6
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 1 66
+bytes 322 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+54:  C1  34  F4  60  FF  9F   0   F   0  9C   6  DC
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 1 53
+bytes 309 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+55:  14  F4  90  FF  B4   0  10   0  9E   6  C0  C1
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 1 40
+bytes 296 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+56:  F4  96  FF  C0   0  1F   0  9E   6  BC  C1  30
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 1 27
+bytes 283 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+57:  C0  FF  B8   0  3B   0  9D   6  90  C1   8  F4
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 1 14
+bytes 270 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+58:  FF  AD   0  44   0  A3   6  96  C1   2  F4  9A
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 1 1
+bytes 257 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+59:  A5   0  36   0  A7   6  AC  C1  44  F4  80  FF
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 0 244
+bytes 244 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+60:   0  2E   0  A8   6  B8  C1  78  F4  BA  FF  A9
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 0 231
+bytes 231 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+61:  2D   0  B0   6  A4  C1  50  F4  B0  FF  B0   0
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 0 218
+bytes 218 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+62:   0  B8   6  58  C1  10  F4  6C  FF  B4   0  39
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 0 205
+bytes 205 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+63:  B5   6  56  C0  F0  F4  46  FF  B3   0  3F   0
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 0 192
+bytes 192 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+64:   6  A2  C0  FE  F4  30  FF  B3   0  44   0  A0
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 0 179
+bytes 179 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+65:  9E  C1  16  F4  72  FF  AE   0  47   0  9E   6
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 0 166
+bytes 166 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+66:  C0  FE  F4  B8  FF  AA   0  4B   0  9F   6  5C
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 0 153
+bytes 153 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+67:   0  F4  86  FF  A1   0  4C   0  9B   6  4C  C0
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 0 140
+bytes 140 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+68:  F4  66  FF  9D   0  45   0  95   6  60  C0  F4
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 0 127
+bytes 127 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+69:  5E  FF  A2   0  3A   0  97   6  56  C1  16  F4
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 0 114
+bytes 114 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+70:  FF  B3   0  36   0  9C   6  66  C1  1A  F4  6E
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 0 101
+bytes 101 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+71:  BA   0  33   0  AD   6  B4  C1   0  F4  9C  FF
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 0 88
+bytes 88 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+72:   0  2C   0  B0   6  CA  C0  FE  F4  AE  FF  B2
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 0 75
+bytes 75 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+73:  2A   0  AD   6  7E  C1  2A  F4  76  FF  A6   0
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 0 62
+bytes 62 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+74:   0  A6   6  5E  C1  30  F4  9E  FF  9A   0  27
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 0 49
+bytes 49 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+75:  9E   6  7E  C1   4  F4  D4  FF  95   0  24   0
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 0 36
+bytes 36 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+76:   6  9E  C0  EA  F4  9E  FF  92   0  20   0  A2
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 0 23
+bytes 23 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+77:  9A  C0  FC  F4  6C  FF  9C   0  1B   0  AE   6
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 0 10
+bytes 10 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+78:  C1  46  F4  A6  FF  A9   0  10   0  B7  FF  FF
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 0 0
+bytes 0 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+79:  FF  FF  FF  FF  FF  FF  FF  FF  FF  FF  FF  FF
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 0 0
+bytes 0 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+80:  FF  FF  FF  FF  FF  FF  FF  FF  FF  FF  FF  FF
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 0 0
+bytes 0 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+81:  FF  FF  FF  FF  FF  FF  FF  FF  FF  FF  FF  FF
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 0 0
+bytes 0 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+82:  FF  FF  FF  FF  FF  FF  FF  FF  FF  FF  FF  FF
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 0 0
+bytes 0 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+83:  FF  FF  FF  FF  FF  FF  FF  FF  FF  FF  FF  FF
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 0 0
+bytes 0 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+84:  FF  FF  FF  FF  FF  FF  FF  FF  FF  FF  FF  FF
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+reading byte count: 0 0
+bytes 0 
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Calibration complete.
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+MPU9150 initialised
+identify IMU
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+Init AK8975A....
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Stop sent
+Wait for device to be ready
+Generate start condition by sending address
+Looping through bytes
+Written 0 byte to data reg, now waiting for DR to be empty again
+Wait for response.
+Wait for device to be ready
+Generate start condition by sending address
+Stop sent
+Magnetometer calibration values: 
+X-Axis sensitivity adjustment value 1.132812
+Y-Axis sensitivity adjustment value 1.132812
+Z-Axis sensitivity adjustment value 1.191406
+AK8975A
+ASAX 162
+ASAY 162
+ASAZ 177
+Magnetometer Setup complete.
+> 

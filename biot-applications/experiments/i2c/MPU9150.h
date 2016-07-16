@@ -154,6 +154,16 @@ extern "C" {
 #define SELF_TEST_MODE      0x08
 #define FUSE_ROM_MODE       0x0F
 
+// bits to enable fifo loading
+#define FIFO_EN_TEMP        0x80    // load temperature
+#define FIFO_EN_GX          0x40    // load gyro X
+#define FIFO_EN_GY          0x20    // load gyro Y
+#define FIFO_EN_GZ          0x10    // load gyro Z
+#define FIFO_EN_AXYZ        0x08    // load accelerometer X,Y and Z
+#define FIFO_EN_SLV2        0x04    // load slave 2 EXT_SENS_DATA
+#define FIFO_EN_SLV1        0x02    // load slave 1 EXT_SENS_DATA
+#define FIFO_EN_SLV0        0x01    // load slave 0 EXT_SENS_DATA
+
 
 typedef enum {
         AFS_2G = 0,
@@ -169,10 +179,22 @@ typedef enum {
         GFS_2000DPS
 } gScale_enum;
 
+#define LPF_256HZ     0     // gyro 256Hz, accel 260Hz
+#define LPF_180HZ     1     // gyro 188Hz, accel 184Hz
+#define LPF_100HZ     2     // gyro 98Hz, accel 98Hz
+#define LPF_40HZ      3     // gyro 42Hz, accel 44Hz
+#define LPF_20HZ      4     // gyro 20Hz, accel 21Hz
+#define LPF_10HZ      5     // gyro 10Hz, accel 10Hz
+#define LPF_5HZ       6     // gyro 5Hz, accel 5Hz
+#define SAMPLERATE_MIN      5                      // samples per second
+#define SAMPLERATE_MAX      1000                   // samples per second maximum
+
 
 bool setupMPU9150(uint16_t i2c_dev);
 
 void imuLoop(uint16_t i2c_dev);
+
+void delayUsec(uint32_t us);
 
 #ifdef __cplusplus
 }

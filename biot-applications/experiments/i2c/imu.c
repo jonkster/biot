@@ -25,6 +25,104 @@ float aRes;
 float magCalibration[3];
 bool imuReady = false;
 
+void dumpPacket(uint16_t packetSizeBytes, uint8_t *packetData)
+{
+    printf("dump %d bytes of packet data\n", packetSizeBytes);
+    for (uint8_t i = 0; i < packetSizeBytes; i++)
+    {
+        printf("%-4.2d     |", i);
+    }
+    puts("");
+    for (uint8_t i = 0; i < packetSizeBytes; i++)
+    {
+        printf("---------+");
+    }
+    puts("");
+    for (uint8_t i = 0; i < packetSizeBytes; i++)
+    {
+        printf("%-9X|", packetData[i]);
+    }
+    puts("");
+}
+
+bool setGyroDegreesPerSecond(uint8_t i2c_dev, gScale_enum dps)
+{
+    if (i2c_write_reg(i2c_dev, MPU9150_ADDRESS, GYRO_CONFIG, dps) == 1)
+        return true;
+    puts("could not set gyro sensitivity");
+    return false;
+}
+
+bool setLowPassFilter(uint8_t i2c_dev, uint8_t flag)
+{
+    if (i2c_write_reg(i2c_dev, MPU9150_ADDRESS, CONFIG,  flag) == 1)
+        return true;
+    puts("could not set low pass filter");
+    return false;
+}
+
+
+
+bool setSamplesPerSecond(uint8_t i2c_dev, uint16_t sRate)
+{
+    // from manual:
+    // Sample Rate = Gyroscope Output Rate / (1 + SMPLRT_DIV)
+    // therefore SMPLRT_DIV = ((Gyroscope Output Rate)/(Sample Rate)) - 1
+
+    if (sRate < SAMPLERATE_MIN)
+        sRate = SAMPLERATE_MIN;
+    else if (sRate > SAMPLERATE_MAX)
+        sRate = SAMPLERATE_MAX;
+
+    // get low pass filter setting - if dlpf_cg == 0 then 8kHz gyro rate, otherwise 1kHz.
+    uint16_t gRate = 1000;
+    char d;
+    if (i2c_read_reg(i2c_dev, MPU9150_ADDRESS, CONFIG, &d) == 1)
+    {
+        d &= 0x07;
+        if (d == 0)
+            gRate = 8000;
+    }
+    else
+    {
+        puts("unable to read config register!");
+        return false;
+    }
+    uint16_t smplrtDiv = (gRate/sRate) - 1;
+    if (i2c_write_reg(i2c_dev, MPU9150_ADDRESS, SMPLRT_DIV,  smplrtDiv) == 1)
+        return true;
+    puts("could not set sample rate");
+    return false;
+}
+
+bool disableFifo(uint8_t i2c_dev)
+{
+    if (i2c_write_reg(i2c_dev, MPU9150_ADDRESS, FIFO_EN, 0x00) != 1)    // Disable FIFO
+        return false;
+    return true;
+}
+
+
+bool setFifoToRecord(uint8_t i2c_dev, uint8_t flags)
+{
+    if (i2c_write_reg(i2c_dev, MPU9150_ADDRESS, INT_ENABLE, 0x00) != 1) // Disable all interrupts
+        return false;
+    if (! disableFifo(i2c_dev))
+        return false;
+    if (i2c_write_reg(i2c_dev, MPU9150_ADDRESS, USER_CTRL, 0x02) != 1)  // Reset I2C master
+        return false;
+    if (i2c_write_reg(i2c_dev, MPU9150_ADDRESS, USER_CTRL, 0x00) != 1)  // Disable FIFO 
+        return false;
+    if (i2c_write_reg(i2c_dev, MPU9150_ADDRESS, I2C_MST_DELAY_CTRL, 0x80) != 1) // Enable delay of external sensor data until all data registers have been read
+        return false;
+    if (i2c_write_reg(i2c_dev, MPU9150_ADDRESS, FIFO_EN, flags) != 1)    // set fifo to record flagged data
+        return false;
+    if (i2c_write_reg(i2c_dev, MPU9150_ADDRESS, USER_CTRL, 0x40) != 1)   // Enable FIFO
+        return false;
+    return true;
+}
+
+
 void getGres(void) {
         switch (gScale)
         {
@@ -67,6 +165,40 @@ void getAres(void) {
         }
 }
 
+uint16_t getPacketSizeBytes(uint8_t i2c_dev)
+{
+    // read what data is being recorded in fifo and use this to calculate how
+    // big each record in the fifo is.
+    char d;
+    if (i2c_read_reg(i2c_dev, MPU9150_ADDRESS, FIFO_EN, &d) == 1)
+    {
+        uint16_t bytes = 0;
+        if (CHECK_BIT(d, 7))
+                bytes += 2;   // temperature data
+        if (CHECK_BIT(d, 6))
+                bytes += 2;   // gyro x data
+        if (CHECK_BIT(d, 5))
+                bytes += 2;   // gyro y data
+        if (CHECK_BIT(d, 4))
+                bytes += 2;   // gyro z data
+        if (CHECK_BIT(d, 3))
+                bytes += 6;   // accel xyz data
+        if (CHECK_BIT(d, 2))
+                bytes += 1;   // slv3 data
+        if (CHECK_BIT(d, 1))
+                bytes += 1;   // slv2 data
+        if (CHECK_BIT(d, 0))
+                bytes += 1;   // slv0 data
+        printf("packet size: %d\n", bytes);
+        return bytes;
+    }
+    else
+    {
+        puts("cannot read fifo en address!");
+        return 0;
+    }
+}
+
 
 void delayUsec(uint32_t us)
 {
@@ -75,7 +207,7 @@ void delayUsec(uint32_t us)
     xtimer_usleep_until(&last_wakeup, us);
 }
 
-int16_t make16BitValue(uint8_t L, uint8_t H, bool littleEndian)
+int16_t make16BitSignedValue(uint8_t L, uint8_t H, bool littleEndian)
 {
     // Turn the MSB and LSB uint8_t pair into a signed 16-bit value
     if (littleEndian)
@@ -83,6 +215,68 @@ int16_t make16BitValue(uint8_t L, uint8_t H, bool littleEndian)
     else
         return ((int16_t)L << 8) | H;  
 }
+
+int16_t make16BitValue(uint8_t L, uint8_t H, bool littleEndian)
+{
+    // Turn the MSB and LSB uint8_t pair into a signed 16-bit value
+    if (littleEndian)
+        return ((uint16_t)H << 8) | L;  
+    else
+        return ((uint16_t)L << 8) | H;  
+}
+
+uint16_t readFifoByteCount(uint16_t i2c_dev)
+{
+    char rawData[2];
+    if (i2c_read_regs(i2c_dev, MPU9150_ADDRESS, FIFO_COUNTH, rawData, 2) == 2)
+    {
+        //printf("reading byte count: %d %d\n", rawData[0], rawData[1]);
+        uint16_t count = make16BitValue(rawData[0], rawData[1], false);
+        return count;
+    }
+    puts("cannot read byte count!!");
+    return 0;
+}
+
+bool readFifoRecord(uint8_t i2c_dev, uint8_t packetBytes, char *packet)
+{
+    if (i2c_read_regs(i2c_dev, MPU9150_ADDRESS, FIFO_R_W, packet, packetBytes) != packetBytes)
+        return false;
+    return true;
+}
+
+bool readRegBlock(uint16_t i2c_dev, uint8_t startRegister, uint8_t bytes, uint8_t *destination, bool verbose)
+{
+    char *rawData;
+    rawData = (char*)malloc(bytes * sizeof(char));
+
+    if (verbose)
+        printf("reading %u bytes starting at %u: ", bytes, startRegister);
+
+    if (i2c_read_regs(i2c_dev, MPU9150_ADDRESS, startRegister, rawData, bytes) == bytes)
+    {
+
+        for (uint8_t i = 0; i < bytes; i += 2)
+        {
+            if (verbose)
+                printf("%X  ", rawData[i]);
+            destination[i] = rawData[i];
+        }
+        if (verbose)
+            puts("");
+        free(rawData);
+        return true;
+    }
+    else
+    {
+        free(rawData);
+        puts(" - could not read block");
+        return false;
+    }
+
+}
+
+
 
 void calibrateMPU9150(int i2c_dev, uint8_t address)
 {  
@@ -108,45 +302,57 @@ void calibrateMPU9150(int i2c_dev, uint8_t address)
     // Configure device for bias calculation
     res = i2c_write_reg(i2c_dev, MPU9150_ADDRESS, INT_ENABLE, 0x00);   // Disable all interrupts
     res = i2c_write_reg(i2c_dev, MPU9150_ADDRESS, FIFO_EN, 0x00);      // Disable FIFO
-    res = i2c_write_reg(i2c_dev, MPU9150_ADDRESS, PWR_MGMT_1, 0x00);   // Turn on internal clock source
+    //res = i2c_write_reg(i2c_dev, MPU9150_ADDRESS, PWR_MGMT_1, 0x00);   // Turn on internal clock source
     res = i2c_write_reg(i2c_dev, MPU9150_ADDRESS, I2C_MST_CTRL, 0x00); // Disable I2C master
     res = i2c_write_reg(i2c_dev, MPU9150_ADDRESS, USER_CTRL, 0x00);    // Disable FIFO and I2C master modes
     res = i2c_write_reg(i2c_dev, MPU9150_ADDRESS, USER_CTRL, 0x0C);    // Reset FIFO and DMP
     delayUsec(100000);  
     
     // Configure MPU6050 gyro and accelerometer for bias calculation
-    res = i2c_write_reg(i2c_dev, MPU9150_ADDRESS, CONFIG, 0x01);      // Set low-pass filter to 188 Hz
-    res = i2c_write_reg(i2c_dev, MPU9150_ADDRESS, SMPLRT_DIV, 0x00);  // Set sample rate to 1 kHz
-    res = i2c_write_reg(i2c_dev, MPU9150_ADDRESS, GYRO_CONFIG, 0x00);  // Set gyro full-scale to 250 degrees per second, maximum sensitivity
+    setLowPassFilter(i2c_dev, LPF_180HZ);// Set low-pass filter to 188 Hz
+    setSamplesPerSecond(i2c_dev, 1000);  // Set sample rate to 1 kHz
+    setGyroDegreesPerSecond(i2c_dev, GFS_250DPS);  // Set gyro full-scale to 250 degrees per second, maximum sensitivity
 
-    uint16_t  accelsensitivity = 16384;  // = 16384 LSB/g
+uint8_t acc[6];    
+if (readRegBlock(i2c_dev, ACCEL_XOUT_H, 6, acc, false))
+{
+    printf("%02X %02X %02X %02X %02X %02X\n", acc[0], acc[1], acc[2], acc[3], acc[4], acc[5]);
+}
 
     // Configure FIFO to capture accelerometer and gyro data for bias calculation
-    res = i2c_write_reg(i2c_dev, MPU9150_ADDRESS, USER_CTRL, 0x40);   // Enable FIFO  
-    res = i2c_write_reg(i2c_dev, MPU9150_ADDRESS, FIFO_EN, 0x78);     // Enable gyro and accelerometer sensors for FIFO  (max size 1024 bytes in MPU-6050)
+    //res = i2c_write_reg(i2c_dev, MPU9150_ADDRESS, USER_CTRL, 0x40);   // Enable FIFO  
+    setFifoToRecord(i2c_dev, FIFO_EN_AXYZ); // Enable accelerometer sensors for FIFO
+    //setFifoToRecord(i2c_dev, FIFO_EN_GX | FIFO_EN_GY | FIFO_EN_GZ | FIFO_EN_AXYZ); // Enable gyro and accelerometer sensors for FIFO
+    uint16_t packetSizeBytes = getPacketSizeBytes(i2c_dev);
+
     delayUsec(80000); // accumulate 80 samples in 80 milliseconds = 960 bytes
-
     // At end of sample accumulation, turn off FIFO sensor read
-    res = i2c_write_reg(i2c_dev, MPU9150_ADDRESS, FIFO_EN, 0x00);        // Disable gyro and accelerometer sensors for FIFO
-    char data[12]; // data array to hold accelerometer and gyro x, y, z, data
-    res = i2c_read_regs(i2c_dev, MPU9150_ADDRESS, FIFO_COUNTH, data, 2); // read FIFO sample count
-    uint16_t fifo_count = make16BitValue((unsigned int)data, (unsigned int)data+1, false);
-    uint16_t packet_count = fifo_count/12;// How many sets of full gyro and accelerometer data for averaging
-    printf("fifo count %d packet count %d\n", fifo_count, packet_count);
+    disableFifo(i2c_dev);
 
-    printf("reading %d stationary values...", packet_count);
+    uint16_t fifoBytes = readFifoByteCount(i2c_dev);
+    char data[packetSizeBytes]; // data array to hold one sample of accelerometer and gyro x, y, z, data
+    memset(data, 0, packetSizeBytes);
+    uint16_t packetCount = fifoBytes/packetSizeBytes;// How many samples of full gyro and accelerometer data for averaging
+    printf("bytes %d packet count %d\n", fifoBytes, packetCount);
     int32_t gyro_bias[3]  = {0, 0, 0};
     int32_t accel_bias[3] = {0, 0, 0};
-    for (uint16_t ii = 0; ii < packet_count; ii++) {
-        int16_t accel_temp[3] = {0, 0, 0}, gyro_temp[3] = {0, 0, 0};
-        i2c_read_regs(i2c_dev, MPU9150_ADDRESS, FIFO_R_W, &data[0], 12); // read data for averaging
-        accel_temp[0] = make16BitValue(data[0], data[1], false) ;  // Form signed 16-bit integer for each sample in FIFO
-        accel_temp[1] = make16BitValue(data[2], data[3], false) ;
-        accel_temp[2] = make16BitValue(data[4], data[5], false) ;
+    printf("reading %d stationary values...\n", packetCount);
+    for (uint16_t ii = 0; ii < packetCount; ii++) {
+        readFifoRecord(i2c_dev, packetSizeBytes, data);
+        dumpPacket(packetSizeBytes, (uint8_t*)&data);
+//printf("%2d: %3X %3X %3X %3X %3X %3X %3X %3X %3X %3X %3X %3X    ", ii, data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8], data[9], data[10], data[11]);
+fifoBytes = readFifoByteCount(i2c_dev);
+uint16_t pc = fifoBytes/packetSizeBytes;// How many sets of full gyro and accelerometer data for averaging
+printf(" now bytes %d packet count %d\n", fifoBytes, pc);
+        /*int16_t accel_temp[3] = {0, 0, 0};
+        accel_temp[0] = make16BitSignedValue(data[0], data[1], false) ;  // Form signed 16-bit integer for each sample in FIFO
+        accel_temp[1] = make16BitSignedValue(data[2], data[3], false) ;
+        accel_temp[2] = make16BitSignedValue(data[4], data[5], false) ;
 
-        gyro_temp[0] = make16BitValue(data[6], data[7], false) ;
-        gyro_temp[1] = make16BitValue(data[8], data[9], false) ;
-        gyro_temp[2] = make16BitValue(data[10], data[11], false) ;
+        int16_t gyro_temp[3] = {0, 0, 0};
+        gyro_temp[0] = make16BitSignedValue(data[6], data[7], false) ;
+        gyro_temp[1] = make16BitSignedValue(data[8], data[9], false) ;
+        gyro_temp[2] = make16BitSignedValue(data[10], data[11], false) ;
 
         accel_bias[0] += (int32_t) accel_temp[0]; // Sum individual signed 16-bit biases to get accumulated signed 32-bit biases
         accel_bias[1] += (int32_t) accel_temp[1];
@@ -154,20 +360,24 @@ void calibrateMPU9150(int i2c_dev, uint8_t address)
 
         gyro_bias[0]  += (int32_t) gyro_temp[0];
         gyro_bias[1]  += (int32_t) gyro_temp[1];
-        gyro_bias[2]  += (int32_t) gyro_temp[2];
+        gyro_bias[2]  += (int32_t) gyro_temp[2];*/
 
     }
+    
     //Serial.println("read stationary values.");
-    accel_bias[0] /= (int32_t) packet_count; // Normalize sums to get average count biases
-    accel_bias[1] /= (int32_t) packet_count;
-    accel_bias[2] /= (int32_t) packet_count;
+    accel_bias[0] /= (int32_t) packetCount; // Normalize sums to get average count biases
+    accel_bias[1] /= (int32_t) packetCount;
+    accel_bias[2] /= (int32_t) packetCount;
 
-    gyro_bias[0]  /= (int32_t) packet_count;
-    gyro_bias[1]  /= (int32_t) packet_count;
-    gyro_bias[2]  /= (int32_t) packet_count;
+    gyro_bias[0]  /= (int32_t) packetCount;
+    gyro_bias[1]  /= (int32_t) packetCount;
+    gyro_bias[2]  /= (int32_t) packetCount;
 
-    if(accel_bias[2] > 0L) {accel_bias[2] -= (int32_t) accelsensitivity;}  // Remove gravity from the z-axis accelerometer bias calculation
-    else {accel_bias[2] += (int32_t) accelsensitivity;}
+    uint16_t  accelsensitivity = 16384;  // = 16384 LSB/g
+    if (accel_bias[2] > 0L) 
+        accel_bias[2] -= (int32_t) accelsensitivity;  // Remove gravity from the z-axis accelerometer bias calculation
+    else 
+        accel_bias[2] += (int32_t) accelsensitivity;
 
     // Construct the gyro biases for push to the hardware gyro bias registers, which are reset to zero upon device startup
     data[0] = (-gyro_bias[0]/4  >> 8) & 0xFF; // Divide by 4 to get 32.9 LSB per deg/s to conform to expected bias input format
@@ -199,18 +409,19 @@ void calibrateMPU9150(int i2c_dev, uint8_t address)
 
     int32_t accel_bias_reg[3] = {0, 0, 0}; // A place to hold the factory accelerometer trim biases
     i2c_read_regs(i2c_dev, address, XA_OFFSET_H, &data[0], 2); // Read factory accelerometer trim values
-    accel_bias_reg[0] = make16BitValue(data[0], data[1], false);
+    accel_bias_reg[0] = make16BitSignedValue(data[0], data[1], false);
     i2c_read_regs(i2c_dev, address, YA_OFFSET_H, &data[0], 2); // Read factory accelerometer trim values
-    accel_bias_reg[1] = make16BitValue(data[0], data[1], false);
+    accel_bias_reg[1] = make16BitSignedValue(data[0], data[1], false);
     i2c_read_regs(i2c_dev, address, ZA_OFFSET_H, &data[0], 2); // Read factory accelerometer trim values
-    accel_bias_reg[2] = make16BitValue(data[0], data[1], false);
+    accel_bias_reg[2] = make16BitSignedValue(data[0], data[1], false);
 
     uint32_t mask = 1uL; // Define mask for temperature compensation bit 0 of lower byte of accelerometer bias registers
     uint8_t mask_bit[3] = {0, 0, 0}; // Define array to hold mask bit for each accelerometer bias axis
 
     for(uint16_t ii = 0; ii < 3; ii++)
     {
-        if(accel_bias_reg[ii] & mask) mask_bit[ii] = 0x01; // If temperature compensation bit is set, record that fact in mask_bit
+        if (accel_bias_reg[ii] & mask)
+            mask_bit[ii] = 0x01; // If temperature compensation bit is set, record that fact in mask_bit
     }
 
     // Construct total accelerometer bias, including calculated average accelerometer bias from above
@@ -316,39 +527,15 @@ void initMPU9150(uint16_t i2c_dev)
     res = i2c_write_reg(i2c_dev, MPU9150_ADDRESS, PWR_MGMT_1, 0x01);  // Set clock source to be PLL with x-axis gyroscope reference, bits 2:0 = 001
     delayUsec(100000); // Delay 100 ms for PLL to get established on x-axis gyro; should check for PLL ready interrupt  
 
-    // Configure Gyro and Accelerometer
-    // Disable FSYNC and set accelerometer and gyro bandwidth to 44 and 42 Hz, respectively; 
-    // Clock rate = 1000Hz
-    // DLPF_CFG = bits 2:0 = 000; 8 kHz gyro acc no delay gyro 1ms, 1kHz sample rate
-    // DLPF_CFG = bits 2:0 = 001; ~2ms delay both, 500Hz sample rate
-    // DLPF_CFG = bits 2:0 = 010; ~3ms delay both, 330Hz sample rate
-    // DLPF_CFG = bits 2:0 = 011; ~5ms delay both, 200Hz sample rate
-    // DLPF_CFG = bits 2:0 = 100; ~8ms delay both, 125Hz sample rate
-    // DLPF_CFG = bits 2:0 = 101; ~13ms delay both, 77Hz sample rate
-    // DLPF_CFG = bits 2:0 = 110; ~19ms delay both, 52Hz sample rate
-    uint8_t delayCode = 0x03; // delay ~5ms = ~200Hz
-    res = i2c_write_reg(i2c_dev, MPU9150_ADDRESS, CONFIG, delayCode);  
-
-    // Set sample rate = gyroscope output rate/(1 + SMPLRT_DIV)
-    // SMPLRT_DIV = (clock rate/sampleRate) - 1
-    // so if we have 200Hz sample rate and 1kHz clock rate:
-    // SMPLRT_DIV = 1000/200 - 1 = 4
-    uint8_t sampleRateDiv = 0x04;
-    res = i2c_write_reg(i2c_dev, MPU9150_ADDRESS, SMPLRT_DIV,  sampleRateDiv);
+    setLowPassFilter(i2c_dev, LPF_40HZ);
+    setSamplesPerSecond(i2c_dev, 100);
 
     // Set gyroscope full scale range
     // Range selects FS_SEL and AFS_SEL are 0 - 3, so 2-bit values are left-shifted into positions 4:3
-    char c[1];
-    res = i2c_read_reg(i2c_dev, MPU9150_ADDRESS, GYRO_CONFIG, c);
-    res = i2c_write_reg(i2c_dev, MPU9150_ADDRESS, GYRO_CONFIG, (unsigned int)c & ~0xE0); // Clear self-test bits [7:5] 
-    res = i2c_write_reg(i2c_dev, MPU9150_ADDRESS, GYRO_CONFIG, (unsigned int)c & ~0x18); // Clear AFS bits [4:3]
-    res = i2c_write_reg(i2c_dev, MPU9150_ADDRESS, GYRO_CONFIG, (unsigned int)c | gScale << 3); // Set full scale range for the gyro
+    res = i2c_write_reg(i2c_dev, MPU9150_ADDRESS, ACCEL_CONFIG, 0 | gScale << 3);
 
     // Set accelerometer configuration
-    res = i2c_read_reg(i2c_dev, MPU9150_ADDRESS, ACCEL_CONFIG, c);
-    res = i2c_write_reg(i2c_dev, MPU9150_ADDRESS, ACCEL_CONFIG, (unsigned int)c & ~0xE0); // Clear self-test bits [7:5] 
-    res = i2c_write_reg(i2c_dev, MPU9150_ADDRESS, ACCEL_CONFIG, (unsigned int)c & ~0x18); // Clear AFS bits [4:3]
-    res = i2c_write_reg(i2c_dev, MPU9150_ADDRESS, ACCEL_CONFIG, (unsigned int)c | aScale << 3); // Set full scale range for the accelerometer 
+    res = i2c_write_reg(i2c_dev, MPU9150_ADDRESS, ACCEL_CONFIG, 0 | aScale << 3);
 
 
     // Configure Magnetometer for FIFO
@@ -364,18 +551,19 @@ void initMPU9150(uint16_t i2c_dev)
     res = i2c_write_reg(i2c_dev, MPU9150_ADDRESS, I2C_SLV0_CTRL, 0x86); // Read six bytes and swap bytes
 
     // Configure FIFO
-    res = i2c_write_reg(i2c_dev, MPU9150_ADDRESS, INT_ENABLE, 0x00); // Disable all interrupts
-    res = i2c_write_reg(i2c_dev, MPU9150_ADDRESS, FIFO_EN, 0x00);    // Disable FIFO
-    res = i2c_write_reg(i2c_dev, MPU9150_ADDRESS, USER_CTRL, 0x02);  // Reset I2C master
-    res = i2c_write_reg(i2c_dev, MPU9150_ADDRESS, USER_CTRL, 0x00);  // Disable FIFO 
-    res = i2c_write_reg(i2c_dev, MPU9150_ADDRESS, FIFO_EN, 0x78); // Enable sensor data to go to FIFO (78 == gyro, and accel)
-    res = i2c_write_reg(i2c_dev, MPU9150_ADDRESS, I2C_MST_DELAY_CTRL, 0x80); // Enable delay of external sensor data until all data registers have been read
-    res = i2c_write_reg(i2c_dev, MPU9150_ADDRESS, USER_CTRL, 0x44);   // Enable FIFO (and clear it)
+    //setFifoToRecord(FIFO_EN_GX | FIFO_EN_GY | FIFO_EN_GZ | FIFO_EN_AXYZ);
+    if (! setFifoToRecord(i2c_dev, FIFO_EN_GX))
+    {
+        puts("could not set fifo up!!");
+        return;
+    }
 
     // Configure Interrupts
     // Set interrupt pin active high, push-pull, and clear on read of INT_STATUS
     res = i2c_write_reg(i2c_dev, MPU9150_ADDRESS, INT_PIN_CFG, 0x22);    
     res = i2c_write_reg(i2c_dev, MPU9150_ADDRESS, INT_ENABLE, 0x11); // set interrupt enable on data ready and fifo oflow (bits 4 and 0)
+
+    res = i2c_write_reg(i2c_dev, MPU9150_ADDRESS, SIGNAL_PATH_RESET, 0x7); // reset gyro, accel, temp signal paths
     puts("MPU9150 initialised");
 }
 
@@ -397,109 +585,33 @@ bool isCorrectSensor(int i2c_dev, uint8_t address, uint8_t whoAmIRegister, uint8
     return false;
 }
 
-void readSensorBlock(uint16_t i2c_dev, uint8_t startRegister, uint8_t words, int16_t *destination)
-{
-    uint8_t bytes = 2 * words;
-
-    int8_t *rawData;
-    rawData = (int8_t*)malloc(bytes * sizeof(int8_t));
-
-    for (uint8_t bIdx = 0; bIdx < bytes; bIdx++)
-    {
-        uint16_t res = i2c_read_reg(i2c_dev, MPU9150_ADDRESS, startRegister, (char*)rawData + bIdx);  // Read the raw data registers into data array
-        if (res != 1)
-        {
-            puts("could not read sensor data");
-            return;
-        }
-    }
-
-    uint8_t bIdx = 0;
-    for (uint8_t wordIdx = 0; wordIdx < words; wordIdx++)
-    {
-        destination[wordIdx] = make16BitValue(rawData[bIdx], rawData[bIdx+1], false);
-        bIdx += 2;
-    }
-    free(rawData);
-}
-
-
-bool readMagData(uint16_t i2c_dev, int16_t * destination)
-{
-    i2c_write_reg(i2c_dev, AK8975A_ADDRESS, AK8975A_CNTL, POWER_DOWN_MODE); // Power down
-    delayUsec(20000);
-    i2c_write_reg(i2c_dev, AK8975A_ADDRESS, AK8975A_CNTL, SINGLE_MEASURE_MODE); // make single measure mode
-    delayUsec(20000);
-
-    // wait until magnetometer had data to read
-    char dRdy;
-    uint16_t res = i2c_read_reg(i2c_dev, AK8975A_ADDRESS, AK8975A_ST1, &dRdy);
-    if (res == 1)
-    {
-        if (CHECK_BIT(dRdy,0))
-        {
-            char rawData[7];  // x/y/z register data stored here + status 2
-            res = i2c_read_regs(i2c_dev, AK8975A_ADDRESS, AK8975A_XOUT_L, rawData, 7);
-            if (res != 7)
-            {
-                puts("could not read magnetometer data");
-                return false;
-            }
-            uint8_t ERR = rawData[6];
-            if (ERR != 0)
-            {
-                // read error or overflow
-                printf("Magnetometer read error:%d (bit8 = overflow, bit4 = read err)\n", ERR);
-                return false;
-            }
-            // AK8975 registers are litte-endian unlike accel and gyros (!)
-            destination[0] = make16BitValue(rawData[0], rawData[1], true);
-            destination[1] = make16BitValue(rawData[2], rawData[3], true);
-            destination[2] = make16BitValue(rawData[4], rawData[5], true);
-            //puts("mag ok");
-            return true;
-        }
-        else
-        {
-            printf("magnetometer not ready: %d\n", dRdy);
-            return false;
-        }
-    }
-    else
-    {
-        puts("could not read magnetometer ready flag");
-        return false;
-    }
-
-}
-
-uint16_t readFifoByteCount(uint16_t i2c_dev)
-{
-    int16_t count[1];
-    readSensorBlock(i2c_dev, FIFO_COUNTH, 1, count);
-    return count[0];
-}
 
 void imuLoop(uint16_t i2c_dev)
 {  
     uint16_t i = 0;
-    uint32_t cTime = 0;
+    //uint32_t cTime = 0;
 
-    uint8_t agBlockWords = 6;
-    uint8_t magBlockWords = 3;
     uint8_t maxBacklog = 40;
+
 
     if (imuReady)
     {
-        while(1)
+        //uint16_t packetSizeBytes = getPacketSizeBytes(i2c_dev);
+        uint16_t packetSizeBytes = 1;
+if (i == 0)
+{
+puts("now disable fifo");
+disableFifo(i2c_dev);
+delayUsec(100000);
+}
+        while(imuReady)
         {
             uint16_t countBytes = readFifoByteCount(i2c_dev);
-            uint16_t count = countBytes/agBlockWords*2;
+            uint16_t count = countBytes/packetSizeBytes;
+printf("fifo has %d recs (%d bytes)\n", count, countBytes);
             if (count > 0)
             {
-                //printf("fifo has %d records\n", count);
-                int16_t agBlock[agBlockWords];
-                int16_t magBlock[magBlockWords];
+                //int16_t packetData[packetSizeBytes];
                 if (countBytes >= 1024)
                 {
                     puts("MPU9150 fifo has overflowed");
@@ -507,19 +619,21 @@ void imuLoop(uint16_t i2c_dev)
                 }
                 else
                 {
-                    if (countBytes > maxBacklog * (agBlockWords*2))
+                    if (countBytes > maxBacklog * packetSizeBytes)
                     {
-                        // we have unacceptable fifo backlog, drop records
-                        puts("losing battle");
+                        // we have unacceptable fifo backlog, drop some records
+                        /*puts("losing battle");
                         for (uint8_t i = 0; i < 5; i++)
                         {
-                            readSensorBlock(i2c_dev, FIFO_R_W, agBlockWords, agBlock);
-                        }
+                            readSensorBlock(i2c_dev, FIFO_R_W, packetSizeBytes, packetData, false);
+                        }*/
                     }
-                    readSensorBlock(i2c_dev, FIFO_R_W, agBlockWords, agBlock);
-                    readSensorBlock(i2c_dev, EXT_SENS_DATA_00, magBlockWords, magBlock);
+                    //readFifoByte(i2c_dev);
+                    /*readSensorBlock(i2c_dev, FIFO_R_W, 2*packetSizeBytes, packetData, true);
+                    dumpFifoPacket(packetSizeBytes/2, packetData);*/
+                    //readSensorBlock(i2c_dev, EXT_SENS_DATA_00, magBlockWords*2, magBlock, false);
 
-                    // calculate the accleration value in g's
+                    /*// calculate the accleration value in g's
                     int16_t ax = agBlock[0] * (aRes * 100);
                     int16_t ay = agBlock[1] * (aRes * 100);   
                     int16_t az = agBlock[2] * (aRes * 100);
@@ -533,11 +647,13 @@ void imuLoop(uint16_t i2c_dev)
                     int16_t my = ((float)magBlock[1]*mRes)*(magCalibration[1]);
                     int16_t mz = ((float)magBlock[2]*mRes)*(magCalibration[2]);
 
-                    printf("%5d a(%5d %5d %5d)      g(%5d %5d %5d)      m(%5d %5d %5d)    time(%lu)\n", i++, ax, ay, az, gx, gy, gz, mx, my, mz, xtimer_now() - cTime);
+                    printf("%5d a(%5d %5d %5d)      g(%5d %5d %5d)      m(%5d %5d %5d)    time(%lu)\n", i++, ax, ay, az, gx, gy, gz, mx, my, mz, xtimer_now() - cTime);*/
                 }
             }
-            thread_yield();
-            cTime = xtimer_now();
+            delayUsec(1000);
+            if (i++ == 4)
+                imuReady = false;
+            //cTime = xtimer_now();
         }
     }
     else
@@ -570,7 +686,6 @@ bool selfTest(int i2c_dev, uint8_t address)
         res = i2c_read_reg(i2c_dev, address, SELF_TEST_Y, rawData+1);
         res = i2c_read_reg(i2c_dev, address, SELF_TEST_Z, rawData+2);
         res = i2c_read_reg(i2c_dev, address, SELF_TEST_A, rawData+3); // Mixed-axis self-test results
-        printf("raw data %d %d %d %d\n", rawData[0],rawData[1],rawData[2],rawData[3]);
 
         // Extract the acceleration test results first (NB the registers are smeared hence the different values used to extract the XA/YA/ZA values)
         uint8_t selfTest[6];

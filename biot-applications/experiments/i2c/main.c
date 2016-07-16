@@ -1,8 +1,11 @@
 /*
  */
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <thread.h>
+#include <xtimer.h>
 
 #include "periph_conf.h"
 #include "periph/i2c.h"
@@ -284,6 +287,7 @@ static const shell_command_t shell_commands[] = {
     { "imu1", "read data from IMU", imu1_cmd },
     { NULL, NULL, NULL }
 };
+
 
 int main(void)
 {
