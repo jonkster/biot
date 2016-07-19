@@ -179,60 +179,53 @@ void imuCalibrate(imuData_t *data)
 
 myQuat_t getPosition(mpu9150_t dev)
 {
-    bool agm[3] = {false, false, true};
     imuData_t imuData;
     if (getIMUData(dev, &imuData))
     {
-        myQuat_t aRot = newQuat();
         // accelerometer
-        if (agm[0])
-        {
-            double ax1 = (double)imuData.accel.x_axis/1024;
-            double ay1 = (double)imuData.accel.y_axis/1024;
-            double az1 = (double)imuData.accel.z_axis/1024;
+        double ax1 = imuData.accel.x_axis;
+        double ay1 = imuData.accel.y_axis;
+        double az1 = imuData.accel.z_axis;
+        double downVec[3] = { ax1, ay1, az1 };
+        //downVec[0] = 0; downVec[1] = -2; downVec[2] = 3; // make pretend accelerometer reading for debugging
+        vecNormalise(downVec);
+        printf("%f, %f, %f\n", downVec[0], downVec[1], downVec[2]);
 
-            double ato[3] = { ax1, ay1, az1 };
-            if (vecLength(ato) > 0)
-            {
-                double afrom[3] = {0, 0, 1};
-                vecNormalise(ato);
-                aRot = quatFrom2Vecs(afrom, ato);
-            }
-        }
-
-        myQuat_t mRot = newQuat();
         // magnetometer
-        if (agm[2])
+        double mx1 = (double)(imuData.mag.x_axis - magHardCorrection[0]);
+        double my1 = (double)(imuData.mag.y_axis - magHardCorrection[1]);
+        double mz1 = (double)(imuData.mag.z_axis - magHardCorrection[2]);
+        mx1 *= magSoftCorrection[0];
+        my1 *= magSoftCorrection[1];
+        mz1 *= magSoftCorrection[2];
+        double magRawVec[3] = { mx1, my1, mz1 };
+
+        // make a north vector without dip by using down and raw
+        // magnetometer vectors - do it by creating an east (90 to down
+        // and raw) and then undipped north (90 to east and down)
+        double eastVec[3];
+        vecCross(eastVec, downVec, magRawVec);
+        double northVec[3];
+        vecCross(northVec, eastVec, downVec);
+        northVec[0] = 1; northVec[1] = 0; northVec[2] = 0; // make pretend magnetometer reading for debugging
+        vecNormalise(northVec);
+
+        double downRef[3] = {0, 0, 1};
+        myQuat_t downRot = quatFrom2Vecs(downVec, downRef);
+        double northRef[3] = {1, 0, 0};
+        myQuat_t northRot = quatFrom2Vecs(northVec, northRef);
+
+        myQuat_t combinedRot = quatMultiply(northRot, downRot);
+        currentIMUPosition = combinedRot;
+        //currentIMUPosition = northRot;
+       
+        //currentIMUPosition = downRot;
+        //currentIMUPosition = northRot;
+
+
+        if (false)
         {
-            double mx1 = (double)(imuData.mag.x_axis - magHardCorrection[0]);
-            double my1 = (double)(imuData.mag.y_axis - magHardCorrection[1]);
-            double mz1 = (double)(imuData.mag.z_axis - magHardCorrection[2]);
-            mx1 *= magSoftCorrection[0];
-            my1 *= magSoftCorrection[1];
-            mz1 *= magSoftCorrection[2];
-
-            double mto[3] = { mx1, my1, mz1 };
-            if (vecLength(mto) > 0)
-            {
-                /* lets say always constant declination for time being - need
-                 * to make this configurable somehow for different locations.
-                 */
-                double declination = 60.0 * PI / 180.0;
-
-                double mfrom[3] = {cos(declination), sin(declination), 0};
-                vecNormalise(mto);
-                mRot = quatFrom2Vecs(mfrom, mto);
-            }
-        }
-
-        myQuat_t iRot = newQuat();
-        iRot = quatMultiply(iRot, aRot);
-        iRot = quatMultiply(iRot, mRot);
-        currentIMUPosition = iRot;
-
-        // gyroscope
-        if (agm[1])
-        {
+            // gyroscope
             double gx1 = (double)imuData.gyro.x_axis/1024;
             double gy1 = (double)imuData.gyro.y_axis/1024;
             double gz1 = (double)imuData.gyro.z_axis/1024;

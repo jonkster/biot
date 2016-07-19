@@ -18,13 +18,11 @@ double vecDot(double *u, double *v)
     return d; 
 }
 
-double *vecCross(double *u, double *v)
+void vecCross(double *dest, double *u, double *v)
 {
-    double *dest = (double*)malloc(3 * sizeof(double));
     dest[0] = u[1] * v[2] - u[2] * v[1];
     dest[1] = u[2] * v[0] - u[0] * v[2];
     dest[2] = u[0] * v[1] - u[1] * v[0];
-    return dest;
 }
 
 double vecLength(double *v)
@@ -39,6 +37,18 @@ double *vecNormalise(double *v)
     v[1] = v[1]/length;
     v[2] = v[2]/length;
     return v;
+}
+
+myQuat_t quatAngleAxis(double angleDeg, double *axis)
+{
+    double angle = angleDeg * PI/180;
+
+    myQuat_t q;
+    q.w = cos(angle/2);
+    q.x = axis[0] * sin(angle/2);
+    q.y = axis[1] * sin(angle/2);
+    q.z = axis[2] * sin(angle/2);
+    return q;
 }
 
 myQuat_t makeQuatFromAngularVelocityTime(double *omega, double dt)
@@ -63,7 +73,7 @@ myQuat_t newQuat(void)
     return q;
 }
 
-myQuat_t quatFrom2Vecs(double *u, double *v)
+myQuat_t oldquatFrom2Vecs(double *u, double *v)
 {
     double normUV = sqrt(abs(vecDot(u, u) * vecDot(v, v)));
     double realPart = normUV + vecDot(u, v);
@@ -91,11 +101,11 @@ myQuat_t quatFrom2Vecs(double *u, double *v)
     else
     {
 	/* Otherwise, build quaternion the standard way. */
-	double *vTemp = vecCross(u, v);
+	double vTemp[3];
+	vecCross(vTemp, u, v);
         vec[0] = vTemp[0];
         vec[1] = vTemp[1];
         vec[2] = vTemp[2];
-        free(vTemp);
     }
     myQuat_t q;
     q.w = realPart;
@@ -103,6 +113,43 @@ myQuat_t quatFrom2Vecs(double *u, double *v)
     q.y = vec[1];
     q.z = vec[2];
     quatNormalise(&q);
+    return q;
+}
+
+myQuat_t quatFrom2Vecs(double *u, double *v)
+{
+    vecNormalise(u);
+    vecNormalise(v);
+
+    double cosTheta = vecDot(u, v);
+
+    double rotationAxis[3];
+
+    if (cosTheta < -1 + 0.001f){
+	// special case when vectors in opposite directions:
+	// there is no "ideal" rotation axis
+	// So guess one; any will do as long as it's perpendicular to start
+	double up[3] = { 0, 0, 1 };
+	vecCross(rotationAxis, up, u);
+	if (vecLength(rotationAxis) < 0.01 ) // bad luck, they were parallel, try again!
+	{
+	    double north[3] = { 0, 0, 1 };
+	    vecCross(rotationAxis, north, u);
+	}
+	vecNormalise(rotationAxis);
+	return quatAngleAxis(180.0, rotationAxis);
+    }
+
+    vecCross(rotationAxis, u, v);
+
+    double s = sqrt( (1+cosTheta)*2 );
+    float invs = 1 / s;
+
+    myQuat_t q;
+    q.w = s * 0.5;
+    q.x = rotationAxis[0] * invs;
+    q.y = rotationAxis[1] * invs;
+    q.z = rotationAxis[2] * invs;
     return q;
 }
 

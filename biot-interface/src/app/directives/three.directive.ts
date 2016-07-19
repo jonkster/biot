@@ -27,6 +27,7 @@ export class ThreeDirective {
         this.anim();
     }
 
+
     addNode(name, x, y, z, colour) {
 
         // make box
@@ -47,30 +48,49 @@ export class ThreeDirective {
         cylinder.position.z = -5;
         node.add(cylinder);
 
-        // make axis indicator
-        var lmaterial = new THREE.LineBasicMaterial( {color: 0xff0000});
-        var lgeometry = new THREE.Geometry();
-        lgeometry.vertices.push(new THREE.Vector3(0, 0, 0));
-        lgeometry.vertices.push(new THREE.Vector3(60, 0, 0));
-        var line = new THREE.Line(lgeometry, lmaterial);
-        node.add(line);
-        lmaterial = new THREE.LineBasicMaterial( {color: 0x00ff00});
-        lgeometry = new THREE.Geometry();
-        lgeometry.vertices.push(new THREE.Vector3(0, 0, 0));
-        lgeometry.vertices.push(new THREE.Vector3(0, 60, 0));
-        line = new THREE.Line(lgeometry, lmaterial);
-        node.add(line);
-        lmaterial = new THREE.LineBasicMaterial( {color: 0x0000ff});
-        lgeometry = new THREE.Geometry();
-        lgeometry.vertices.push(new THREE.Vector3(0, 0, 0));
-        lgeometry.vertices.push(new THREE.Vector3(0, 0, 60));
-        line = new THREE.Line(lgeometry, lmaterial);
-        node.add(line);
+        var worldAxis = this.addWorldAxis(x, y, z, 100, 1, 0.35);
+        worldAxis.translateX(x);
+        this.scene.add(worldAxis);
+
+        var localAxis = this.addWorldAxis(x, y, z, 40, 5, 0);
+        node.add(localAxis);
 
         this.scene.add(node);
-	var labelName = name.replace(/:/g, ":\n");
-        var label = this.createLabel(labelName, x, y, z+10, 20, "white", "black", 3);
-        this.scene.add(label);
+	/*var labelName = name.replace(/:/g, ":\n");
+        var label = this.createLabel(labelName, x, y, z, 20, "white", "black", 3);
+        this.scene.add(label);*/
+    }
+
+    addWorldAxis(x, y, z, length, width, brightness) {
+        var group = new THREE.Object3D();
+
+        var r = new THREE.Color(0.5, 0.1, 0.1).offsetHSL(0, 0, brightness);
+        var g = new THREE.Color(0.1, 0.5, 0.1).offsetHSL(0, 0, brightness);
+        var b = new THREE.Color(0.1, 0.1, 0.5).offsetHSL(0, 0, brightness);
+        console.log(r.getHSL(), g.getHSL(), b.getHSL());
+
+        var lmaterial = new THREE.LineBasicMaterial( {color: r.getHex(), linewidth: width});
+        var lgeometry = new THREE.Geometry();
+        lgeometry.vertices.push(new THREE.Vector3(0, 0, 0));
+        lgeometry.vertices.push(new THREE.Vector3(length, 0, 0));
+        var line = new THREE.Line(lgeometry, lmaterial);
+        group.add(line);
+
+        lmaterial = new THREE.LineBasicMaterial( {color: g.getHex(), linewidth: width} );
+        lgeometry = new THREE.Geometry();
+        lgeometry.vertices.push(new THREE.Vector3(0, 0, 0));
+        lgeometry.vertices.push(new THREE.Vector3(0, length, 0));
+        line = new THREE.Line(lgeometry, lmaterial);
+        group.add(line);
+
+        lmaterial = new THREE.LineBasicMaterial( {color: b.getHex(), linewidth: width} );
+        lgeometry = new THREE.Geometry();
+        lgeometry.vertices.push(new THREE.Vector3(0, 0, 0));
+        lgeometry.vertices.push(new THREE.Vector3(0, 0, length));
+        line = new THREE.Line(lgeometry, lmaterial);
+        group.add(line);
+
+        return group;
     }
 
     anim() {
@@ -129,14 +149,14 @@ export class ThreeDirective {
 
         this.scene = new THREE.Scene();
 
-        this.camera = new THREE.PerspectiveCamera( 45, this.sizeX/this.sizeY, 0.1, 10000 );
+        this.camera = new THREE.OrthographicCamera( -800, 800, 200, -200, 0.1, 1000);
+        //this.camera = new THREE.PerspectiveCamera( 45, this.sizeX/this.sizeY, 0.1, 10000 );
         this.scene.add(this.camera);
         this.camera.up.set( 0, 0, 1 )
-        this.camera.position.z = 0;
+        this.camera.position.z = 200;
         this.camera.position.y = -250;
-        this.camera.position.x = 0;
-        console.log(this.camera);
-        this.camera.lookAt( new THREE.Vector3(0, 0, 0) );
+        this.camera.position.x = 30;
+        this.camera.lookAt( this.scene.position );
 
         var axisHelper = new THREE.AxisHelper( 125 );
         this.scene.add( axisHelper );

@@ -30,6 +30,8 @@ extern "C" {
 
     void slerp(myQuat_t *dest, myQuat_t qa, myQuat_t qb, double t);
 
+    void vecCross(double *dest, double *u, double *v);
+
     double vecLength(double *v);
 
     double *vecNormalise(double *v);
