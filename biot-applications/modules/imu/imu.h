@@ -5,6 +5,8 @@
 
 #include "mpu9150.h"
 
+#include "../position/position.h"
+
 #define GA_SAMPLE_RATE_HZ   300 // must be between 4 and 1000.  200 works
 #define C_SAMPLE_RATE_HZ     25 // should be between 1 and 100Hz and an integral fraction of comapss/gyro rate
 
@@ -19,23 +21,30 @@ typedef struct {
     float temperature;
 } imuData_t;
 
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-uint16_t aFsrRange2Int(mpu9150_accel_ranges_t fsr);
+    uint16_t aFsrRange2Int(mpu9150_accel_ranges_t fsr);
 
-void displayConfiguration(mpu9150_t dev);
+    void displayConfiguration(mpu9150_t dev);
 
-void displayData(imuData_t data);
+    void displayCorrections(void);
 
-uint16_t gFsrRange2Int(mpu9150_gyro_ranges_t fsr);
+    void displayData(imuData_t data);
 
-bool getIMUData(mpu9150_t dev, imuData_t *data);
+    uint16_t gFsrRange2Int(mpu9150_gyro_ranges_t fsr);
 
-bool initialiseIMU(mpu9150_t *dev);
+    bool getIMUData(mpu9150_t dev, imuData_t *data);
 
-void imuLoop(void);
+    void imuCalibrate(imuData_t *data);
+
+    myQuat_t getPosition(mpu9150_t dev);
+
+    bool initialiseIMU(mpu9150_t *dev);
+
+    void imuLoop(void);
 
 #ifdef __cplusplus
 }

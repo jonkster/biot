@@ -12,6 +12,15 @@
 #define CHECK_BIT(var,pos) ((var) & (1<<(pos))) != 0
 
 uint64_t t0;
+myQuat_t currentIMUPosition;
+imuData_t lastIMUData;
+
+int16_t magMin[3] = { 0, 0, 0 };
+int16_t magMax[3] = { 0, 0, 0 };
+int16_t magHardCorrection[3] = { 0, 0, 0 };
+double magSoftCorrection[3] = { 1, 1, 1 };
+bool magValid = false;
+
 
 uint16_t aFsrRange2Int(mpu9150_accel_ranges_t fsr)
 {
@@ -48,6 +57,22 @@ void displayConfiguration(mpu9150_t dev)
     printf("Compass Z axis factory adjustment: %u\n", dev.conf.compass_z_adj);
     printf("+-------------------------------------+\n");
 }
+
+void displayCorrections(void)
+{
+    printf("+------------Correction Data----------+\n");
+    printf(
+            "mag min: %"PRId16", %"PRId16", %"PRId16"\n"
+            "mag max: %"PRId16", %"PRId16", %"PRId16"\n"
+            "hard correction offsets: %"PRId16", %"PRId16", %"PRId16"\n"
+            "soft correction factors: %f, %f, %f\n",
+            magMin[0], magMin[1], magMin[2],
+            magMax[0], magMax[1], magMax[2],
+            magHardCorrection[0], magHardCorrection[1], magHardCorrection[2],
+            magSoftCorrection[0], magSoftCorrection[1], magSoftCorrection[2]);
+    printf("+-------------------------------------+\n");
+}
+
 
 void displayData(imuData_t data)
 {
@@ -90,12 +115,147 @@ bool getIMUData(mpu9150_t dev, imuData_t *data)
     mpu9150_read_accel(&dev, &data->accel);
     mpu9150_read_gyro(&dev, &data->gyro);
     mpu9150_read_compass(&dev, &data->mag);
+    imuCalibrate(data);
     int32_t rawTemp;
     mpu9150_read_temperature(&dev, &rawTemp);
     data->temperature = rawTemp/1000; // approx temperature in degrees C
 
     return true;
 }
+
+void imuCalibrate(imuData_t *data)
+{
+    // hard corrections - try and make all mag readings be equally spread
+    // acrooss origin rather than being offset by collecting max and min values
+    // and calculating an 'average centre'.
+    
+    if (data->mag.x_axis > magMax[0])
+        magMax[0] = data->mag.x_axis;
+
+    if (data->mag.y_axis > magMax[1])
+        magMax[1] = data->mag.y_axis;
+
+    if (data->mag.z_axis > magMax[2])
+        magMax[2] = data->mag.z_axis;
+
+    if (data->mag.x_axis < magMin[0])
+        magMin[0] = data->mag.x_axis;
+
+    if (data->mag.y_axis < magMin[1])
+        magMin[1] = data->mag.y_axis;
+
+    if (data->mag.z_axis < magMin[2])
+        magMin[2] = data->mag.z_axis;
+    
+    for (uint8_t i = 0; i < 3; i++)
+        magHardCorrection[i] = (magMin[i] + magMax[i])/2;
+
+    // soft corrections, try and reduce elongations along x,y,z
+    // axis to make the data fit closer to a sphere (this a bit of a quick and
+    // dirty method but hopefully will be OK).
+
+    // along each axis, work out a max/min value
+    double vMax[3];
+    double vMin[3];
+    for (uint8_t i = 0; i < 3; i++)
+    {
+        vMax[i] = (double)magMax[i] - (magMin[i] + magMax[i])/2.0;
+        vMin[i] = (double)magMin[i] - (magMin[i] + magMin[i])/2.0;
+    }
+    // find 'average' distance from centre of the 3 axes
+    double avg[3];
+    for (uint8_t i = 0; i < 3; i++)
+    {
+        avg[i] = (vMax[i] - vMin[i])/2;
+    }
+    double averageRadius = (avg[0] + avg[1] + avg[2]) / 3;
+
+    // calculate scale factor along each axis
+    for (uint8_t i = 0; i < 3; i++)
+    {
+        magSoftCorrection[i] = averageRadius/avg[i];
+    }
+}
+
+myQuat_t getPosition(mpu9150_t dev)
+{
+    bool agm[3] = {false, false, true};
+    imuData_t imuData;
+    if (getIMUData(dev, &imuData))
+    {
+        myQuat_t aRot = newQuat();
+        // accelerometer
+        if (agm[0])
+        {
+            double ax1 = (double)imuData.accel.x_axis/1024;
+            double ay1 = (double)imuData.accel.y_axis/1024;
+            double az1 = (double)imuData.accel.z_axis/1024;
+
+            double ato[3] = { ax1, ay1, az1 };
+            if (vecLength(ato) > 0)
+            {
+                double afrom[3] = {0, 0, 1};
+                vecNormalise(ato);
+                aRot = quatFrom2Vecs(afrom, ato);
+            }
+        }
+
+        myQuat_t mRot = newQuat();
+        // magnetometer
+        if (agm[2])
+        {
+            double mx1 = (double)(imuData.mag.x_axis - magHardCorrection[0]);
+            double my1 = (double)(imuData.mag.y_axis - magHardCorrection[1]);
+            double mz1 = (double)(imuData.mag.z_axis - magHardCorrection[2]);
+            mx1 *= magSoftCorrection[0];
+            my1 *= magSoftCorrection[1];
+            mz1 *= magSoftCorrection[2];
+
+            double mto[3] = { mx1, my1, mz1 };
+            if (vecLength(mto) > 0)
+            {
+                /* lets say always constant declination for time being - need
+                 * to make this configurable somehow for different locations.
+                 */
+                double declination = 60.0 * PI / 180.0;
+
+                double mfrom[3] = {cos(declination), sin(declination), 0};
+                vecNormalise(mto);
+                mRot = quatFrom2Vecs(mfrom, mto);
+            }
+        }
+
+        myQuat_t iRot = newQuat();
+        iRot = quatMultiply(iRot, aRot);
+        iRot = quatMultiply(iRot, mRot);
+        currentIMUPosition = iRot;
+
+        // gyroscope
+        if (agm[1])
+        {
+            double gx1 = (double)imuData.gyro.x_axis/1024;
+            double gy1 = (double)imuData.gyro.y_axis/1024;
+            double gz1 = (double)imuData.gyro.z_axis/1024;
+
+            uint32_t dt = imuData.ts - lastIMUData.ts;
+            double omega[3] = { gx1, gy1, gz1 }; 
+            myQuat_t gRot = makeQuatFromAngularVelocityTime(omega, dt/50000);
+            currentIMUPosition = quatMultiply(currentIMUPosition, gRot);
+        }
+
+    }
+    lastIMUData = imuData;
+    return currentIMUPosition;
+}
+
+void initialisePosition(mpu9150_t *dev)
+{
+    makeIdentityQuat(&currentIMUPosition);
+
+    currentIMUPosition = getPosition(*dev);
+}
+
+
 
 bool initialiseIMU(mpu9150_t *dev)
 {
@@ -144,6 +304,7 @@ bool initialiseIMU(mpu9150_t *dev)
 
     t0 = xtimer_now64();
 
+    initialisePosition(dev);
     return true;
 }
 

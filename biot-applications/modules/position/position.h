@@ -16,11 +16,23 @@ extern "C" {
 
     void makeIdentityQuat(myQuat_t *q);
 
+    myQuat_t makeQuatFromAngularVelocityTime(double *omega, double dt);
+
+    myQuat_t newQuat(void);
+
+    float quatLength(myQuat_t q);
+
     void quatNormalise(myQuat_t *q);
 
     myQuat_t quatMultiply(myQuat_t p, myQuat_t q);
 
     myQuat_t quatFrom2Vecs(double *u, double *v);
+
+    void slerp(myQuat_t *dest, myQuat_t qa, myQuat_t qb, double t);
+
+    double vecLength(double *v);
+
+    double *vecNormalise(double *v);
 
 #ifdef __cplusplus
 }

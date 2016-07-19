@@ -30,8 +30,8 @@ extern bool isTimeSet(void);
 bool hasTimeChanged(void);
 extern void timeInit(void);
 extern void sendData(char *address, nodeData_t data);
-myQuat_t currentPosition;
 bool imuReady = false;
+myQuat_t currentPosition;
 /* ########################################################################## */
 
 mpu9150_t imuDev;
@@ -79,22 +79,7 @@ int findRoot(void)
 
 void updatePosition(void)
 {
-    if (imuReady)
-    {
-        // currently just use accelerometer...
-        imuData_t imuData;
-        if (getIMUData(imuDev, &imuData))
-        {
-            double x = (double)imuData.accel.x_axis/1024;
-            double y = (double)imuData.accel.y_axis/1024;
-            double z = (double)imuData.accel.z_axis/1024;
-
-            double from[3] = {0, 1, 0};
-            double to[3] = {x, y, z};
-            currentPosition = quatFrom2Vecs(from, to);
-            /*currentPosition = quatMultiply(currentPosition, rotQ);*/
-        }
-    }
+    currentPosition = getPosition(imuDev);
 }
 
 void sendNodeData(uint32_t ts)
@@ -158,18 +143,15 @@ int callTime_cmd(int argc, char **argv)
     return 1;
 }
 
-int imu0_cmd(int argc, char **argv)
+void initIMU(void)
 {
     if (initialiseIMU(&imuDev))
     {
         displayConfiguration(imuDev);
-        imuReady = true;
-        return 0;
     }
     else
     {
         puts("could not initialise IMU device");
-        return 1;
     }
 }
 
@@ -186,6 +168,12 @@ int imu_cmd(int argc, char **argv)
         puts("could not read IMU device");
         return 1;
     }
+}
+
+int mag_cmd(int argc, char **argv)
+{
+    displayCorrections();
+    return 0;
 }
 
 
@@ -218,9 +206,9 @@ static const shell_command_t shell_commands[] = {
     { "callRoot", "contact root node", callRoot_cmd },
     { "timeAsk", "ask for current net time", callTime_cmd },
     { "udp", "send a message: udp <IPv6-address> <message>", udp_cmd },
-    { "imu0", "initialise IMU device", imu0_cmd },
     { "imu", "get IMU position data", imu_cmd },
     { "quat", "get position quaternion", quat_cmd },
+    { "mag", "display compass correction data", mag_cmd },
     { NULL, NULL, NULL }
 };
 
@@ -230,10 +218,15 @@ static const shell_command_t shell_commands[] = {
 #define INTERVAL (1000000U)
 void *housekeeping_handler(void *arg)
 {
-    int counter = 5;
     uint32_t lastSecs = 0;
     while(1)
     {
+        if (! imuReady)
+        {
+            initIMU();
+            imuReady = true;
+        }
+
         uint32_t secs = getCurrentTime()/1500000;
         uint32_t mSecs = getCurrentTime()/1500;
         if (mSecs % 50 == 0)
@@ -255,27 +248,12 @@ void *housekeeping_handler(void *arg)
                 LED0_ON;
                 thread_yield();
             }
-            if (knowsRoot())
-            {
-                if (counter++ > 30)
-                {
-                }
-                else if (hasTimeChanged())
-                {
-                }
-                else
-                {
-                }
-            }
-            else
+            if (! knowsRoot())
             {
                 findRoot();
                 if (knowsRoot())
                 {
                     sendTimeRequest();
-                }
-                else
-                {
                 }
             }
         }
@@ -306,6 +284,7 @@ int main(void)
 
     timeInit();
     sendTimeRequest();
+
 
     char line_buf[SHELL_DEFAULT_BUFSIZE];
     shell_run(shell_commands, line_buf, SHELL_DEFAULT_BUFSIZE);

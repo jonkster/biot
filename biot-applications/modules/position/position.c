@@ -27,6 +27,42 @@ double *vecCross(double *u, double *v)
     return dest;
 }
 
+double vecLength(double *v)
+{
+     return sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+}
+
+double *vecNormalise(double *v)
+{
+    double length = vecLength(v);
+    v[0] = v[0]/length;
+    v[1] = v[1]/length;
+    v[2] = v[2]/length;
+    return v;
+}
+
+myQuat_t makeQuatFromAngularVelocityTime(double *omega, double dt)
+{
+    double d[3] = { omega[0]*dt,  omega[1]*dt,  omega[2]*dt };
+    double angle = vecLength(d);
+    myQuat_t q = newQuat();
+    if (angle != 0)
+    {
+        q.x = omega[0] * sin(angle/2)/angle;
+        q.y = omega[1] * sin(angle/2)/angle;
+        q.z = omega[2] * sin(angle/2)/angle;
+        q.w = cos(angle/2);
+    }
+    return q;
+}
+
+myQuat_t newQuat(void)
+{
+    myQuat_t q;
+    makeIdentityQuat(&q);
+    return q;
+}
+
 myQuat_t quatFrom2Vecs(double *u, double *v)
 {
     double normUV = sqrt(abs(vecDot(u, u) * vecDot(v, v)));
@@ -67,7 +103,6 @@ myQuat_t quatFrom2Vecs(double *u, double *v)
     q.y = vec[1];
     q.z = vec[2];
     quatNormalise(&q);
-    //dumpQuat(q);
     return q;
 }
 
@@ -93,7 +128,17 @@ myQuat_t quatMultiply(myQuat_t p, myQuat_t q)
     p.x = dest.x;
     p.y = dest.y;
     p.z = dest.z;
+    quatNormalise(&p);
     return p;
+}
+
+float quatLength(myQuat_t q)
+{
+    float w = q.w;
+    float x = q.x;
+    float y = q.y;
+    float z = q.z;
+    return sqrt(x * x + y * y + z * z + w * w);
 }
 
 void quatNormalise(myQuat_t *q)
@@ -103,7 +148,7 @@ void quatNormalise(myQuat_t *q)
     float y = q->y;
     float z = q->z;
 
-    float len = sqrt(x * x + y * y + z * z + w * w);
+    float len = quatLength(*q);
     if (len == 0) {
         q->w = 0;
         q->x = 0;
@@ -118,5 +163,43 @@ void quatNormalise(myQuat_t *q)
         q->y = y * len;
         q->z = z * len;
     }
+}
+
+void slerp(myQuat_t *dest, myQuat_t qa, myQuat_t qb, double t)
+{
+    dest->w = 1;
+    dest->x = 0;
+    dest->y = 0;
+    dest->z = 0;
+
+    double cosHalfTheta = qa.w * qb.w + qa.x * qb.x + qa.y * qb.y + qa.z * qb.z;
+    // if qa=qb or qa=-qb then theta = 0 and we can return qa
+    if (abs(cosHalfTheta) >= 1.0)
+    {
+	dest->w = qa.w;
+	dest->x = qa.x;
+	dest->y = qa.y;
+	dest->z = qa.z;
+	return;
+    }
+
+    double halfTheta = acos(cosHalfTheta);
+    double sinHalfTheta = sqrt(1.0 - cosHalfTheta*cosHalfTheta);
+    // if theta = 180 degrees then result is not fully defined
+    // we could rotate around any axis normal to qa or qb
+    if (fabs(sinHalfTheta) < 0.001)
+    {
+	dest->w = (qa.w * 0.5 + qb.w * 0.5);
+	dest->x = (qa.x * 0.5 + qb.x * 0.5);
+	dest->y = (qa.y * 0.5 + qb.y * 0.5);
+	dest->z = (qa.z * 0.5 + qb.z * 0.5);
+	return;
+    }
+    double ratioA = sin((1 - t) * halfTheta) / sinHalfTheta;
+    double ratioB = sin(t * halfTheta) / sinHalfTheta; 
+    dest->w = (qa.w * ratioA + qb.w * ratioB);
+    dest->x = (qa.x * ratioA + qb.x * ratioB);
+    dest->y = (qa.y * ratioA + qb.y * ratioB);
+    dest->z = (qa.z * ratioA + qb.z * ratioB);
 }
 

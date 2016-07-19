@@ -1,0 +1,39 @@
+Quaternion From Angular Velocity
+==================================
+
+The first step is to convert angular velocity into an axis angle.
+w is angular velocity and t is the time period (sample rate of gyroscopes)
+theta = |w|dt (ie magnitude of w = degrees/per sec * secs = degrees)
+v = vector(w) (ie the direction of the rotation)
+
+Using theta as the angle and v as the axis vector, it’s possible to translate
+this axis angle representation into a quaternion using the axis
+angle to quaternion formula.
+
+
+Axis Angle to Quaternion
+-------------------------
+v = axis, theta = angle
+
+qw = cos(theta/2)
+qx = vx . sin(theta/2)
+qy = vy . sin(theta/2)
+qz = vz . sin(theta/2)
+
+
+code
+----
+eg
+
+    double d[3] = { omega[0]*dt,  omega[1]*dt,  omega[2]*dt };
+    double angle = vecLength(d);
+    myQuat_t q;
+    makeIdentityQuat(&q);
+    if (angle != 0)
+    {
+        q.x = d[0] * sin(angle/2)/angle;
+        q.y = d[1] * sin(angle/2)/angle;
+        q.z = d[2] * sin(angle/2)/angle;
+        q.w = cos(angle/2);
+    }
+    return q;
