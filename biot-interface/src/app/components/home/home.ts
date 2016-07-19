@@ -69,7 +69,7 @@ export class Home {
                     if (this.nodes[addr] === undefined)
                     {
                         this.nodes[addr] = {};
-                        this.threeD.addNode(addr, (idx * 220 - 400), 0, 0, colour);
+                        this.threeD.addNode(addr, (i*200)-600, 0, 0, colour);
                     }
                     this.nodes[addr] = q;
                     this.threeD.moveNode(addr, q);
