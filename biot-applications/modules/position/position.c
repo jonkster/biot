@@ -12,9 +12,14 @@ void dumpQuat(myQuat_t q)
     printf("q{%f, %f, %f, %f}\n", q.w, q.x, q.y, q.z);
 }
 
+void dumpVec(double *v)
+{
+    printf("v{%f, %f, %f}\n", v[0], v[1], v[2]);
+}
+
 double vecDot(double *u, double *v)
 {
-    double d = u[0]*v[0] + u[1]+u[1] + u[2]*v[2]; 
+    double d = u[0]*v[0] + u[1]*v[1] + u[2]*v[2]; 
     return d; 
 }
 
@@ -116,28 +121,35 @@ myQuat_t oldquatFrom2Vecs(double *u, double *v)
     return q;
 }
 
+/*
+ * return a quaternion representing the rotation from vector u to vector v
+ */
 myQuat_t quatFrom2Vecs(double *u, double *v)
 {
     vecNormalise(u);
     vecNormalise(v);
 
     double cosTheta = vecDot(u, v);
-
     double rotationAxis[3];
 
-    if (cosTheta < -1 + 0.001f){
-	// special case when vectors in opposite directions:
-	// there is no "ideal" rotation axis
-	// So guess one; any will do as long as it's perpendicular to start
+    if (cosTheta < -1.0 + 1.0e-6 ) // vectors are anti-parallel
+    {
+        // we have 180d rotation, there is no "ideal" rotation axis, any axis 90
+        // deg to the vectors
 	double up[3] = { 0, 0, 1 };
 	vecCross(rotationAxis, up, u);
-	if (vecLength(rotationAxis) < 0.01 ) // bad luck, they were parallel, try again!
+	if (vecLength(rotationAxis) < 0.000001 ) // bad luck, up is parallel to our vector!
 	{
-	    double north[3] = { 0, 0, 1 };
+	    double north[3] = { 1, 0, 0 };
 	    vecCross(rotationAxis, north, u);
 	}
 	vecNormalise(rotationAxis);
 	return quatAngleAxis(180.0, rotationAxis);
+    }
+    else if (cosTheta > 1.0 - 1.0e-6 ) // vectors are parallel
+    {
+        // there is no rotation! return an identity quaternion
+        return newQuat();
     }
 
     vecCross(rotationAxis, u, v);
@@ -212,22 +224,19 @@ void quatNormalise(myQuat_t *q)
     }
 }
 
-void slerp(myQuat_t *dest, myQuat_t qa, myQuat_t qb, double t)
+myQuat_t slerp(myQuat_t qa, myQuat_t qb, double t)
 {
-    dest->w = 1;
-    dest->x = 0;
-    dest->y = 0;
-    dest->z = 0;
+    myQuat_t dest = newQuat();
 
     double cosHalfTheta = qa.w * qb.w + qa.x * qb.x + qa.y * qb.y + qa.z * qb.z;
     // if qa=qb or qa=-qb then theta = 0 and we can return qa
     if (abs(cosHalfTheta) >= 1.0)
     {
-	dest->w = qa.w;
-	dest->x = qa.x;
-	dest->y = qa.y;
-	dest->z = qa.z;
-	return;
+	dest.w = qa.w;
+	dest.x = qa.x;
+	dest.y = qa.y;
+	dest.z = qa.z;
+	return dest;
     }
 
     double halfTheta = acos(cosHalfTheta);
@@ -236,17 +245,18 @@ void slerp(myQuat_t *dest, myQuat_t qa, myQuat_t qb, double t)
     // we could rotate around any axis normal to qa or qb
     if (fabs(sinHalfTheta) < 0.001)
     {
-	dest->w = (qa.w * 0.5 + qb.w * 0.5);
-	dest->x = (qa.x * 0.5 + qb.x * 0.5);
-	dest->y = (qa.y * 0.5 + qb.y * 0.5);
-	dest->z = (qa.z * 0.5 + qb.z * 0.5);
-	return;
+	dest.w = (qa.w * 0.5 + qb.w * 0.5);
+	dest.x = (qa.x * 0.5 + qb.x * 0.5);
+	dest.y = (qa.y * 0.5 + qb.y * 0.5);
+	dest.z = (qa.z * 0.5 + qb.z * 0.5);
+	return dest;
     }
     double ratioA = sin((1 - t) * halfTheta) / sinHalfTheta;
     double ratioB = sin(t * halfTheta) / sinHalfTheta; 
-    dest->w = (qa.w * ratioA + qb.w * ratioB);
-    dest->x = (qa.x * ratioA + qb.x * ratioB);
-    dest->y = (qa.y * ratioA + qb.y * ratioB);
-    dest->z = (qa.z * ratioA + qb.z * ratioB);
+    dest.w = (qa.w * ratioA + qb.w * ratioB);
+    dest.x = (qa.x * ratioA + qb.x * ratioB);
+    dest.y = (qa.y * ratioA + qb.y * ratioB);
+    dest.z = (qa.z * ratioA + qb.z * ratioB);
+    return dest;
 }
 

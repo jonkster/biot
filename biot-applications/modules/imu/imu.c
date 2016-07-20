@@ -15,8 +15,8 @@ uint64_t t0;
 myQuat_t currentIMUPosition;
 imuData_t lastIMUData;
 
-int16_t magMin[3] = { 0, 0, 0 };
-int16_t magMax[3] = { 0, 0, 0 };
+int16_t magMin[3] = { -72, -90, -68 };
+int16_t magMax[3] = { 46, 33, 57 };
 int16_t magHardCorrection[3] = { 0, 0, 0 };
 double magSoftCorrection[3] = { 1, 1, 1 };
 bool magValid = false;
@@ -189,7 +189,6 @@ myQuat_t getPosition(mpu9150_t dev)
         double downVec[3] = { ax1, ay1, az1 };
         //downVec[0] = 0; downVec[1] = -2; downVec[2] = 3; // make pretend accelerometer reading for debugging
         vecNormalise(downVec);
-        printf("%f, %f, %f\n", downVec[0], downVec[1], downVec[2]);
 
         // magnetometer
         double mx1 = (double)(imuData.mag.x_axis - magHardCorrection[0]);
@@ -198,7 +197,7 @@ myQuat_t getPosition(mpu9150_t dev)
         mx1 *= magSoftCorrection[0];
         my1 *= magSoftCorrection[1];
         mz1 *= magSoftCorrection[2];
-        double magRawVec[3] = { mx1, my1, mz1 };
+        double magRawVec[3] = { my1, mx1, -mz1 };
 
         // make a north vector without dip by using down and raw
         // magnetometer vectors - do it by creating an east (90 to down
@@ -207,7 +206,7 @@ myQuat_t getPosition(mpu9150_t dev)
         vecCross(eastVec, downVec, magRawVec);
         double northVec[3];
         vecCross(northVec, eastVec, downVec);
-        northVec[0] = 1; northVec[1] = 0; northVec[2] = 0; // make pretend magnetometer reading for debugging
+        //northVec[0] = 1; northVec[1] = 0; northVec[2] = 0; // make pretend magnetometer reading for debugging
         vecNormalise(northVec);
 
         double downRef[3] = {0, 0, 1};
@@ -215,27 +214,22 @@ myQuat_t getPosition(mpu9150_t dev)
         double northRef[3] = {1, 0, 0};
         myQuat_t northRot = quatFrom2Vecs(northVec, northRef);
 
-        myQuat_t combinedRot = quatMultiply(northRot, downRot);
-        currentIMUPosition = combinedRot;
-        //currentIMUPosition = northRot;
-       
-        //currentIMUPosition = downRot;
-        //currentIMUPosition = northRot;
+        // get orientation as calculated using accel and compass readings
+        myQuat_t amMeasuredOrientation = quatMultiply(northRot, downRot);
 
+        // get orientation as deduced from adding gyro measured rotational
+        // velocity to previous orientation
+        double gx1 = (double)imuData.gyro.x_axis/1024;
+        double gy1 = (double)imuData.gyro.y_axis/1024;
+        double gz1 = (double)imuData.gyro.z_axis/1024;
 
-        if (false)
-        {
-            // gyroscope
-            double gx1 = (double)imuData.gyro.x_axis/1024;
-            double gy1 = (double)imuData.gyro.y_axis/1024;
-            double gz1 = (double)imuData.gyro.z_axis/1024;
+        uint32_t dt = imuData.ts - lastIMUData.ts;
+        double omega[3] = { gx1, gy1, gz1 }; 
+        myQuat_t gRot = makeQuatFromAngularVelocityTime(omega, dt/50000);
+        myQuat_t gyroDeducedOrientation =  quatMultiply(currentIMUPosition, gRot);
 
-            uint32_t dt = imuData.ts - lastIMUData.ts;
-            double omega[3] = { gx1, gy1, gz1 }; 
-            myQuat_t gRot = makeQuatFromAngularVelocityTime(omega, dt/50000);
-            currentIMUPosition = quatMultiply(currentIMUPosition, gRot);
-        }
-
+        // calculate an orientation that is slightly towards am orientation starting from gyro deduced.
+        currentIMUPosition = slerp(gyroDeducedOrientation, amMeasuredOrientation, 0.1);
     }
     lastIMUData = imuData;
     return currentIMUPosition;

@@ -14,6 +14,8 @@ extern "C" {
 
     void dumpQuat(myQuat_t q);
 
+    void dumpVec(double *v);
+
     void makeIdentityQuat(myQuat_t *q);
 
     myQuat_t makeQuatFromAngularVelocityTime(double *omega, double dt);
@@ -28,7 +30,7 @@ extern "C" {
 
     myQuat_t quatFrom2Vecs(double *u, double *v);
 
-    void slerp(myQuat_t *dest, myQuat_t qa, myQuat_t qb, double t);
+    myQuat_t slerp(myQuat_t qa, myQuat_t qb, double t);
 
     void vecCross(double *dest, double *u, double *v);
 
