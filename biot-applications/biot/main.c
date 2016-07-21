@@ -68,8 +68,9 @@ int findRoot(void)
         return 1;
     }
 
-    gnrc_rpl_dodag_t *dodag = &gnrc_rpl_instances[0].dodag;
-    ipv6_addr_to_str(dodagRoot, &dodag->dodag_id, sizeof(dodagRoot));
+    gnrc_rpl_dodag_t *dodag = &gnrc_rpl_instances[0].dodag; // disable while debugging
+    ipv6_addr_to_str(dodagRoot, &dodag->dodag_id, sizeof(dodagRoot)); // disable while debugging
+    //strcpy(dodagRoot, "affe::2"); // use to force value while debugging
     printf("dodag: %s\n", dodagRoot);
     findParent();
     return 0;
@@ -83,7 +84,7 @@ void updatePosition(void)
 void sendNodeCalibration(void)
 {
     int16_t *data = getMagCalibration();
-    if (strlen(dodagRoot) > 0)
+    if (knowsRoot())
     {
         sendCalibration(dodagRoot, data);
     }
@@ -103,7 +104,7 @@ void sendNodeData(uint32_t ts)
     data.y = currentPosition.y;
     data.z = currentPosition.z;
     thread_yield();
-    if (strlen(dodagRoot) > 0)
+    if (knowsRoot())
     {
         sendData(dodagRoot, data);
     }
@@ -118,7 +119,7 @@ int sendTimeRequest(void)
 {
     if (knowsRoot())
     {
-        udp_send(dodagParent, "time-please");
+        udp_send(dodagRoot, "time-please");
         return 0;
     }
     return 1;
@@ -229,7 +230,10 @@ void *housekeeping_handler(void *arg)
 
             if (secs % 10 == 0)
             {
-                sendNodeCalibration();
+                if (knowsRoot())
+                {
+                    sendNodeCalibration();
+                }
             }
             
             if (! knowsRoot())

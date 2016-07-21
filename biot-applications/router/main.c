@@ -165,12 +165,10 @@ void *housekeeping_handler(void *arg)
             if (secs % 2 == 0)
             {
                 LED0_ON;
-                thread_yield();
             }
             else
             {
                 LED0_OFF;
-                thread_yield();
             }
         }
         lastSecs = secs;

@@ -84,10 +84,11 @@ static void *udp_server_loop(void)
 
         if (res < 0)
         {
-            errs++;
+            //errs++;
             puts("Error on receive");
             printf("error %d:%s.  Msg l:%d from: %s\n", errno, strerror(errno), srcLen, srcAdd);
             xtimer_sleep(2);
+            // what now????
         }
         else if (res == 0)
         {
@@ -97,8 +98,8 @@ static void *udp_server_loop(void)
         {
 
             //uint32_t rand = random_uint32();
-            /*if (! strncmp(serverBuffer, "data:", 4) == 0)
-              printf("msg: %s from %s\n", serverBuffer, srcAdd);*/
+            /*if (! strncmp(serverBuffer, "data:", 4) == 0)*/
+              //printf("msg: %s from %s\n", serverBuffer, srcAdd);
             //if (true) { printf("msg: %s from %s\n", serverBuffer, srcAdd); } else
             if (strcmp(serverBuffer, "on") == 0)
             {
@@ -175,7 +176,7 @@ static void *udp_server_loop(void)
 
 int udp_send(char *addrStr, char *data)
 {
-//    printf("sending: %s msg: %s\n", addrStr, data);
+    //printf("sending: %s msg: %s\n", addrStr, data);
     struct sockaddr_in6 src, dst;
     size_t data_len = strlen(data);
     int s;
