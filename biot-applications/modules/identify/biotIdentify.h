@@ -6,7 +6,7 @@ extern "C" {
 #endif
 
 #include "board.h"
-void identifyYourself(void);
+void identifyYourself(char *name);
 
 #ifdef __cplusplus
 }

@@ -15,8 +15,11 @@ uint64_t t0;
 myQuat_t currentIMUPosition;
 imuData_t lastIMUData;
 
-int16_t magMin[3] = { -72, -90, -68 };
-int16_t magMax[3] = { 46, 33, 57 };
+int16_t magMin[3] = { 0, 0, 0 };
+int16_t magMax[3] = { 0, 0, 0 };
+/*int16_t magMin[3] = { -72, -90, -68 };
+int16_t magMax[3] = { 46, 33, 57 };*/
+
 int16_t magHardCorrection[3] = { 0, 0, 0 };
 double magSoftCorrection[3] = { 1, 1, 1 };
 bool magValid = false;
@@ -123,12 +126,15 @@ bool getIMUData(mpu9150_t dev, imuData_t *data)
     return true;
 }
 
+int16_t *getMagCalibration(void)
+{
+    return magMin;
+}
+
+
+
 void imuCalibrate(imuData_t *data)
 {
-    // hard corrections - try and make all mag readings be equally spread
-    // acrooss origin rather than being offset by collecting max and min values
-    // and calculating an 'average centre'.
-    
     if (data->mag.x_axis > magMax[0])
         magMax[0] = data->mag.x_axis;
 
@@ -146,35 +152,8 @@ void imuCalibrate(imuData_t *data)
 
     if (data->mag.z_axis < magMin[2])
         magMin[2] = data->mag.z_axis;
-    
-    for (uint8_t i = 0; i < 3; i++)
-        magHardCorrection[i] = (magMin[i] + magMax[i])/2;
 
-    // soft corrections, try and reduce elongations along x,y,z
-    // axis to make the data fit closer to a sphere (this a bit of a quick and
-    // dirty method but hopefully will be OK).
-
-    // along each axis, work out a max/min value
-    double vMax[3];
-    double vMin[3];
-    for (uint8_t i = 0; i < 3; i++)
-    {
-        vMax[i] = (double)magMax[i] - (magMin[i] + magMax[i])/2.0;
-        vMin[i] = (double)magMin[i] - (magMin[i] + magMin[i])/2.0;
-    }
-    // find 'average' distance from centre of the 3 axes
-    double avg[3];
-    for (uint8_t i = 0; i < 3; i++)
-    {
-        avg[i] = (vMax[i] - vMin[i])/2;
-    }
-    double averageRadius = (avg[0] + avg[1] + avg[2]) / 3;
-
-    // calculate scale factor along each axis
-    for (uint8_t i = 0; i < 3; i++)
-    {
-        magSoftCorrection[i] = averageRadius/avg[i];
-    }
+    setMagCalibration(magMin);
 }
 
 myQuat_t getPosition(mpu9150_t dev)
@@ -295,7 +274,49 @@ bool initialiseIMU(mpu9150_t *dev)
     return true;
 }
 
-void imuLoop(void)
-{  
+void setMagCalibration(int16_t *cal)
+{
+    magMin[0] = cal[0];
+    magMin[1] = cal[1];
+    magMin[2] = cal[2];
+    magMax[0] = cal[3];
+    magMax[1] = cal[4];
+    magMax[2] = cal[5];
+
+    // Hard corrections - try and make all mag readings be equally spread
+    // across origin (rather than being offset).  Collect max and min values
+    // and calculate an 'average centre'.
+
+    for (uint8_t i = 0; i < 3; i++)
+        magHardCorrection[i] = (magMin[i] + magMax[i])/2;
+
+    // Soft corrections - try and reduce elongations along x,y,z
+    // axis to make the data fit closer to a sphere (this is a bit of a quick and
+    // dirty method but hopefully will be OK).
+
+    // take hard corrected data (which should be centred on origin)
+    // and along each axis, work out a max/min value
+    double vMax[3];
+    double vMin[3];
+    for (uint8_t i = 0; i < 3; i++)
+    {
+        vMax[i] = (double)magMax[i] - (magMin[i] + magMax[i])/2.0;
+        vMin[i] = (double)magMin[i] - (magMin[i] + magMin[i])/2.0;
+    }
+    // find 'average' distance from centre of the 3 axes
+    double avg[3];
+    for (uint8_t i = 0; i < 3; i++)
+    {
+        avg[i] = (vMax[i] - vMin[i])/2;
+    }
+    double averageRadius = (avg[0] + avg[1] + avg[2]) / 3;
+
+    // calculate scale factor along each axis that would squash the readings
+    // into something closer to a sphere
+    for (uint8_t i = 0; i < 3; i++)
+    {
+        magSoftCorrection[i] = averageRadius/avg[i];
+    }
 }
+
 

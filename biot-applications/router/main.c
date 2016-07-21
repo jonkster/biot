@@ -27,7 +27,7 @@
 
 #define PRIO    (THREAD_PRIORITY_MAIN + 1)
 static char housekeeping_stack[THREAD_STACKSIZE_DEFAULT];
-static char udp_stack[2*THREAD_STACKSIZE_DEFAULT];
+static char udp_stack[THREAD_STACKSIZE_DEFAULT + 1024];
 
 char dodagRoot[] = "affe::2";
 
@@ -69,7 +69,7 @@ int resetTime_cmd(int argc, char **argv)
 
 int identify_cmd(int argc, char **argv)
 {
-    identifyYourself();
+    identifyYourself("");
     return 0;
 }
 
@@ -183,7 +183,7 @@ int main(void)
     setRoot();
     gpio_init_int(BUTTON_GPIO, GPIO_IN_PU, GPIO_RISING, (gpio_cb_t)btnCallback, NULL);
 
-    identifyYourself();
+    identifyYourself("");
 
     timeInit();
     sync();

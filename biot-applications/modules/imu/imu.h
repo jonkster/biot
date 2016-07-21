@@ -40,11 +40,13 @@ extern "C" {
 
     void imuCalibrate(imuData_t *data);
 
+    int16_t *getMagCalibration(void);
+
     myQuat_t getPosition(mpu9150_t dev);
 
     bool initialiseIMU(mpu9150_t *dev);
 
-    void imuLoop(void);
+    void setMagCalibration(int16_t *cal);
 
 #ifdef __cplusplus
 }
