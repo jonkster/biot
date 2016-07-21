@@ -229,7 +229,7 @@ void *housekeeping_handler(void *arg)
 
             if (secs % 10 == 0)
             {
-                //sendNodeCalibration();
+                sendNodeCalibration();
             }
             
             if (! knowsRoot())
