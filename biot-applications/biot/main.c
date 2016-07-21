@@ -17,8 +17,8 @@
 #include "../modules/imu/imu.h"
 
 #define PRIO    (THREAD_PRIORITY_MAIN + 1)
-static char housekeeping_stack[THREAD_STACKSIZE_DEFAULT+1024];
-static char udp_stack[THREAD_STACKSIZE_DEFAULT + 1024];
+static char housekeeping_stack[THREAD_STACKSIZE_DEFAULT];
+static char udp_stack[THREAD_STACKSIZE_DEFAULT];
 
 char dodagRoot[IPV6_ADDR_MAX_STR_LEN];
 char dodagParent[IPV6_ADDR_MAX_STR_LEN];
@@ -26,8 +26,6 @@ char dodagParent[IPV6_ADDR_MAX_STR_LEN];
 extern void batch(const shell_command_t *command_list, char *line);
 extern int udp_send(char *addr_str, char *data);
 extern uint32_t getCurrentTime(void);
-//extern bool isTimeSet(void);
-//bool hasTimeChanged(void);
 extern void timeInit(void);
 extern void sendData(char *address, nodeData_t data);
 bool imuReady = false;
@@ -118,7 +116,7 @@ void sendNodeData(uint32_t ts)
 
 int sendTimeRequest(void)
 {
-    if (findParent() == 0)
+    if (knowsRoot())
     {
         udp_send(dodagParent, "time-please");
         return 0;
@@ -183,27 +181,6 @@ int mag_cmd(int argc, char **argv)
 
 
 
-int quat_cmd(int argc, char **argv)
-{
-    imuData_t imuData;
-    if (getIMUData(imuDev, &imuData))
-    {
-        double x = (double)imuData.accel.x_axis/1024;
-        double y = (double)imuData.accel.y_axis/1024;
-        double z = (double)imuData.accel.z_axis/1024;
-
-        double from[3] = {0, 1, 0};
-        double to[3] = {x, y, z};
-	myQuat_t q = quatFrom2Vecs(from, to);
-	dumpQuat(q);
-        return 0;
-    }
-    else
-    {
-        puts("could not read IMU device");
-        return 1;
-    }
-}
 
 static const shell_command_t shell_commands[] = {
     /* Add a new shell commands here */
@@ -212,7 +189,6 @@ static const shell_command_t shell_commands[] = {
     { "timeAsk", "ask for current net time", callTime_cmd },
     { "udp", "send a message: udp <IPv6-address> <message>", udp_cmd },
     { "imu", "get IMU position data", imu_cmd },
-    { "quat", "get position quaternion", quat_cmd },
     { "mag", "display compass correction data", mag_cmd },
     { NULL, NULL, NULL }
 };
@@ -245,11 +221,15 @@ void *housekeeping_handler(void *arg)
             if (secs % 2 == 0)
             {
                 LED0_OFF;
-                sendNodeCalibration();
             }
             else
             {
                 LED0_ON;
+            }
+
+            if (secs % 10 == 0)
+            {
+                //sendNodeCalibration();
             }
             
             if (! knowsRoot())
@@ -277,6 +257,7 @@ int main(void)
     thread_create(housekeeping_stack, sizeof(housekeeping_stack), PRIO, THREAD_CREATE_STACKTEST, housekeeping_handler,
                   NULL, "housekeeping");
 
+    //thread_create(udp_stack, sizeof(udp_stack), PRIO, THREAD_CREATE_STACKTEST | THREAD_CREATE_SLEEPING, udp_server,
     thread_create(udp_stack, sizeof(udp_stack), PRIO, THREAD_CREATE_STACKTEST, udp_server,
                   NULL, "udp");
 

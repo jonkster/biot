@@ -79,6 +79,13 @@ int showNode_cmd(int argc, char **argv)
     return 0;
 }
 
+int showCalibration_cmd(int argc, char **argv)
+{
+    dumpNodeCalibration();
+    return 0;
+}
+
+
 
 
 bool isRoot = false;
@@ -107,6 +114,8 @@ static const shell_command_t shell_commands[] = {
     { "retime", "reset net time", resetTime_cmd },
 
     { "data", "show current node data", showNode_cmd },
+
+    { "cal", "show current node calibration", showCalibration_cmd },
 
     { "udp", "send a message: udp <IPv6-address> <message>", udp_cmd },
 

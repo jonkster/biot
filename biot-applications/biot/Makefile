@@ -18,7 +18,9 @@ CFLAGS += -I$(CURDIR)
 # gl matrix library is sloppy...
 CFLAGS += -Wno-error=maybe-uninitialized
 
-CFLAGS += -DMAX_NODES=100
+# if a single node then define MAX_NODES to 0
+CFLAGS += -DMAX_NODES=0
+
 USEMODULE += printf_float
 
 # adding biot specific modules

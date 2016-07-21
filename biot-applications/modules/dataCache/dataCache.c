@@ -6,9 +6,11 @@
 
 #include "dataCache.h"
 
-bool testInit(hash_t *h)
+/*bool testInit(hash_t *h)
 {
-    printf("configured size:%d\n", h->size);
+// problems with malloc in RIOT for 32 bit uints - this part of debugging -
+// remove when sorted
+    //printf("configured size:%d\n", h->size);
     for (uint16_t i = 0; i < h->size; i++)
     {
         if (h->slotUsed[i])
@@ -36,7 +38,7 @@ bool testInit(hash_t *h)
         }
     }
     return true;
-}
+}*/
 
 hash_t *newHash (uint16_t size)
 {
@@ -55,11 +57,11 @@ hash_t *newHash (uint16_t size)
     for (uint16_t i = 0; i < size; i++)
         h->slotUsed[i] = false;
 
-    if (! testInit(h))
+  /*  if (! testInit(h))
     {
         printf("Woah! error initialising!\n");
         exit(1);
-    }
+    }*/
 
 
     return h;

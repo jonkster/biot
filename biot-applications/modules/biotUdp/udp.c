@@ -23,8 +23,8 @@
 #define STR(x) #x
 
 
-#define MUDP_Q_SZ           (16)
-#define SERVER_BUFFER_SIZE  (256)
+#define MUDP_Q_SZ           (32)
+#define SERVER_BUFFER_SIZE  (128)
 #define UDP_PORT            (8888)
 
 extern uint32_t getCurrentTime(void);
@@ -36,6 +36,8 @@ static msg_t msg_q[MUDP_Q_SZ];
 
 hash_t *nodeData;
 hash_t *nodeCalibration;
+
+uint8_t errs = 0;
 
 static void *udp_server_loop(void)
 {
@@ -63,17 +65,29 @@ static void *udp_server_loop(void)
 
     int res;
     struct sockaddr_in6 src;
-    socklen_t src_len = sizeof(struct sockaddr_in6);
+    socklen_t srcLen = sizeof(struct sockaddr_in6);
     while (1)
     {
+        if (errs > 10)
+        {
+            puts("too many errors in udp system, panic!");
+            return NULL;
+        }
         memset(serverBuffer, 0, SERVER_BUFFER_SIZE);
-        res = recvfrom(server_socket, serverBuffer, sizeof(serverBuffer), 0, (struct sockaddr *)&src, &src_len);
+        res = recvfrom(server_socket, serverBuffer, sizeof(serverBuffer), 0, (struct sockaddr *)&src, &srcLen);
 
-        struct in6_addr src_addr = src.sin6_addr; 
+            struct in6_addr src_addr = src.sin6_addr; 
+            char srcAdd[IPV6_ADDR_MAX_STR_LEN];
+            char selfAdd[IPV6_ADDR_MAX_STR_LEN];
+            inet_ntop(AF_INET6, &(src_addr.s6_addr), srcAdd, IPV6_ADDR_MAX_STR_LEN);
+            inet_ntop(AF_INET6, &(server_addr.sin6_addr), selfAdd, IPV6_ADDR_MAX_STR_LEN);
 
         if (res < 0)
         {
+            errs++;
             puts("Error on receive");
+            printf("error %d:%s.  Msg l:%d from: %s\n", errno, strerror(errno), srcLen, srcAdd);
+            xtimer_sleep(2);
         }
         else if (res == 0)
         {
@@ -81,13 +95,11 @@ static void *udp_server_loop(void)
         }
         else
         {
+
             //uint32_t rand = random_uint32();
-            char srcAdd[IPV6_ADDR_MAX_STR_LEN];
-            char selfAdd[IPV6_ADDR_MAX_STR_LEN];
-            inet_ntop(AF_INET6, &(src_addr.s6_addr), srcAdd, IPV6_ADDR_MAX_STR_LEN);
-            inet_ntop(AF_INET6, &(server_addr.sin6_addr), selfAdd, IPV6_ADDR_MAX_STR_LEN);
-/*if (! strncmp(serverBuffer, "data:", 4) == 0)
-            printf("msg: %s from %s\n", serverBuffer, srcAdd);*/
+            /*if (! strncmp(serverBuffer, "data:", 4) == 0)
+              printf("msg: %s from %s\n", serverBuffer, srcAdd);*/
+            //if (true) { printf("msg: %s from %s\n", serverBuffer, srcAdd); } else
             if (strcmp(serverBuffer, "on") == 0)
             {
                 LED0_ON;
@@ -102,7 +114,7 @@ static void *udp_server_loop(void)
             }
             else if (strncmp(serverBuffer, "nudge:", 6) == 0)
             {
-                    udp_send(serverBuffer+6, "identify");
+                udp_send(serverBuffer+6, "identify");
             }
             else if (strcmp(serverBuffer, "sync") == 0)
             {
@@ -122,19 +134,7 @@ static void *udp_server_loop(void)
                 // update the cache of all the node data values (this is stored
                 // by the router).  The data will be periodically fired from
                 // nodes to the router
-                //printf("set %s %s\n", srcAdd, serverBuffer);
                 setValue(nodeData, srcAdd, serverBuffer+5);
-            }
-            else if (true)
-            {
-                // ignore other messages
-            }
-            else if (strcmp(serverBuffer, "get-cal") == 0)
-            {
-                // send a structure containing the cache of node calibration parameters (typically sent to a processing application)
-                char *json = nodeCalibrationJson();
-                udp_send(srcAdd, json);
-                free(json);
             }
             else if (strncmp(serverBuffer, "calib:", 6) == 0)
             {
@@ -142,6 +142,13 @@ static void *udp_server_loop(void)
                 // stored by the router).  The data will be periodically fired from
                 // nodes to the router
                 setValue(nodeCalibration, srcAdd, serverBuffer+6);
+            }
+            else if (strcmp(serverBuffer, "get-cal") == 0)
+            {
+                // send a structure containing the cache of node calibration parameters (typically sent to a processing application)
+                char *json = nodeCalibrationJson();
+                udp_send(srcAdd, json);
+                free(json);
             }
             else if (strcmp(serverBuffer, "time-please") == 0)
             {
@@ -161,12 +168,14 @@ static void *udp_server_loop(void)
                 printf("rx unknown udp msg from %s : %s\n", srcAdd, serverBuffer);
             }
         }
+        thread_yield();
     }
     return NULL;
 }
 
-int udp_send(char *addr_str, char *data)
+int udp_send(char *addrStr, char *data)
 {
+//    printf("sending: %s msg: %s\n", addrStr, data);
     struct sockaddr_in6 src, dst;
     size_t data_len = strlen(data);
     int s;
@@ -174,7 +183,7 @@ int udp_send(char *addr_str, char *data)
     dst.sin6_family = AF_INET6;
     memset(&src.sin6_addr, 0, sizeof(src.sin6_addr));
     /* parse destination address */
-    if (inet_pton(AF_INET6, addr_str, &dst.sin6_addr) != 1) {
+    if (inet_pton(AF_INET6, addrStr, &dst.sin6_addr) != 1) {
         puts("Error: unable to parse destination address");
         return 1;
     }
@@ -195,7 +204,7 @@ int udp_send(char *addr_str, char *data)
         return 1;
     }
 
-    //printf("Success: send %u byte(s) to %s:%u\n", (unsigned)data_len, addr_str, UDP_PORT);
+    //printf("Success: send %u byte(s) to %s:%u\n", (unsigned)data_len, addrStr, UDP_PORT);
 
     close(s);
 
@@ -209,11 +218,12 @@ int udp_send(char *addr_str, char *data)
 void *udp_server(void *arg)
 {
     (void) arg;
-    msg_init_queue(msg_q, MUDP_Q_SZ);
     //random_init(12345);
+#ifdef MAX_NODES
     nodeData = newHash(MAX_NODES);
-    //nodeCalibration = newHash(MAX_NODES);
-
+    nodeCalibration = newHash(MAX_NODES);
+#endif
+    msg_init_queue(msg_q, MUDP_Q_SZ);
     udp_server_loop();
 
     /* never reached */
@@ -295,4 +305,3 @@ void dumpNodeData(void)
     }
 }
 
-/** @} */

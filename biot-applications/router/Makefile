@@ -4,7 +4,7 @@ APPLICATION = BIOT-Router
 # If no BOARD is found in the environment, use this default:
 BOARD ?= samr21-zllk
 
-CFLAGS += -DMAX_NODES=100
+CFLAGS += -DMAX_NODES=50
 
 # This has to be the absolute path to the RIOT base directory:
 RIOTBASE ?= $(CURDIR)/../../../RIOT
