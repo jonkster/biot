@@ -86,8 +86,8 @@ static void *udp_server_loop(void)
             char selfAdd[IPV6_ADDR_MAX_STR_LEN];
             inet_ntop(AF_INET6, &(src_addr.s6_addr), srcAdd, IPV6_ADDR_MAX_STR_LEN);
             inet_ntop(AF_INET6, &(server_addr.sin6_addr), selfAdd, IPV6_ADDR_MAX_STR_LEN);
-if (! strncmp(serverBuffer, "data:", 4) == 0)
-            printf("msg: %s from %s\n", serverBuffer, srcAdd);
+/*if (! strncmp(serverBuffer, "data:", 4) == 0)
+            printf("msg: %s from %s\n", serverBuffer, srcAdd);*/
             if (strcmp(serverBuffer, "on") == 0)
             {
                 LED0_ON;
@@ -113,7 +113,7 @@ if (! strncmp(serverBuffer, "data:", 4) == 0)
             {
                 // send a structure containing the cache of node orientations (typically sent to a processing application)
                 char *json = nodeDataJson();
-                printf("sending:%s\n", json);
+                //printf("sending:%s\n", json);
                 udp_send(srcAdd, json);
                 free(json);
             }
@@ -122,7 +122,7 @@ if (! strncmp(serverBuffer, "data:", 4) == 0)
                 // update the cache of all the node data values (this is stored
                 // by the router).  The data will be periodically fired from
                 // nodes to the router
-                printf("set %s %s\n", srcAdd, serverBuffer);
+                //printf("set %s %s\n", srcAdd, serverBuffer);
                 setValue(nodeData, srcAdd, serverBuffer+5);
             }
             else if (true)
@@ -146,7 +146,6 @@ if (! strncmp(serverBuffer, "data:", 4) == 0)
             else if (strcmp(serverBuffer, "time-please") == 0)
             {
                 char ts[25];
-                sprintf(ts, "ts:%lu", getCurrentTime());
                 udp_send(srcAdd, ts);
             }
             else if (strncmp(serverBuffer, "ts:", 3) == 0)
