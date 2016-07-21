@@ -19,8 +19,8 @@
 #include "periph/gpio.h"
 #include "shell.h"
 #include "../modules/identify/biotIdentify.h"
-#include "../modules/sendData/sendData.h"
-#include "../modules/dataCache/dataCache.h"
+//#include "../modules/sendData/sendData.h"
+//#include "../modules/dataCache/dataCache.h"
 #include "../modules/biotUdp/udp.h"
 
 
@@ -37,7 +37,6 @@ extern uint32_t getCurrentTime(void);
 extern bool isTimeSet(void);
 bool hasTimeChanged(void);
 extern void timeInit(void);
-extern void sendData(char *address, nodeData_t data);
 extern void setCurrentTime(uint32_t t);
 /* ########################################################################## */
 
@@ -136,6 +135,7 @@ void setRoot(void)
     batch(shell_commands, "ifconfig 7 add affe::3");
     // assume outside world is at affe::1
     batch(shell_commands, "ncache add 7 affe::1");
+    isRoot = true;
     LED0_ON;
 }
 

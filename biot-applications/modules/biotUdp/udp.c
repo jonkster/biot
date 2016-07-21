@@ -1,6 +1,5 @@
 #include <inttypes.h>
 #include <xtimer.h>
-//#include "random.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -97,7 +96,6 @@ static void *udp_server_loop(void)
         else
         {
 
-            //uint32_t rand = random_uint32();
             /*if (! strncmp(serverBuffer, "data:", 4) == 0)*/
               //printf("msg: %s from %s\n", serverBuffer, srcAdd);
             //if (true) { printf("msg: %s from %s\n", serverBuffer, srcAdd); } else
@@ -120,13 +118,13 @@ static void *udp_server_loop(void)
             else if (strcmp(serverBuffer, "sync") == 0)
             {
                 char ts[15];
+                sprintf(ts, "ts:%lu", getCurrentTime());
                 udp_send("ff02::1", ts);
             }
             else if (strcmp(serverBuffer, "get-data") == 0)
             {
                 // send a structure containing the cache of node orientations (typically sent to a processing application)
                 char *json = nodeDataJson();
-                //printf("sending:%s\n", json);
                 udp_send(srcAdd, json);
                 free(json);
             }
@@ -154,6 +152,7 @@ static void *udp_server_loop(void)
             else if (strcmp(serverBuffer, "time-please") == 0)
             {
                 char ts[25];
+                sprintf(ts, "ts:%lu", getCurrentTime());
                 udp_send(srcAdd, ts);
             }
             else if (strncmp(serverBuffer, "ts:", 3) == 0)
@@ -176,38 +175,45 @@ static void *udp_server_loop(void)
 
 int udp_send(char *addrStr, char *data)
 {
-    //printf("sending: %s msg: %s\n", addrStr, data);
-    struct sockaddr_in6 src, dst;
-    size_t data_len = strlen(data);
-    int s;
-    src.sin6_family = AF_INET6;
-    dst.sin6_family = AF_INET6;
-    memset(&src.sin6_addr, 0, sizeof(src.sin6_addr));
-    /* parse destination address */
-    if (inet_pton(AF_INET6, addrStr, &dst.sin6_addr) != 1) {
-        puts("Error: unable to parse destination address");
-        return 1;
-    }
+    if (strlen(data) > 0)
+    {
+        //printf("sending: %s msg: %s\n", addrStr, data);
+        struct sockaddr_in6 src, dst;
+        size_t data_len = strlen(data);
+        int s;
+        src.sin6_family = AF_INET6;
+        dst.sin6_family = AF_INET6;
+        memset(&src.sin6_addr, 0, sizeof(src.sin6_addr));
+        /* parse destination address */
+        if (inet_pton(AF_INET6, addrStr, &dst.sin6_addr) != 1) {
+            puts("Error: unable to parse destination address");
+            return 1;
+        }
 
-    dst.sin6_port = htons(UDP_PORT);
-    src.sin6_port = htons(UDP_PORT);
+        dst.sin6_port = htons(UDP_PORT);
+        src.sin6_port = htons(UDP_PORT);
 
-    s = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
+        s = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
 
-    if (s < 0) {
-        puts("error initializing socket");
-        return 1;
-    }
+        if (s < 0) {
+            puts("error initializing socket");
+            return 1;
+        }
 
-    if (sendto(s, data, data_len, 0, (struct sockaddr *)&dst, sizeof(dst)) < 0) {
-        puts("error: could not send message");
+        if (sendto(s, data, data_len, 0, (struct sockaddr *)&dst, sizeof(dst)) < 0) {
+            puts("error: could not send message");
+            close(s);
+            return 1;
+        }
+
+        //printf("Success: send %u byte(s) to %s:%u\n", (unsigned)data_len, addrStr, UDP_PORT);
+
         close(s);
-        return 1;
     }
-
-    //printf("Success: send %u byte(s) to %s:%u\n", (unsigned)data_len, addrStr, UDP_PORT);
-
-    close(s);
+    else
+    {
+        puts("trying to send empty value via udp!! Send discarded.");
+    }
 
     return 0;
 }
@@ -219,7 +225,6 @@ int udp_send(char *addrStr, char *data)
 void *udp_server(void *arg)
 {
     (void) arg;
-    //random_init(12345);
 #ifdef MAX_NODES
     nodeData = newHash(MAX_NODES);
     nodeCalibration = newHash(MAX_NODES);
