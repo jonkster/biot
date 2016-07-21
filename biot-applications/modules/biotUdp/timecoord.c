@@ -18,8 +18,8 @@ void setCurrentTime(uint32_t t)
 {
     prevTimeCorrection = timeCorrection;
     timeCorrection = xtimer_now() - t;
-    printf("time correction now: %lu\n", timeCorrection);
     timeSet = true;
+    printf("time correction now: %lu\n", timeCorrection);
 }
 
 bool isTimeSet(void)

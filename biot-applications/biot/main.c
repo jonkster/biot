@@ -17,8 +17,8 @@
 #include "../modules/imu/imu.h"
 
 #define PRIO    (THREAD_PRIORITY_MAIN + 1)
-static char housekeeping_stack[THREAD_STACKSIZE_DEFAULT];
-static char udp_stack[THREAD_STACKSIZE_DEFAULT];
+static char housekeeping_stack[THREAD_STACKSIZE_DEFAULT+1024];
+static char udp_stack[THREAD_STACKSIZE_DEFAULT + 1024];
 
 char dodagRoot[IPV6_ADDR_MAX_STR_LEN];
 char dodagParent[IPV6_ADDR_MAX_STR_LEN];
@@ -26,8 +26,8 @@ char dodagParent[IPV6_ADDR_MAX_STR_LEN];
 extern void batch(const shell_command_t *command_list, char *line);
 extern int udp_send(char *addr_str, char *data);
 extern uint32_t getCurrentTime(void);
-extern bool isTimeSet(void);
-bool hasTimeChanged(void);
+//extern bool isTimeSet(void);
+//bool hasTimeChanged(void);
 extern void timeInit(void);
 extern void sendData(char *address, nodeData_t data);
 bool imuReady = false;
@@ -38,7 +38,7 @@ mpu9150_t imuDev;
 
 int identify_cmd(int argc, char **argv)
 {
-    identifyYourself();
+    identifyYourself("");
     return 0;
 }
 
@@ -60,12 +60,12 @@ int findParent(void)
 
     ipv6_addr_to_str(dodagParent, &parents->addr, sizeof(dodagParent));
     printf("parent: %s\n", dodagParent);
-    //udp_send(dodagRoot, "nudge");
     return 0;
 }
 
 int findRoot(void)
 {
+    puts("where is root?");
     if (gnrc_rpl_instances[0].state == 0) {
         return 1;
     }
@@ -81,6 +81,20 @@ void updatePosition(void)
 {
     currentPosition = getPosition(imuDev);
 }
+
+void sendNodeCalibration(void)
+{
+    int16_t *data = getMagCalibration();
+    if (strlen(dodagRoot) > 0)
+    {
+        sendCalibration(dodagRoot, data);
+    }
+    else
+    {
+        sendCalibration("affe::2", data);
+    }
+}
+
 
 void sendNodeData(uint32_t ts)
 {
@@ -110,15 +124,6 @@ int sendTimeRequest(void)
         return 0;
     }
     return 1;
-
-    /*if (gnrc_rpl_instances[0].state == 0) {
-        return 1;
-    }
-
-    gnrc_rpl_dodag_t *dodag = &gnrc_rpl_instances[0].dodag;
-    ipv6_addr_to_str(dodagRoot, &dodag->dodag_id, sizeof(dodagRoot));
-    udp_send(dodagRoot, "time-please");
-    return 0;*/
 }
 
 
@@ -233,7 +238,6 @@ void *housekeeping_handler(void *arg)
         {
             updatePosition();
             sendNodeData(mSecs);
-            thread_yield();
         }
 
         if (secs != lastSecs)
@@ -241,13 +245,13 @@ void *housekeeping_handler(void *arg)
             if (secs % 2 == 0)
             {
                 LED0_OFF;
-                thread_yield();
+                sendNodeCalibration();
             }
             else
             {
                 LED0_ON;
-                thread_yield();
             }
+            
             if (! knowsRoot())
             {
                 findRoot();
@@ -269,8 +273,6 @@ int main(void)
     LED0_OFF;
 
     makeIdentityQuat(&currentPosition);
-    dumpQuat(currentPosition);
-
 
     thread_create(housekeeping_stack, sizeof(housekeeping_stack), PRIO, THREAD_CREATE_STACKTEST, housekeeping_handler,
                   NULL, "housekeeping");
@@ -280,12 +282,13 @@ int main(void)
 
     batch(shell_commands, "rpl init 6");
 
-    identifyYourself();
+    identifyYourself("");
 
     timeInit();
     sendTimeRequest();
 
 
+    puts("starting shell");
     char line_buf[SHELL_DEFAULT_BUFSIZE];
     shell_run(shell_commands, line_buf, SHELL_DEFAULT_BUFSIZE);
 

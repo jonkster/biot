@@ -9,6 +9,8 @@ typedef struct nodeDataStructure {
     float z;    
 } nodeData_t;
 
+void sendCalibration(char *address, int16_t *cal);
+
 void sendData(char *address, nodeData_t data);
 
 #endif

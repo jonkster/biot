@@ -6,24 +6,71 @@
 
 #include "dataCache.h"
 
-
-hash_t *newHash (uint32_t size)
+bool testInit(hash_t *h)
 {
-    hash_t *h = calloc(1, sizeof (hash_t));
-    h->keys = calloc(size, sizeof (char*));
-    h->values = calloc(size, sizeof (char*));
-    h->keySet = calloc(size, sizeof (char*));
+    printf("configured size:%d\n", h->size);
+    for (uint16_t i = 0; i < h->size; i++)
+    {
+        if (h->slotUsed[i])
+        {
+            printf("expected slot %u to be false!\n", i);
+            return false;
+        }
+
+        if (h->keys[i] != 0)
+        {
+            printf("expected keys %u to be 0 not: %p !\n", i, h->keys[i]);
+            return false;
+        }
+
+        if (h->values[i] != 0)
+        {
+            printf("expected values %u to be 0 not: %p !\n", i, h->values[i]);
+            return false;
+        }
+
+        if (h->keySet[i] != 0)
+        {
+            printf("expected keySet %u to be 0 not: %p !\n", i, h->keySet[i]);
+            return false;
+        }
+    }
+    return true;
+}
+
+hash_t *newHash (uint16_t size)
+{
+    hash_t *h = malloc(sizeof (hash_t));
     h->size = size;
     h->currentSize = 0;
+
+    h->slotUsed = malloc(size * sizeof (bool));
+
+    h->keys = calloc(size, sizeof (char*));
+
+    h->values = calloc(size, sizeof (char*));
+
+    h->keySet = calloc(size, sizeof (char*));
+
+    for (uint16_t i = 0; i < size; i++)
+        h->slotUsed[i] = false;
+
+    if (! testInit(h))
+    {
+        printf("Woah! error initialising!\n");
+        exit(1);
+    }
+
+
     return h;
 }
 
 /*
  * djb2 hash function by Dan Bernstein - http://www.cse.yorku.ca/~oz/hash.html
  */
-uint32_t djb2Hash(char *key)
+uint16_t djb2Hash(char *key)
 {
-    uint32_t hash = 5381;
+    uint16_t hash = 5381;
     int c;
 
     while ((c = *key++) != 0)
@@ -70,7 +117,7 @@ bool exists(hash_t *h, char *key)
     if (i < 0)
         return false;
 
-    return (h->values[i] != 0);
+    return (h->slotUsed[i]);
 }
 
 
@@ -88,7 +135,12 @@ void setValue (hash_t *h, char *key, char *value)
             if (alreadyGot)
             {
                 free(h->keys[i]);
+                h->keys[i] = 0;
+
                 free(h->values[i]);
+                h->values[i] = 0;
+
+                h->slotUsed[i] = false;
             }
             else
             {
@@ -102,6 +154,8 @@ void setValue (hash_t *h, char *key, char *value)
             char *v = (char*) malloc(strlen(value) + 1);
             memcpy(v, value, strlen(value) + 1);
             h->values[i] = v;
+
+            h->slotUsed[i] = true;
 
             allKeys(h);
             return;
@@ -123,6 +177,9 @@ bool deleteEntry(hash_t *h, char *key)
             free(h->values[i]);
             h->values[i] = 0;
             h->currentSize--;
+
+            h->slotUsed[i] = false;
+
             return true;
         }
     }
@@ -134,10 +191,17 @@ char *getValue (hash_t *h, char *key)
     int16_t i = hashKey(h, key);
     if (i >= 0)
     {
-        char *r = h->values[i];
-        return r;
+        if (h->slotUsed[i])
+        {
+            char *r = h->values[i];
+            return r;
+        }
+        else
+        {
+            printf("cannot find %s???\n", key);
+        }
     }
-    return 0;
+    return "";
 }
 
 void dumpHash(hash_t *h)
@@ -235,6 +299,30 @@ int testHash (void)
 
     puts("dump hash");
     dumpHash(h);
+
+    int s = 200;
+    hash_t *h2 = newHash(s);
+    for (int i = 0; i < s; i++)
+    {
+        char k[5];
+        char v[20];
+        sprintf(k, "k-%d", i);
+        sprintf(v, "value = %d", i);
+        setValue(h2, k, v);
+    }
+    puts("dump hash");
+    dumpHash(h2);
+    for (int i = 0; i < s; i++)
+    {
+        char k[5];
+        char v[20];
+        sprintf(k, "k-%d", i);
+        sprintf(v, "v = %d", i);
+        setValue(h2, k, v);
+    }
+    puts("dump hash");
+    dumpHash(h2);
+
 
     return 0;
 }

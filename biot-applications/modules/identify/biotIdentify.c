@@ -5,8 +5,9 @@
 #include <xtimer.h>
 #include "board.h"
 
-void identifyYourself(void)
+void identifyYourself(char *name)
 {
+    printf("%s\n", name);
     for (uint8_t i = 0; i < 3; i++)
     {
         for (uint8_t j = 0; j < 10; j++)

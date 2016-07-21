@@ -4,6 +4,7 @@
 typedef struct {
     uint16_t size;
     uint16_t currentSize;
+    bool *slotUsed;
     char **keys;
     char **values;
     char **keySet;
@@ -16,7 +17,7 @@ extern "C" {
 
  
 
-hash_t *newHash(uint32_t size);
+hash_t *newHash(uint16_t size);
 
 bool deleteEntry(hash_t *h, char *key);
 bool exists(hash_t *h, char *key);

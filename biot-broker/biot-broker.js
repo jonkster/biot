@@ -41,6 +41,7 @@ brokerUdpListener.on('message', function (message, remote) {
     if (message.length > 0)
     {
         biotzData = JSON.parse(message);
+        console.log('bd', biotzData);
     }
 });
 
@@ -92,7 +93,8 @@ function getRoot(req, res, next) {
         "   http://" + BROKER_HOST + ":" + BROKER_HTTP_PORT + "/biotz/addresses/XXXXXX/w\n" +
         "   http://" + BROKER_HOST + ":" + BROKER_HTTP_PORT + "/biotz/addresses/XXXXXX/x\n" +
         "   http://" + BROKER_HOST + ":" + BROKER_HTTP_PORT + "/biotz/addresses/XXXXXX/y\n" +
-        "   http://" + BROKER_HOST + ":" + BROKER_HTTP_PORT + "/biotz/addresses/XXXXXX/z\n" 
+        "   http://" + BROKER_HOST + ":" + BROKER_HTTP_PORT + "/biotz/addresses/XXXXXX/z\n" +
+        "   http://" + BROKER_HOST + ":" + BROKER_HTTP_PORT + "/biotz/addresses/XXXXXX/calibration\n" 
     );
     next();
 }
@@ -124,6 +126,27 @@ function getBiot(req, res, next) {
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
     res.setHeader('Content-Type', 'application/json');
     res.send(value);
+    next();
+}
+
+function getBiotCalibration(req, res, next) {
+
+    res.header("Access-Control-Allow-Origin", "*"); 
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+    res.setHeader('Content-Type', 'application/json');
+
+    var address = req.params['address'];
+    var message = new Buffer('get-calib:' + address);
+    var client = dgram.createSocket('udp6');
+
+    client.send(message, 0, message.length, BIOTZ_UDP_PORT, BIOTZ_ROUTER_HOST, function(err, bytes) {
+        if (err)
+        {
+            console.log('Error:', err);
+        }
+        client.close();
+    });
+    res.send('OK');
     next();
 }
 
@@ -198,6 +221,7 @@ brokerListener.get('/biotz/synchronise', biotSync);
 brokerListener.get('/biotz/addresses', getBiotz);
 brokerListener.get('/biotz/addresses/:address', getBiot);
 brokerListener.get('/biotz/addresses/:address/identify', biotIdentify);
+brokerListener.get('/biotz/addresses/:address/calibration', getBiotCalibration);
 brokerListener.get('/biotz/addresses/:address/:quality', getBiotQuality);
 
 brokerListener.listen(BROKER_HTTP_PORT, BROKER_HOST, function() {
