@@ -55,6 +55,7 @@ brokerUdpListener.on('message', function (message, remote) {
     if (message.length > 0)
     {
         var jResponse = JSON.parse(message);
+//        console.log('json:', jResponse);
         if (jResponse['t'] == 'dat')
             biotzData = jResponse;
         else if (jResponse['t'] == 'cal')

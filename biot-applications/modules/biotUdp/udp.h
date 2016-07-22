@@ -2,7 +2,7 @@
 #define UDP_COMMON_H
 
 #define MAX_BIG_MESSAGE_LENGTH 512
-#define MAX_MESSAGE_LENGTH 256
+#define MAX_MESSAGE_LENGTH 768
 
 #ifdef __cplusplus
 extern "C" {
@@ -12,7 +12,7 @@ void *udp_server(void *);
 
 int udp_cmd(int argc, char **argv);
 
-int udp_send(char *addr_str, char *data);
+int udpSend(char *addr_str, char *data);
 
 void dumpNodeData(void);
 
@@ -21,6 +21,8 @@ char *nodeCalibrationJson(void);
 void dumpNodeCalibration(void);
 
 char *nodeDataJson(void);
+
+void syncKnown(void);
 
 #ifdef __cplusplus
 }

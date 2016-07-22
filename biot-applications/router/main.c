@@ -27,12 +27,12 @@
 
 #define PRIO    (THREAD_PRIORITY_MAIN + 1)
 static char housekeeping_stack[THREAD_STACKSIZE_DEFAULT];
-static char udp_stack[THREAD_STACKSIZE_DEFAULT + 1024];
+static char udp_stack[THREAD_STACKSIZE_DEFAULT+512];
 
 char dodagRoot[] = "affe::2";
 
 extern void batch(const shell_command_t *command_list, char *line);
-extern int udp_send(char *addr_str, char *data);
+extern int udpSend(char *addr_str, char *data);
 extern uint32_t getCurrentTime(void);
 extern bool isTimeSet(void);
 bool hasTimeChanged(void);
@@ -40,16 +40,9 @@ extern void timeInit(void);
 extern void setCurrentTime(uint32_t t);
 /* ########################################################################## */
 
-void sync(void)
-{
-    char ts[15];
-    sprintf(ts, "ts:%lu", getCurrentTime());
-    udp_send("ff02::1", ts);
-}
-
 int sync_cmd(int argc, char **argv)
 {
-    sync();
+    syncKnown();
     return 0;
 }
 
@@ -62,7 +55,7 @@ int time_cmd(int argc, char **argv)
 int resetTime_cmd(int argc, char **argv)
 {
     setCurrentTime(0);
-    sync();
+    syncKnown();
     return 0;
 }
 
@@ -158,7 +151,7 @@ void *housekeeping_handler(void *arg)
 
             if (isRoot && counter++ > 30)
             {
-                sync();
+                syncKnown();
                 counter = 0;
             }
 
@@ -193,7 +186,7 @@ int main(void)
     identifyYourself("");
 
     timeInit();
-    sync();
+    syncKnown();
 
 
     char line_buf[SHELL_DEFAULT_BUFSIZE];

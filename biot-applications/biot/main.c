@@ -24,7 +24,7 @@ char dodagRoot[IPV6_ADDR_MAX_STR_LEN];
 char dodagParent[IPV6_ADDR_MAX_STR_LEN];
 
 extern void batch(const shell_command_t *command_list, char *line);
-extern int udp_send(char *addr_str, char *data);
+extern int udpSend(char *addr_str, char *data);
 extern uint32_t getCurrentTime(void);
 extern void timeInit(void);
 extern void sendData(char *address, nodeData_t data);
@@ -119,7 +119,7 @@ int sendTimeRequest(void)
 {
     if (knowsRoot())
     {
-        udp_send(dodagRoot, "time-please");
+        udpSend(dodagRoot, "time-please");
         return 0;
     }
     return 1;

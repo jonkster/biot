@@ -22,7 +22,7 @@
 #define STR(x) #x
 
 
-#define MUDP_Q_SZ           (32)
+#define MUDP_Q_SZ           (16)
 #define SERVER_BUFFER_SIZE  (128)
 #define UDP_PORT            (8888)
 
@@ -33,10 +33,12 @@ static int server_socket = -1;
 static char serverBuffer[SERVER_BUFFER_SIZE];
 static msg_t msg_q[MUDP_Q_SZ];
 
+static char json[MAX_MESSAGE_LENGTH];
+static char jsonBit[MAX_MESSAGE_LENGTH/3];
+
 hash_t *nodeData;
 hash_t *nodeCalibration;
 
-uint8_t errs = 0;
 
 static void *udp_server_loop(void)
 {
@@ -67,11 +69,6 @@ static void *udp_server_loop(void)
     socklen_t srcLen = sizeof(struct sockaddr_in6);
     while (1)
     {
-        if (errs > 10)
-        {
-            puts("too many errors in udp system, panic!");
-            return NULL;
-        }
         memset(serverBuffer, 0, SERVER_BUFFER_SIZE);
         res = recvfrom(server_socket, serverBuffer, sizeof(serverBuffer), 0, (struct sockaddr *)&src, &srcLen);
 
@@ -83,7 +80,6 @@ static void *udp_server_loop(void)
 
         if (res < 0)
         {
-            //errs++;
             puts("Error on receive");
             printf("error %d:%s.  Msg l:%d from: %s\n", errno, strerror(errno), srcLen, srcAdd);
             xtimer_sleep(2);
@@ -113,20 +109,24 @@ static void *udp_server_loop(void)
             }
             else if (strncmp(serverBuffer, "nudge:", 6) == 0)
             {
-                udp_send(serverBuffer+6, "identify");
+                udpSend(serverBuffer+6, "identify");
             }
             else if (strcmp(serverBuffer, "sync") == 0)
             {
-                char ts[15];
-                sprintf(ts, "ts:%lu", getCurrentTime());
-                udp_send("ff02::1", ts);
+                syncKnown();
             }
             else if (strcmp(serverBuffer, "get-data") == 0)
             {
                 // send a structure containing the cache of node orientations (typically sent to a processing application)
                 char *json = nodeDataJson();
-                udp_send(srcAdd, json);
-                free(json);
+                if (strlen(json) == 0)
+                {
+                    puts("data json empty?? Not sending");
+                }
+                else
+                {
+                    udpSend(srcAdd, json);
+                }
             }
             else if (strncmp(serverBuffer, "data:", 5) == 0)
             {
@@ -146,14 +146,20 @@ static void *udp_server_loop(void)
             {
                 // send a structure containing the cache of node calibration parameters (typically sent to a processing application)
                 char *json = nodeCalibrationJson();
-                udp_send(srcAdd, json);
-                free(json);
+                if (strlen(json) == 0)
+                {
+                    puts("calibration json empty?? Not sending");
+                }
+                else
+                {
+                    udpSend(srcAdd, json);
+                }
             }
             else if (strcmp(serverBuffer, "time-please") == 0)
             {
                 char ts[25];
                 sprintf(ts, "ts:%lu", getCurrentTime());
-                udp_send(srcAdd, ts);
+                udpSend(srcAdd, ts);
             }
             else if (strncmp(serverBuffer, "ts:", 3) == 0)
             {
@@ -173,7 +179,7 @@ static void *udp_server_loop(void)
     return NULL;
 }
 
-int udp_send(char *addrStr, char *data)
+int udpSend(char *addrStr, char *data)
 {
     if (strlen(data) > 0)
     {
@@ -218,6 +224,20 @@ int udp_send(char *addrStr, char *data)
     return 0;
 }
 
+void syncKnown(void)
+{
+    char ts[15];
+    uint16_t count = nodeData->currentSize;
+    for (uint8_t i = 0; i < count; i++)
+    {
+        char *addr = nodeData->keySet[i];
+        // slightly adjust time for each node to avoid bottlenecks when nodes
+        // sending data on schedule
+        sprintf(ts, "ts:%lu", getCurrentTime() - 1500*i);
+        udpSend(addr, ts);
+    }
+}
+
 
 /*
  * trampoline for udp_server_loop()
@@ -239,7 +259,7 @@ void *udp_server(void *arg)
 int udp_cmd(int argc, char **argv)
 {
     if (argc == 3) {
-        return udp_send(argv[1], argv[2]);
+        return udpSend(argv[1], argv[2]);
     }
 
     printf("usage: %s <IPv6-address> <message>\n", argv[0]);
@@ -249,8 +269,6 @@ int udp_cmd(int argc, char **argv)
 char *nodeCalibrationJson(void)
 {
     uint16_t count = nodeCalibration->currentSize;
-    char json[MAX_MESSAGE_LENGTH];
-    char jsonBit[MAX_MESSAGE_LENGTH/2];
     sprintf(json, "{\"t\":\"cal\",\"c\":%d,\"n\":[", count);
     for (uint8_t i = 0; i < count; i++)
     {
@@ -264,7 +282,7 @@ char *nodeCalibrationJson(void)
         strncat(json, jsonBit, MAX_MESSAGE_LENGTH - strlen(json) - 1);
     }
     strncat(json, "]}", MAX_MESSAGE_LENGTH - strlen(json) - 1);
-    return strdup(json);
+    return json;
 }
 
 void dumpNodeCalibration(void)
@@ -282,8 +300,6 @@ void dumpNodeCalibration(void)
 char *nodeDataJson(void)
 {
     uint16_t count = nodeData->currentSize;
-    char json[MAX_BIG_MESSAGE_LENGTH];
-    char jsonBit[MAX_BIG_MESSAGE_LENGTH/2];
     sprintf(json, "{\"t\":\"dat\",\"c\":%d,\"n\":[", count);
     for (uint8_t i = 0; i < count; i++)
     {
@@ -297,7 +313,7 @@ char *nodeDataJson(void)
         strncat(json, jsonBit, MAX_BIG_MESSAGE_LENGTH - strlen(json) - 1);
     }
     strncat(json, "]}", MAX_BIG_MESSAGE_LENGTH - strlen(json) - 1);
-    return strdup(json);
+    return json;
 }
 
 void dumpNodeData(void)
