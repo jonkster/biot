@@ -6,6 +6,12 @@ import 'rxjs/add/operator/map';
 export class Biotz {
   constructor(private http: Http) {}
 
+  getCalibration(addr) {
+    var result = this.makeBrokerRequest('biotz/addresses/' + addr + '/calibration');
+    return result;
+  }
+
+
   getData() {
     var result = this.makeBrokerRequest('biotz');
     return result;

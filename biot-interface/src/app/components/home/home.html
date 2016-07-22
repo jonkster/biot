@@ -21,6 +21,7 @@
                 <th>x</th>
                 <th>y</th>
                 <th>z</th>
+                <th>cal</th>
                 <th>Identify++</th>
             </tr>
         </thead>
@@ -32,6 +33,7 @@
                 <td>{{ biot.x }}</td>
                 <td>{{ biot.y }}</td>
                 <td>{{ biot.z }}</td>
+                <td>{{ biot.calibration }}</td>
                 <td><button [disabled]="monitoring" (click)="identify(biot.address)">Identify</button></td>
             </tr>
         </tbody>

@@ -16,6 +16,7 @@ import {Biotz} from '../../services/biotz';
 export class Home {
     @ViewChildren(ThreeDirective) threeDirective;
     private biotzData:any = {};
+    private biotzCalibration:any = {};
     private monitoring:boolean = true;
     private counter:number = 0;
     private nodes: any = {};
@@ -29,6 +30,13 @@ export class Home {
 
     ngAfterViewInit() {
         this.threeD = this.threeDirective.first;
+    }
+
+    getCalibration(addr) {
+        this.biotz.getCalibration(addr)
+            .subscribe(rawData => {
+                this.biotzCalibration[addr] = rawData;
+            });
     }
 
     getData() {
@@ -63,7 +71,8 @@ export class Home {
                         'w': q.w,
                         'x': q.x,
                         'y': q.y,
-                        'z': q.z
+                        'z': q.z,
+                        'calibration' : this.biotzCalibration[addr]
                     });
 
                     if (this.nodes[addr] === undefined)
@@ -97,6 +106,12 @@ export class Home {
     updateData() {
         if (this.counter % 5 == 0)
             this.getData();
+        else if (this.counter % 101 == 0) {
+            for (var i = 0; i < this.biotzData.count; i++) {
+                var addr = this.biotzData.nodes[i].address;
+                this.getCalibration(addr);
+            }
+        }
 
         if (this.monitoring) {
             this.counter++;
