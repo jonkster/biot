@@ -1,7 +1,7 @@
 #ifndef UDP_COMMON_H
 #define UDP_COMMON_H
 
-#define MAX_BIG_MESSAGE_LENGTH 1024
+#define MAX_BIG_MESSAGE_LENGTH 512
 #define MAX_MESSAGE_LENGTH 256
 
 #ifdef __cplusplus

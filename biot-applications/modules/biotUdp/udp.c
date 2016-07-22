@@ -250,7 +250,8 @@ char *nodeCalibrationJson(void)
 {
     uint16_t count = nodeCalibration->currentSize;
     char json[MAX_MESSAGE_LENGTH];
-    sprintf(json, "{\"c\":%d,\"n\":[", count);
+    char jsonBit[MAX_MESSAGE_LENGTH/2];
+    sprintf(json, "{\"t\":\"cal\",\"c\":%d,\"n\":[", count);
     for (uint8_t i = 0; i < count; i++)
     {
         if (i != 0)
@@ -259,7 +260,6 @@ char *nodeCalibrationJson(void)
             strncat(json, ",", 1);
         }
         char *key = nodeCalibration->keySet[i];
-        char jsonBit[MAX_MESSAGE_LENGTH/10];
         sprintf(jsonBit, "{\"a\":\"%s\",\"v\":\"%s\"}", key, getValue(nodeCalibration, key));
         strncat(json, jsonBit, MAX_MESSAGE_LENGTH - strlen(json) - 1);
     }
@@ -283,7 +283,8 @@ char *nodeDataJson(void)
 {
     uint16_t count = nodeData->currentSize;
     char json[MAX_BIG_MESSAGE_LENGTH];
-    sprintf(json, "{\"c\":%d,\"n\":[", count);
+    char jsonBit[MAX_BIG_MESSAGE_LENGTH/2];
+    sprintf(json, "{\"t\":\"dat\",\"c\":%d,\"n\":[", count);
     for (uint8_t i = 0; i < count; i++)
     {
         if (i != 0)
@@ -292,7 +293,6 @@ char *nodeDataJson(void)
             strncat(json, ",", 1);
         }
         char *key = nodeData->keySet[i];
-        char jsonBit[MAX_BIG_MESSAGE_LENGTH/10];
         sprintf(jsonBit, "{\"a\":\"%s\",\"v\":\"%s\"}", key, getValue(nodeData, key));
         strncat(json, jsonBit, MAX_BIG_MESSAGE_LENGTH - strlen(json) - 1);
     }
