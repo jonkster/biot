@@ -185,6 +185,12 @@ export class ThreeDirective {
         node.updateMatrix();
     }
 
+    removeNode(name) {
+        var node = this.scene.getObjectByName(name);
+        this.scene.remove(node);
+    }
+
+
 
 }
 

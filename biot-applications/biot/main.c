@@ -17,8 +17,8 @@
 #include "../modules/imu/imu.h"
 
 #define PRIO    (THREAD_PRIORITY_MAIN + 1)
-static char housekeeping_stack[THREAD_STACKSIZE_DEFAULT];
-static char udp_stack[THREAD_STACKSIZE_DEFAULT];
+static char hkp_stack[THREAD_STACKSIZE_DEFAULT];
+static char udp_stack[THREAD_STACKSIZE_DEFAULT+512];
 
 char dodagRoot[IPV6_ADDR_MAX_STR_LEN];
 char dodagParent[IPV6_ADDR_MAX_STR_LEN];
@@ -198,9 +198,10 @@ static const shell_command_t shell_commands[] = {
 
 /* set interval to 1 second */
 #define INTERVAL (1000000U)
-void *housekeeping_handler(void *arg)
+void *houseKeeper(void *arg)
 {
     uint32_t lastSecs = 0;
+
     while(1)
     {
         if (! imuReady)
@@ -217,6 +218,14 @@ void *housekeeping_handler(void *arg)
             sendNodeData(mSecs);
         }
 
+        if (mSecs % 10000 == 0)
+        {
+            if (knowsRoot())
+            {
+                sendNodeCalibration();
+            }
+        }
+
         if (secs != lastSecs)
         {
             if (secs % 2 == 0)
@@ -228,13 +237,6 @@ void *housekeeping_handler(void *arg)
                 LED0_ON;
             }
 
-            if (secs % 10 == 0)
-            {
-                if (knowsRoot())
-                {
-                    sendNodeCalibration();
-                }
-            }
             
             if (! knowsRoot())
             {
@@ -258,12 +260,9 @@ int main(void)
 
     makeIdentityQuat(&currentPosition);
 
-    thread_create(housekeeping_stack, sizeof(housekeeping_stack), PRIO, THREAD_CREATE_STACKTEST, housekeeping_handler,
-                  NULL, "housekeeping");
+    thread_create(hkp_stack, sizeof(hkp_stack), PRIO, THREAD_CREATE_STACKTEST, houseKeeper, NULL, "housekeer");
 
-    //thread_create(udp_stack, sizeof(udp_stack), PRIO, THREAD_CREATE_STACKTEST | THREAD_CREATE_SLEEPING, udp_server,
-    thread_create(udp_stack, sizeof(udp_stack), PRIO, THREAD_CREATE_STACKTEST, udp_server,
-                  NULL, "udp");
+    thread_create(udp_stack, sizeof(udp_stack), PRIO, THREAD_CREATE_STACKTEST, udpServer, NULL, "udpserver");
 
     batch(shell_commands, "rpl init 6");
 

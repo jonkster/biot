@@ -50,6 +50,7 @@ export class Home {
                 var colours = [
                     0xff0000, 0x00ff00, 0x0000ff, 0xff00ff, 0x00ffff, 0xffff00
                 ];
+                var nodesUpdated = [];
                 for (var i = 0; i < rawData.n.length; i++) {
                     var addr = rawData.n[i].a;
                     var dataSt = rawData.n[i].v.split(/:/);
@@ -82,6 +83,17 @@ export class Home {
                     }
                     this.nodes[addr] = q;
                     this.threeD.moveNode(addr, q);
+                    nodesUpdated[addr] = true;
+                }
+                // clean up expired nodes
+                var addressesKnown = Object.keys(this.nodes);
+                for (var i = 0; i < addressesKnown.length; i++) {
+                    var name = addressesKnown[i];
+                    if (! nodesUpdated[name]) 
+                    {
+                        this.threeD.removeNode(name);
+                        this.nodes[name] = undefined;
+                    }
                 }
             });
     }
@@ -104,7 +116,7 @@ export class Home {
     }
 
     updateData() {
-        if (this.counter % 5 == 0)
+        if (this.counter % 4 == 0)
             this.getData();
         else if (this.counter % 101 == 0) {
             for (var i = 0; i < this.biotzData.count; i++) {

@@ -26,8 +26,8 @@
 
 
 #define PRIO    (THREAD_PRIORITY_MAIN + 1)
-static char housekeeping_stack[THREAD_STACKSIZE_DEFAULT];
-static char udp_stack[THREAD_STACKSIZE_DEFAULT+512];
+static char housekeeping_stack[THREAD_STACKSIZE_DEFAULT+1516];
+//static char udp_stack[THREAD_STACKSIZE_DEFAULT+512];
 
 char dodagRoot[] = "affe::2";
 
@@ -139,9 +139,19 @@ void *housekeeping_handler(void *arg)
 {
     int counter = 0;
     uint32_t lastSecs = 0;
+    initUdp();
+    bool udpOK = setupUdpServer();
+    
     while(1)
     {
-        uint32_t secs = getCurrentTime()/1500000;
+
+        if (udpOK)
+            udpGetRequestAndAct(); // NB this will block...
+        else
+            udpOK = setupUdpServer();
+
+        uint32_t ct = getCurrentTime();
+        uint32_t secs = ct/1500000;
         if (secs != lastSecs)
         {
             if (isRootPending)
@@ -165,7 +175,6 @@ void *housekeeping_handler(void *arg)
             }
         }
         lastSecs = secs;
-        thread_yield();
     }
 }
 
@@ -176,7 +185,7 @@ int main(void)
 
     thread_create(housekeeping_stack, sizeof(housekeeping_stack), PRIO, THREAD_CREATE_STACKTEST, housekeeping_handler, NULL, "housekeeping");
 
-    thread_create(udp_stack, sizeof(udp_stack), PRIO, THREAD_CREATE_STACKTEST, udp_server, NULL, "udp");
+//    thread_create(udp_stack, sizeof(udp_stack), PRIO, THREAD_CREATE_STACKTEST, udp_server, NULL, "udp");
 
 
     batch(shell_commands, "rpl init 6");
