@@ -174,6 +174,12 @@ int imu_cmd(int argc, char **argv)
     }
 }
 
+int imuinit_cmd(int argc, char **argv)
+{
+    imuReady = false;
+    return 0;
+}
+
 int mag_cmd(int argc, char **argv)
 {
     displayCorrections();
@@ -190,6 +196,7 @@ static const shell_command_t shell_commands[] = {
     { "timeAsk", "ask for current net time", callTime_cmd },
     { "udp", "send a message: udp <IPv6-address> <message>", udp_cmd },
     { "imu", "get IMU position data", imu_cmd },
+    { "imuinit", "reset IMU", imuinit_cmd },
     { "mag", "display compass correction data", mag_cmd },
     { NULL, NULL, NULL }
 };

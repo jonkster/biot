@@ -1,5 +1,5 @@
 # name of your application
-APPLICATION = net_oled_rpl
+APPLICATION = biotz-router
 
 # If no BOARD is found in the environment, use this default:
 BOARD ?= samr21-xpro
