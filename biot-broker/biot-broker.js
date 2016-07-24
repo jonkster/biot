@@ -45,7 +45,6 @@ brokerUdpListener.on('listening', function () {
     var address = brokerUdpListener.address();
     console.log('UDP Server listening on ' + address.address + ":" + address.port);
     sendBiotzRouterMessage();
-
 });
 
 var biotzData = {};
@@ -54,14 +53,19 @@ var biotzCal = {};
 brokerUdpListener.on('message', function (message, remote) {
     if (message.length > 0)
     {
-        var jResponse = JSON.parse(message);
-//        console.log('json:', jResponse);
-        if (jResponse['t'] == 'dat')
-            biotzData = jResponse;
-        else if (jResponse['t'] == 'cal')
-            biotzCal = jResponse;
-        else
+        try {
+            var jResponse = JSON.parse(message);
+            // console.log('json:', jResponse);
+            if (jResponse['t'] == 'dat')
+                biotzData = jResponse;
+            else if (jResponse['t'] == 'cal')
+                biotzCal = jResponse;
+            else
             console.log("unknown response type");
+        }
+        catch(e) {
+            console.log("unrecognised broker message:", message);
+        }
     }
 });
 
