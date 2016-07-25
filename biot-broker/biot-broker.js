@@ -186,7 +186,7 @@ function getBiotCalibration(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*"); 
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
     res.setHeader('Content-Type', 'application/json');
-    var value = biotzData[address];
+    var value = biotzCal[address];
     res.send(value);
     next();
 }
