@@ -26,10 +26,11 @@
 
 
 #define PRIO    (THREAD_PRIORITY_MAIN + 1)
-static char housekeeping_stack[THREAD_STACKSIZE_DEFAULT+1516];
-//static char udp_stack[THREAD_STACKSIZE_DEFAULT+512];
+static char housekeeping_stack[THREAD_STACKSIZE_DEFAULT-512];
+static char udp_stack[THREAD_STACKSIZE_DEFAULT+512];
 
 char dodagRoot[] = "affe::2";
+bool udpOK = false;
 
 extern void batch(const shell_command_t *command_list, char *line);
 extern int udpSend(char *addr_str, char *data);
@@ -77,6 +78,11 @@ int showCalibration_cmd(int argc, char **argv)
     return 0;
 }
 
+int udpinit_cmd(int argc, char **argv)
+{
+    udpOK = false;
+    return 0;
+}
 
 
 
@@ -104,6 +110,8 @@ static const shell_command_t shell_commands[] = {
     { "time", "show net time", time_cmd },
 
     { "retime", "reset net time", resetTime_cmd },
+
+    { "udpinit", "restart UDP system", udpinit_cmd },
 
     { "data", "show current node data", showNode_cmd },
 
@@ -137,18 +145,17 @@ void setRoot(void)
 #define INTERVAL (1000000U)
 void *housekeeping_handler(void *arg)
 {
-    int counter = 0;
     uint32_t lastSecs = 0;
-    initUdp();
-    bool udpOK = setupUdpServer();
+    //initUdp();
+    //udpOK = setupUdpServer();
     
     while(1)
     {
 
-        if (udpOK)
-            udpGetRequestAndAct(); // NB this will block...
-        else
-            udpOK = setupUdpServer();
+        //if (udpOK)
+         //   udpGetRequestAndAct(); // NB this will block...
+        //else
+         //   udpOK = setupUdpServer();
 
         uint32_t ct = getCurrentTime();
         uint32_t secs = ct/1500000;
@@ -159,10 +166,9 @@ void *housekeeping_handler(void *arg)
                 setRoot();
             }
 
-            if (isRoot && counter++ > 30)
+            if (isRoot && secs % 20)
             {
                 syncKnown();
-                counter = 0;
             }
 
             if (secs % 2 == 0)
@@ -185,7 +191,7 @@ int main(void)
 
     thread_create(housekeeping_stack, sizeof(housekeeping_stack), PRIO, THREAD_CREATE_STACKTEST, housekeeping_handler, NULL, "housekeeping");
 
-//    thread_create(udp_stack, sizeof(udp_stack), PRIO, THREAD_CREATE_STACKTEST, udp_server, NULL, "udp");
+    thread_create(udp_stack, sizeof(udp_stack), PRIO, THREAD_CREATE_STACKTEST, udpServer, NULL, "udp");
 
 
     batch(shell_commands, "rpl init 6");

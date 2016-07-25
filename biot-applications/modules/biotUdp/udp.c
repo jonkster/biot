@@ -22,7 +22,7 @@
 #define STR(x) #x
 
 
-#define MUDP_Q_SZ           (8)
+#define MUDP_Q_SZ           (4)
 #define SERVER_BUFFER_SIZE  (256)
 #define UDP_PORT            (8888)
 
@@ -35,13 +35,23 @@ static char serverBuffer[SERVER_BUFFER_SIZE];
 static msg_t msg_q[MUDP_Q_SZ];
 
 static char json[MAX_MESSAGE_LENGTH];
-static char jsonBit[MAX_MESSAGE_LENGTH/3];
+static char jsonBit[MAX_MESSAGE_LENGTH/4];
 
 hash_t *nodeData;
 hash_t *nodeCalibration;
 
+char dataDestAdd[IPV6_ADDR_MAX_STR_LEN];
+
+bool relayData(char * destAdd, char *srcAdd, char *type, char *val);
+
 bool setupUdpServer(void)
 {
+    printf("starting udp server...");
+    if (serverSocket >= 0)
+    {
+        puts("closing open socket");
+        close(serverSocket);
+    }
     serverSocket = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
 
     serverSocketAddr.sin6_family = AF_INET6;
@@ -51,7 +61,7 @@ bool setupUdpServer(void)
     if (serverSocket < 0)
     {
         puts("error initializing socket");
-        serverSocket = 0;
+        serverSocket = -1;
         return false;
     }
 
@@ -62,138 +72,130 @@ bool setupUdpServer(void)
         return false;
     }
 
+    strcpy(dataDestAdd, "");
+
+    puts(" OK");
     return true;
 }
 
 void actOnUdpRequests(int res, char *srcAdd, char* selfAdd)
 {
-    if (res < 0)
-    {
-        printf("Error on RX %d:%s rx from: %s (%s)\n", errno, strerror(errno), srcAdd, serverBuffer);
-        xtimer_usleep(100);
-    }
-    else if (res == 0)
-    {
-        puts("Peer did shut down");
-    }
-    else
-    {
+    //printf("%s: %d: %s\n", srcAdd, strlen(serverBuffer), serverBuffer);
 
-        if (strcmp(serverBuffer, "on") == 0)
+    if (strcmp(serverBuffer, "on") == 0)
+    {
+        LED0_ON;
+    }
+    else if (strcmp(serverBuffer, "off") == 0)
+    {
+        LED0_OFF;
+    }
+    else if (strcmp(serverBuffer, "identify") == 0)
+    {
+        identifyYourself(selfAdd);
+    }
+    else if (strncmp(serverBuffer, "nudge:", 6) == 0)
+    {
+        udpSend(serverBuffer+6, "identify");
+    }
+    else if (strcmp(serverBuffer, "sync") == 0)
+    {
+        syncKnown();
+    }
+    else if (strcmp(serverBuffer, "get-data") == 0)
+    {
+        // send a structure containing the cache of node orientations (typically sent to a processing application)
+        strcpy(dataDestAdd, srcAdd);
+        /*char *json = nodeDataJson();
+        if (strlen(json) == 0)
         {
-            LED0_ON;
-        }
-        else if (strcmp(serverBuffer, "off") == 0)
-        {
-            LED0_OFF;
-        }
-        else if (strcmp(serverBuffer, "identify") == 0)
-        {
-            identifyYourself(selfAdd);
-        }
-        else if (strncmp(serverBuffer, "nudge:", 6) == 0)
-        {
-            udpSend(serverBuffer+6, "identify");
-        }
-        else if (strcmp(serverBuffer, "sync") == 0)
-        {
-            syncKnown();
-        }
-        else if (strcmp(serverBuffer, "get-data") == 0)
-        {
-            // send a structure containing the cache of node orientations (typically sent to a processing application)
-            char *json = nodeDataJson();
-            if (strlen(json) == 0)
-            {
-                puts("data json empty?? Not sending");
-            }
-            else
-            {
-                udpSend(srcAdd, json);
-            }
-        }
-        else if (strncmp(serverBuffer, "data:", 5) == 0)
-        {
-            // update the cache of all the node data values (this is stored
-            // by the router).  The data will be periodically fired from
-            // nodes to the router
-            setValue(nodeData, srcAdd, serverBuffer+5);
-        }
-        else if (strncmp(serverBuffer, "calib:", 6) == 0)
-        {
-            // update the cache of all the node calibration values (this is
-            // stored by the router).  The data will be periodically fired from
-            // nodes to the router
-            setValue(nodeCalibration, srcAdd, serverBuffer+6);
-        }
-        else if (strcmp(serverBuffer, "get-cal") == 0)
-        {
-            // send a structure containing the cache of node calibration parameters (typically sent to a processing application)
-            char *json = nodeCalibrationJson();
-            if (strlen(json) == 0)
-            {
-                puts("calibration json empty?? Not sending");
-            }
-            else
-            {
-                udpSend(srcAdd, json);
-            }
-        }
-        else if (strcmp(serverBuffer, "time-please") == 0)
-        {
-            char ts[25];
-            sprintf(ts, "ts:%lu", getCurrentTime());
-            udpSend(srcAdd, ts);
-        }
-        else if (strncmp(serverBuffer, "ts:", 3) == 0)
-        {
-            if (srcAdd != selfAdd)
-            {
-                uint32_t t = atoi(serverBuffer+3);
-                setCurrentTime(t);
-            }
+            puts("data json empty?? Not sending");
         }
         else
         {
-            printf("rx unknown udp msg from %s : %s\n", srcAdd, serverBuffer);
+            udpSend(srcAdd, json);
+        }*/
+    }
+    else if (strncmp(serverBuffer, "data:", 5) == 0)
+    {
+        // update the cache of all the node data values (this is stored
+        // by the router).  The data will be periodically fired from
+        // nodes to the router
+        /*setValue(nodeData, srcAdd, serverBuffer+5);
+        sendData(dataDestAdd);*/
+        relayData(dataDestAdd, srcAdd, "dat", serverBuffer+5);
+    }
+    else if (strncmp(serverBuffer, "calib:", 6) == 0)
+    {
+        // update the cache of all the node calibration values (this is
+        // stored by the router).  The data will be periodically fired from
+        // nodes to the router
+        /*setValue(nodeCalibration, srcAdd, serverBuffer+6);
+        sendCal(dataDestAdd);*/
+        relayData(dataDestAdd, srcAdd, "cal", serverBuffer+6);
+    }
+    else if (strcmp(serverBuffer, "get-cal") == 0)
+    {
+        strcpy(dataDestAdd, srcAdd);
+        // send a structure containing the cache of node calibration parameters (typically sent to a processing application)
+        /*char *json = nodeCalibrationJson();
+        if (strlen(json) == 0)
+        {
+            puts("calibration json empty?? Not sending");
         }
+        else
+        {
+            udpSend(srcAdd, json);
+        }*/
+    }
+    else if (strcmp(serverBuffer, "time-please") == 0)
+    {
+        char ts[25];
+        sprintf(ts, "ts:%lu", getCurrentTime());
+        udpSend(srcAdd, ts);
+    }
+    else if (strncmp(serverBuffer, "ts:", 3) == 0)
+    {
+        if (srcAdd != selfAdd)
+        {
+            uint32_t t = atoi(serverBuffer+3);
+            setCurrentTime(t);
+        }
+    }
+    else
+    {
+        printf("rx unknown udp msg from %s : %s\n", srcAdd, serverBuffer);
     }
 }
 
 int udpSend(char *addrStr, char *data)
 {
-    if (strlen(data) > 0)
+    size_t dataLen = strlen(data);
+    if (dataLen > 0)
     {
         //printf("sending: %s msg: %s\n", addrStr, data);
-        struct sockaddr_in6 src, dst;
-        size_t data_len = strlen(data);
-        int s;
-        src.sin6_family = AF_INET6;
+        struct sockaddr_in6 dst;
         dst.sin6_family = AF_INET6;
-        memset(&src.sin6_addr, 0, sizeof(src.sin6_addr));
-        /* parse destination address */
         if (inet_pton(AF_INET6, addrStr, &dst.sin6_addr) != 1) {
             puts("Error: unable to parse destination address");
             return 1;
         }
-
         dst.sin6_port = htons(UDP_PORT);
-        src.sin6_port = htons(UDP_PORT);
 
+        int s;
         s = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
-
         if (s < 0) {
             puts("error initializing socket");
             return 1;
         }
 
-        if (sendto(s, data, data_len, 0, (struct sockaddr *)&dst, sizeof(dst)) < 0) {
+        if (sendto(s, data, dataLen, 0, (struct sockaddr *)&dst, sizeof(dst)) < 0) {
             puts("error: could not send message");
             close(s);
             return 1;
         }
 
-        //printf("Success: send %u byte(s) to %s:%u\n", (unsigned)data_len, addrStr, UDP_PORT);
+        //printf("Success: send %u byte(s) to %s:%u\n", (unsigned)dataLen, addrStr, UDP_PORT);
 
         close(s);
     }
@@ -219,7 +221,6 @@ void udpGetRequestAndAct(void)
             0,
             (struct sockaddr *)&src,
             &srcLen);
-
     //printf("w%lu\n", xtimer_now() - waitTimer);
 
     // get strings represnting source and server ipv6 addresses
@@ -229,6 +230,23 @@ void udpGetRequestAndAct(void)
 
     char selfAdd[IPV6_ADDR_MAX_STR_LEN];
     inet_ntop(AF_INET6, &(serverSocketAddr.sin6_addr), selfAdd, IPV6_ADDR_MAX_STR_LEN);
+
+    if (res < 0)
+    {
+        printf("Error on RX %d:%s rx from: %s (%s)\n", errno, strerror(errno), srcAdd, serverBuffer);
+        xtimer_usleep(100);
+        return;
+    }
+    else if (res == 0)
+    {
+        puts("Peer did shut down");
+        return;
+    }
+    else if (res >= SERVER_BUFFER_SIZE)
+    {
+        puts("OVERFLOW!");
+        return;
+    }
 
     actOnUdpRequests(res, srcAdd, selfAdd);
 }
@@ -250,6 +268,16 @@ void *udpServer(void *arg)
     }
 }
 
+bool relayData(char * destAdd, char *srcAdd, char *type, char *val)
+{
+    if (strlen(destAdd) > 0)
+    {
+        sprintf(json, "{\"t\":\"%s\",\"s\":\"%s\",\"v\":\"%s\"}", type, srcAdd, val);
+        udpSend(destAdd, json);
+        return true;
+    }
+    return false;
+}
 
 void syncKnown(void)
 {
