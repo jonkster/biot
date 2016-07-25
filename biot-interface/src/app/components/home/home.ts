@@ -17,6 +17,7 @@ export class Home {
     @ViewChildren(ThreeDirective) threeDirective;
     private biotzData:any = {};
     private biotzCalibration:any = {};
+    private savedCalibrations:any = {};
     private monitoring:boolean = true;
     private counter:number = 0;
     private nodes: any = {};
@@ -26,6 +27,9 @@ export class Home {
 
     ngOnInit() {
         this.updateData();
+        if (Object.keys(this.savedCalibrations).length == 0) {
+            this.readStoredCalibrations();
+        }
     }
 
     ngAfterViewInit() {
@@ -42,7 +46,7 @@ export class Home {
     getData() {
         this.biotz.getData()
             .subscribe(rawData => {
-                this.biotzData = rawData;
+                //this.biotzData = rawData;
                 this.biotzData = {
                     'count': rawData.c,
                     'nodes': []
@@ -65,6 +69,10 @@ export class Home {
                     var colourSt = colour.toString(16);
                     while (colourSt.length < 6)
                         colourSt = '00' + colourSt;
+                    var cal = this.savedCalibrations[addr];
+                    if (cal === undefined) {
+                        cal = '';
+                    }
                     this.biotzData.nodes.push({
                         'address': addr,
                         'colour': colourSt,
@@ -73,7 +81,8 @@ export class Home {
                         'x': q.x,
                         'y': q.y,
                         'z': q.z,
-                        'calibration' : this.biotzCalibration[addr]
+                        'calibration' : this.biotzCalibration[addr],
+                        'savedCals' : cal
                     });
 
                     if (this.nodes[addr] === undefined)
@@ -99,7 +108,42 @@ export class Home {
     }
 
     identify(addr) {
-        this.biotz.identify(addr).subscribe();;
+        this.biotz.identify(addr).subscribe();
+    }
+
+    readStoredCalibrations() {
+        var knownAddresses = [];
+        this.biotz.getCachedCalibrationAddresses()
+            .subscribe(addresses => {
+                knownAddresses = addresses;
+                for (var i = 0; i < knownAddresses.length; i++) {
+                    var addr = knownAddresses[i];
+                    (function(a, obj) {
+                        obj.biotz.getCachedCalibration(a).subscribe( res => {
+                            obj.savedCalibrations[a] = res;
+                        });
+                    })(addr, this);
+                }
+            });
+    }
+
+    saveCalibrations() {
+         var addresses = Object.keys(this.biotzCalibration);
+         for (var i = 0; i < addresses.length; i++) {
+             var address = addresses[i];
+             (function(a, obj) {
+                var cal = obj.biotzCalibration[a];
+                 obj.biotz.putCachedCalibration(a, cal)
+                     .subscribe(res => {
+                         obj.savedCalibrations[a] = obj.biotzCalibration[a];
+                     });
+             })(address, this)
+         }
+
+    }
+
+    sendCalibrations() {
+         this.biotzCalibration = this.savedCalibrations;
     }
 
     synchronise() {
@@ -116,9 +160,9 @@ export class Home {
     }
 
     updateData() {
-        if (this.counter % 4 == 0)
+        if (this.counter % 2 == 0)
             this.getData();
-        else if (this.counter % 101 == 0) {
+        else if (this.counter % 21 == 0) {
             for (var i = 0; i < this.biotzData.count; i++) {
                 var addr = this.biotzData.nodes[i].address;
                 this.getCalibration(addr);

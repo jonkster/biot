@@ -17,7 +17,7 @@
 #include "../modules/imu/imu.h"
 
 #define PRIO    (THREAD_PRIORITY_MAIN + 1)
-static char hkp_stack[THREAD_STACKSIZE_DEFAULT];
+static char hkp_stack[THREAD_STACKSIZE_DEFAULT+512];
 static char udp_stack[THREAD_STACKSIZE_DEFAULT+512];
 
 char dodagRoot[IPV6_ADDR_MAX_STR_LEN];

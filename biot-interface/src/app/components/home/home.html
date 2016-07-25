@@ -21,7 +21,8 @@
                 <th>x</th>
                 <th>y</th>
                 <th>z</th>
-                <th>cal</th>
+                <th>cals</th>
+                <th>saved cals</th>
                 <th>Identify++</th>
             </tr>
         </thead>
@@ -34,6 +35,7 @@
                 <td>{{ biot.y }}</td>
                 <td>{{ biot.z }}</td>
                 <td>{{ biot.calibration }}</td>
+                <td>{{ biot.savedCals }}</td>
                 <td><button [disabled]="monitoring" (click)="identify(biot.address)">Identify</button></td>
             </tr>
         </tbody>
@@ -44,4 +46,6 @@
     </div>
 
     <button (click)="synchronise()">Force Synchronise Nodes</button>
+    <button (click)="saveCalibrations()">Save Current Calibrations</button>
+    <button (click)="sendCalibrations()">Send Saved Calibrations to Nodes</button>
 </div>

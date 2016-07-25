@@ -12,6 +12,7 @@
   ],
   "license": "0BSD",
   "dependencies": {
+    "mkdirp": "^0.5.1",
     "restify": "^4.1.1"
   },
   "repository": {

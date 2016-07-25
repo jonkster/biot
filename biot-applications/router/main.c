@@ -24,7 +24,7 @@
 
 
 #define PRIO    (THREAD_PRIORITY_MAIN + 1)
-static char housekeeping_stack[THREAD_STACKSIZE_DEFAULT-512];
+static char housekeeping_stack[THREAD_STACKSIZE_DEFAULT];
 static char udp_stack[THREAD_STACKSIZE_DEFAULT+1024];
 
 char dodagRoot[] = "affe::2";

@@ -161,15 +161,37 @@ myQuat_t getPosition(mpu9150_t dev)
     imuData_t imuData;
     if (getIMUData(dev, &imuData))
     {
-        // accelerometer
+        // get orientation as deduced by adding gyro measured rotational
+        // velocity (times time interval) to previous orientation.
+        double gx1 = (double)imuData.gyro.x_axis/1024;
+        double gy1 = (double)imuData.gyro.y_axis/1024;
+        double gz1 = (double)imuData.gyro.z_axis/1024;
+        double omega[3] = { gx1, gy1, gz1 }; 
+
+        uint32_t dt = imuData.ts - lastIMUData.ts;
+        myQuat_t gRot = makeQuatFromAngularVelocityTime(omega, dt/50000);
+        myQuat_t gyroDeducedOrientation =  quatMultiply(currentIMUPosition, gRot);
+
+        // get gravity direction from accelerometer
         double ax1 = imuData.accel.x_axis;
         double ay1 = imuData.accel.y_axis;
         double az1 = imuData.accel.z_axis;
         double downVec[3] = { ax1, ay1, az1 };
-        //downVec[0] = 0; downVec[1] = -2; downVec[2] = 3; // make pretend accelerometer reading for debugging
+
+        // check if acceleration has a large non-gravity component.
+        double acclMagnitude = vecLength(downVec) / 1024;
+        if ((acclMagnitude > 1.1) || (acclMagnitude < 0.9))
+        {
+            // just use gyro deduced orientation as accelerometer probably
+            // skewed by non gravity acceleration component.
+            myQuat_t gyroDeducedOrientation =  quatMultiply(currentIMUPosition, gRot);
+            lastIMUData = imuData;
+            return gyroDeducedOrientation;
+        }
+
         vecNormalise(downVec);
 
-        // magnetometer
+        // get magnetometer indication of North
         double mx1 = (double)(imuData.mag.x_axis - magHardCorrection[0]);
         double my1 = (double)(imuData.mag.y_axis - magHardCorrection[1]);
         double mz1 = (double)(imuData.mag.z_axis - magHardCorrection[2]);
@@ -178,36 +200,29 @@ myQuat_t getPosition(mpu9150_t dev)
         mz1 *= magSoftCorrection[2];
         double magRawVec[3] = { my1, mx1, -mz1 };
 
-        // make a north vector without dip by using down and raw
-        // magnetometer vectors - do it by creating an east (90 to down
-        // and raw) and then undipped north (90 to east and down)
+        // make a north vector without dip by using the gravity and raw
+        // magnetometer vectors - create an east vector (which is 90deg to down
+        // and raw) and then find undipped north (which is 90deg to east and
+        // down)
         double eastVec[3];
         vecCross(eastVec, downVec, magRawVec);
         double northVec[3];
         vecCross(northVec, eastVec, downVec);
-        //northVec[0] = 1; northVec[1] = 0; northVec[2] = 0; // make pretend magnetometer reading for debugging
         vecNormalise(northVec);
 
+        // calculate rotation quats by seeing how measured down and north are
+        // different from un rotated down and north
         double downRef[3] = {0, 0, 1};
-        myQuat_t downRot = quatFrom2Vecs(downVec, downRef);
         double northRef[3] = {1, 0, 0};
+
+        myQuat_t downRot = quatFrom2Vecs(downVec, downRef);
         myQuat_t northRot = quatFrom2Vecs(northVec, northRef);
 
-        // get orientation as calculated using accel and compass readings
+        // get combined orientation quat using down and north rotations
         myQuat_t amMeasuredOrientation = quatMultiply(northRot, downRot);
 
-        // get orientation as deduced from adding gyro measured rotational
-        // velocity to previous orientation
-        double gx1 = (double)imuData.gyro.x_axis/1024;
-        double gy1 = (double)imuData.gyro.y_axis/1024;
-        double gz1 = (double)imuData.gyro.z_axis/1024;
-
-        uint32_t dt = imuData.ts - lastIMUData.ts;
-        double omega[3] = { gx1, gy1, gz1 }; 
-        myQuat_t gRot = makeQuatFromAngularVelocityTime(omega, dt/50000);
-        myQuat_t gyroDeducedOrientation =  quatMultiply(currentIMUPosition, gRot);
-
-        // calculate an orientation that is slightly towards am orientation starting from gyro deduced.
+        // calculate an orientation that is slightly towards accl/magnetometer
+        // calculated orientation (starting from gyro deduced orientation).
         currentIMUPosition = slerp(gyroDeducedOrientation, amMeasuredOrientation, 0.1);
     }
     lastIMUData = imuData;

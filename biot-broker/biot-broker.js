@@ -12,31 +12,7 @@ var BROKER_HOST = 'localhost';
 
 var dgram = require('dgram');
 
-// send message to Biotz Router device
-function sendBiotzRouterMessage() {
-    var message = new Buffer('get-data');
-    var client1 = dgram.createSocket('udp6');
-
-    // ask for update on node data knowledge
-    client1.send(message, 0, message.length, BIOTZ_UDP_PORT, BIOTZ_ROUTER_HOST, function(err, bytes) {
-        if (err)
-        {
-            console.log('Error:', err);
-        }
-        client1.close();
-    });
-
-    // ask for update on node calibration knowledge
-    message = new Buffer('get-cal');
-    client2 = dgram.createSocket('udp6');
-    client2.send(message, 0, message.length, BIOTZ_UDP_PORT, BIOTZ_ROUTER_HOST, function(err, bytes) {
-        if (err)
-        {
-            console.log('Error:', err);
-        }
-        client2.close();
-    });
-}
+var dataPath = './data';
 
 
 // Listen to Biotz Router device
@@ -64,6 +40,33 @@ brokerUdpListener.on('message', function (message, remote) {
     }
 });
 
+// Listen for and act on Broker HTTP Requests
+var restify = require('restify');
+var brokerListener = restify.createServer();
+brokerListener.get('/', getRoot);
+brokerListener.get('/biotz', getAllBiotData);
+brokerListener.get('/biotz/count', getBiotCount);
+brokerListener.get('/biotz/synchronise', biotSync);
+brokerListener.get('/biotz/addresses', getBiotz);
+brokerListener.get('/biotz/addresses/:address', getBiotFull);
+brokerListener.get('/biotz/addresses/:address', getBiotFull);
+brokerListener.get('/biotz/addresses/:address/data', getBiotData);
+brokerListener.get('/biotz/addresses/:address/identify', biotIdentify);
+brokerListener.get('/biotz/addresses/:address/calibration', getBiotCalibration);
+brokerListener.get('/biotz/addresses/:address/:quality', getBiotQuality);
+brokerListener.put('/biotz/addresses/:address/calibration', putBiotCalibration);
+
+brokerListener.get('/data/addresses', getCachedAddresses);
+brokerListener.get('/data/addresses/:address/calibration', getCachedCalibration);
+brokerListener.put('/data/addresses/:address/calibration/:data', putCachedCalibration);
+
+brokerListener.listen(BROKER_HTTP_PORT, BROKER_HOST, function() {
+    console.log('Broker %s listening for HTTP requests at port:%s', brokerListener.name, brokerListener.url);
+    console.log('eg: http://%s:%s/biotz', brokerListener.name, brokerListener.url);
+    brokerUdpListener.bind(BIOTZ_UDP_PORT, UDP_LOCAL_HOST);
+});
+
+
 function addNodeData(jResponse) {
     /* expecting jResponse to be in form:
      * json: { t: 'dat',
@@ -82,8 +85,6 @@ function addNodeData(jResponse) {
 }
 
 
-// Listen for and act on Broker HTTP Requests
-var restify = require('restify');
 
 function biotIdentify(req, res, next) {
     var address = req.params['address'];
@@ -272,27 +273,108 @@ function getBiotz(req, res, next) {
     next();
 }
 
-var brokerListener = restify.createServer();
-brokerListener.get('/', getRoot);
-brokerListener.get('/biotz', getAllBiotData);
-brokerListener.get('/biotz/count', getBiotCount);
-brokerListener.get('/biotz/synchronise', biotSync);
-brokerListener.get('/biotz/addresses', getBiotz);
-brokerListener.get('/biotz/addresses/:address', getBiotFull);
-brokerListener.get('/biotz/addresses/:address', getBiotFull);
-brokerListener.get('/biotz/addresses/:address/data', getBiotData);
-brokerListener.get('/biotz/addresses/:address/identify', biotIdentify);
-brokerListener.get('/biotz/addresses/:address/calibration', getBiotCalibration);
-brokerListener.get('/biotz/addresses/:address/:quality', getBiotQuality);
+function getCachedAddresses(req, res, next) {
 
-brokerListener.listen(BROKER_HTTP_PORT, BROKER_HOST, function() {
-    console.log('Broker %s listening for HTTP requests at port:%s', brokerListener.name, brokerListener.url);
-    console.log('eg: http://%s:%s/biotz', brokerListener.name, brokerListener.url);
-    brokerUdpListener.bind(BIOTZ_UDP_PORT, UDP_LOCAL_HOST);
-});
+    res.header("Access-Control-Allow-Origin", "*"); 
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+    res.setHeader('Content-Type', 'application/json');
+    var path = dataPath + '/addresses/';
+
+    var fs = require('fs');
+    fs.readdir(path, function(err, files) {
+        if (err) {
+            res.send(500, 'fail');
+        } else {
+            res.send(200, files);
+        }
+        next();
+    });
+}
+
+function getCachedCalibration(req, res, next) {
+    var address = req.params['address'];
+    var path = dataPath + '/addresses/' + address + '/calibration.json';
+    console.log(path);
+
+    var fs = require('fs');
+    fs.readFile(path, function(err, data) {
+        data = JSON.parse(data);
+        console.log(data);
+        res.header("Access-Control-Allow-Origin", "*"); 
+        res.header("Access-Control-Allow-Headers", "X-Requested-With");
+        res.setHeader('Content-Type', 'application/json');
+        if (err) {
+            console.log(err, 'reading file:', path);
+            res.send(404, data);
+        } else {
+            res.send(200, data);
+        }
+        next();
+    });
+}
+
+function putBiotCalibration(req, res, next) {
+    console.log("cannot send calibrations to biot node yet!");
+}
+
+function putCachedCalibration(req, res, next) {
+    var address = req.params['address'];
+    var data = req.params['data'];
+    var path = dataPath + '/addresses/' + address;
+
+    res.header("Access-Control-Allow-Origin", "*"); 
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+    res.setHeader('Content-Type', 'application/json');
+
+    var fs = require('fs');
+
+    if (! fs.existsSync(path)) {
+        var mkdirp = require('mkdirp');
+        var dir = mkdirp.sync(path);
+        if (! dir) {
+            res.send(500, 'failed to create resource');
+            next();
+            return;
+        }
+    }
+    path += '/calibration.json';
+    fs.writeFile(path, JSON.stringify(data), function(err) {
+        if (err) {
+            res.send(500, 'OK');
+            console.log(fErr, 'writing file:', path);
+        } else {
+            res.send('OK');
+        }
+        next();
+    });
+
+}
 
 
+// send message to Biotz Router device
+function sendBiotzRouterMessage() {
+    var message = new Buffer('get-data');
+    var client1 = dgram.createSocket('udp6');
 
+    // ask for update on node data knowledge
+    client1.send(message, 0, message.length, BIOTZ_UDP_PORT, BIOTZ_ROUTER_HOST, function(err, bytes) {
+        if (err)
+        {
+            console.log('Error:', err);
+        }
+        client1.close();
+    });
 
+    // ask for update on node calibration knowledge
+    message = new Buffer('get-cal');
+    client2 = dgram.createSocket('udp6');
+    client2.send(message, 0, message.length, BIOTZ_UDP_PORT, BIOTZ_ROUTER_HOST, function(err, bytes) {
+        if (err)
+        {
+            console.log('Error:', err);
+        }
+        client2.close();
+    });
+}
 
 
