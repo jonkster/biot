@@ -55,19 +55,31 @@ brokerUdpListener.on('message', function (message, remote) {
     {
         try {
             var jResponse = JSON.parse(message);
-            // console.log('json:', jResponse);
-            if (jResponse['t'] == 'dat')
-                biotzData = jResponse;
-            else if (jResponse['t'] == 'cal')
-                biotzCal = jResponse;
-            else
-            console.log("unknown response type");
+            //console.log('json:', jResponse);
+            addNodeData(jResponse);
         }
         catch(e) {
-            console.log("unrecognised broker message:", message);
+            console.log(e, "unrecognised broker message:", message);
         }
     }
 });
+
+function addNodeData(jResponse) {
+    /* expecting jResponse to be in form:
+     * json: { t: 'dat',
+         *   s: 'affe::585a:6b64:95b5:846',
+         *   v: '190150:0.828802:-0.104520:-0.535533:-0.123965' }
+     */
+    if (jResponse['t'] == 'dat') {
+        biotzData[jResponse.s] = jResponse.v;
+    }
+    else if (jResponse['t'] == 'cal'){
+        biotzCal[jResponse.s] = jResponse.v;
+    }
+    else{
+        console.log("unknown response type", jResponse['t']);
+    }
+}
 
 
 // Listen for and act on Broker HTTP Requests
@@ -130,22 +142,33 @@ function getAllBiotData(req, res, next) {
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
     res.setHeader('Content-Type', 'application/json');
 
-    res.send(biotzData);
+    var addresses = Object.keys(biotzData);
+    var c =addresses.length;
+
+    var nodes = [];
+    for (var i = 0; i < c; i++) {
+        var address = addresses[i];
+        var nodeValue = biotzData[address];
+        nodes.push({
+            "a" : address,
+            "v" : nodeValue
+        });
+    }
+
+    var value = {
+        "c": c,
+        "n" : nodes
+    }
+
+    res.send(value);
     next();
 }
 
 function getBiotData(req, res, next) {
 
     var address = req.params['address'];
-    var nodes = biotzData.n;
-    var value = "";
-    for (var i = 0; i < nodes.length; i++) {
-        var node = nodes[i];
-        if (node.a === address) {
-            value = node.v;
-            break;
-        }
-    }
+    var value = biotzData[address];
+
     // trigger update request for next time
     sendBiotzRouterMessage();
     res.header("Access-Control-Allow-Origin", "*"); 
@@ -158,32 +181,24 @@ function getBiotData(req, res, next) {
 function getBiotCalibration(req, res, next) {
 
     var address = req.params['address'];
-    var nodes = biotzCal.n;
-    var value = "";
-    for (var i = 0; i < nodes.length; i++) {
-        var node = nodes[i];
-        if (node.a === address) {
-            value = node.v;
-            break;
-        }
-    }
-    // trigger update request for next time
+
     sendBiotzRouterMessage();
     res.header("Access-Control-Allow-Origin", "*"); 
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
     res.setHeader('Content-Type', 'application/json');
+    var value = biotzData[address];
     res.send(value);
     next();
 }
 
 function getBiotCount(req, res, next) {
 
-    var addresses = [];
+    sendBiotzRouterMessage();
     res.header("Access-Control-Allow-Origin", "*"); 
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
     res.setHeader('Content-Type', 'application/json');
-    res.send(biotzData.c);
-    sendBiotzRouterMessage();
+    var addresses = Object.keys(biotzData);
+    res.send(addresses.length);
     next();
 }
 
@@ -195,25 +210,9 @@ function getBiotFull(req, res, next) {
         getBiotz(req, res, next);
         return;
     }
-    var data = "";
-    var nodes = biotzData.n;
-    for (var i = 0; i < nodes.length; i++) {
-        var node = nodes[i];
-        if (node.a === address) {
-            data = node.v;
-            break;
-        }
-    }
 
-    var cal = "";
-    var nodes = biotzCal.n;
-    for (var i = 0; i < nodes.length; i++) {
-        var node = nodes[i];
-        if (node.a === address) {
-            cal = node.v;
-            break;
-        }
-    }
+    var data = biotzData[address];
+    var cal = biotzCal[address];
     var value = {
         'data': data,
         'calibration': cal,
@@ -239,26 +238,21 @@ function getBiotQuality(req, res, next) {
         getBiotFull(req, res, next);
         return;
     }
-    var nodes = biotzData.n;
+
+    var nodeData = biotzData[address];
     var value = "";
-    for (var i = 0; i < nodes.length; i++) {
-        var node = nodes[i];
-        if (node.a === address) {
-            var vs = node.v.split(':');
-            switch(quality) {
-                case 'time': value = vs[0];
-                    break;
-                case 'w': value = vs[1];
-                    break;
-                case 'x': value = vs[2];
-                    break;
-                case 'y': value = vs[3];
-                    break;
-                case 'z': value = vs[4];
-                    break;
-            }
+    var vs = nodeData.split(':');
+    switch(quality) {
+        case 'time': value = vs[0];
             break;
-        }
+        case 'w': value = vs[1];
+            break;
+        case 'x': value = vs[2];
+            break;
+        case 'y': value = vs[3];
+            break;
+        case 'z': value = vs[4];
+            break;
     }
     sendBiotzRouterMessage();
     res.header("Access-Control-Allow-Origin", "*"); 
@@ -270,20 +264,11 @@ function getBiotQuality(req, res, next) {
 
 function getBiotz(req, res, next) {
 
-    var addresses = [];
-    if (biotzData.c > 0)
-    {
-        var nodes = biotzData.n;
-        for (var i = 0; i < nodes.length; i++) {
-            var node = nodes[i];
-            addresses.push(node.a);
-        }
-    }
     sendBiotzRouterMessage();
     res.header("Access-Control-Allow-Origin", "*"); 
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
     res.setHeader('Content-Type', 'application/json');
-    res.send(addresses);
+    res.send(Object.keys(biotzData));
     next();
 }
 
