@@ -14,15 +14,7 @@ int udp_cmd(int argc, char **argv);
 
 int udpSend(char *addr_str, char *data);
 
-void dumpNodeData(void);
-
 void initUdp(void);
-
-char *nodeCalibrationJson(void);
-
-void dumpNodeCalibration(void);
-
-char *nodeDataJson(void);
 
 bool setupUdpServer(void);
 

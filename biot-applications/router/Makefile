@@ -20,8 +20,8 @@ DIRS += ../modules/identify/
 USEMODULE += biotIdentify
 DIRS += ../modules/sendData/
 USEMODULE += sendData
-DIRS += ../modules/dataCache/
-USEMODULE += dataCache
+#DIRS += ../modules/dataCache/
+#USEMODULE += dataCache
 
 #
 # create 2 network interfaces, one for 6lowPAN and one for SLIP

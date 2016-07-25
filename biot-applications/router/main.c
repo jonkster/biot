@@ -19,15 +19,13 @@
 #include "periph/gpio.h"
 #include "shell.h"
 #include "../modules/identify/biotIdentify.h"
-//#include "../modules/sendData/sendData.h"
-//#include "../modules/dataCache/dataCache.h"
 #include "../modules/biotUdp/udp.h"
 
 
 
 #define PRIO    (THREAD_PRIORITY_MAIN + 1)
 static char housekeeping_stack[THREAD_STACKSIZE_DEFAULT-512];
-static char udp_stack[THREAD_STACKSIZE_DEFAULT+512];
+static char udp_stack[THREAD_STACKSIZE_DEFAULT+1024];
 
 char dodagRoot[] = "affe::2";
 bool udpOK = false;
@@ -66,18 +64,6 @@ int identify_cmd(int argc, char **argv)
     return 0;
 }
 
-int showNode_cmd(int argc, char **argv)
-{
-    dumpNodeData();
-    return 0;
-}
-
-int showCalibration_cmd(int argc, char **argv)
-{
-    dumpNodeCalibration();
-    return 0;
-}
-
 int udpinit_cmd(int argc, char **argv)
 {
     udpOK = false;
@@ -113,10 +99,6 @@ static const shell_command_t shell_commands[] = {
 
     { "udpinit", "restart UDP system", udpinit_cmd },
 
-    { "data", "show current node data", showNode_cmd },
-
-    { "cal", "show current node calibration", showCalibration_cmd },
-
     { "udp", "send a message: udp <IPv6-address> <message>", udp_cmd },
 
     { NULL, NULL, NULL }
@@ -146,16 +128,9 @@ void setRoot(void)
 void *housekeeping_handler(void *arg)
 {
     uint32_t lastSecs = 0;
-    //initUdp();
-    //udpOK = setupUdpServer();
     
     while(1)
     {
-
-        //if (udpOK)
-         //   udpGetRequestAndAct(); // NB this will block...
-        //else
-         //   udpOK = setupUdpServer();
 
         uint32_t ct = getCurrentTime();
         uint32_t secs = ct/1500000;

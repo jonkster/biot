@@ -15,7 +15,6 @@
 #include "board.h"
 #include "udp.h"
 #include "../identify/biotIdentify.h"
-#include "../dataCache/dataCache.h"
 #include "../imu/imu.h"
 
 #define XSTR(x) STR(x)
@@ -34,11 +33,9 @@ struct sockaddr_in6 serverSocketAddr;
 static char serverBuffer[SERVER_BUFFER_SIZE];
 static msg_t msg_q[MUDP_Q_SZ];
 
-static char json[MAX_MESSAGE_LENGTH];
-static char jsonBit[MAX_MESSAGE_LENGTH/4];
-
-hash_t *nodeData;
-hash_t *nodeCalibration;
+#ifdef MAX_NODES
+    char nodeData[MAX_NODES][IPV6_ADDR_MAX_STR_LEN];
+#endif
 
 char dataDestAdd[IPV6_ADDR_MAX_STR_LEN];
 
@@ -100,53 +97,29 @@ void actOnUdpRequests(int res, char *srcAdd, char* selfAdd)
     }
     else if (strcmp(serverBuffer, "sync") == 0)
     {
+#ifdef MAX_NODES
         syncKnown();
+#endif
     }
     else if (strcmp(serverBuffer, "get-data") == 0)
     {
-        // send a structure containing the cache of node orientations (typically sent to a processing application)
+        // record the sender as a destination for imu data
         strcpy(dataDestAdd, srcAdd);
-        /*char *json = nodeDataJson();
-        if (strlen(json) == 0)
-        {
-            puts("data json empty?? Not sending");
-        }
-        else
-        {
-            udpSend(srcAdd, json);
-        }*/
     }
     else if (strncmp(serverBuffer, "data:", 5) == 0)
     {
-        // update the cache of all the node data values (this is stored
-        // by the router).  The data will be periodically fired from
-        // nodes to the router
-        /*setValue(nodeData, srcAdd, serverBuffer+5);
-        sendData(dataDestAdd);*/
+        // pass node's data to the current data destination
         relayData(dataDestAdd, srcAdd, "dat", serverBuffer+5);
     }
     else if (strncmp(serverBuffer, "calib:", 6) == 0)
     {
-        // update the cache of all the node calibration values (this is
-        // stored by the router).  The data will be periodically fired from
-        // nodes to the router
-        /*setValue(nodeCalibration, srcAdd, serverBuffer+6);
-        sendCal(dataDestAdd);*/
+        // pass node's data to the current data destination
         relayData(dataDestAdd, srcAdd, "cal", serverBuffer+6);
     }
     else if (strcmp(serverBuffer, "get-cal") == 0)
     {
+        // record the sender as a destination for calibration data
         strcpy(dataDestAdd, srcAdd);
-        // send a structure containing the cache of node calibration parameters (typically sent to a processing application)
-        /*char *json = nodeCalibrationJson();
-        if (strlen(json) == 0)
-        {
-            puts("calibration json empty?? Not sending");
-        }
-        else
-        {
-            udpSend(srcAdd, json);
-        }*/
     }
     else if (strcmp(serverBuffer, "time-please") == 0)
     {
@@ -272,6 +245,7 @@ bool relayData(char * destAdd, char *srcAdd, char *type, char *val)
 {
     if (strlen(destAdd) > 0)
     {
+        char json[MAX_MESSAGE_LENGTH];
         sprintf(json, "{\"t\":\"%s\",\"s\":\"%s\",\"v\":\"%s\"}", type, srcAdd, val);
         udpSend(destAdd, json);
         return true;
@@ -281,23 +255,21 @@ bool relayData(char * destAdd, char *srcAdd, char *type, char *val)
 
 void syncKnown(void)
 {
-    char ts[15];
-    uint16_t count = nodeData->currentSize;
-    for (uint8_t i = 0; i < count; i++)
-    {
-        char *addr = nodeData->keySet[i];
-        // slightly adjust time for each node to avoid bottlenecks when nodes
-        // sending data on schedule
-        sprintf(ts, "ts:%lu", getCurrentTime() - 150000*i);
-        udpSend(addr, ts);
-    }
+#ifdef MAX_NODES
+    char ts[25];
+    sprintf(ts, "ts:%lu", getCurrentTime());
+    udpSend("ff02::1", ts);
+    return;
+#endif
 }
 
 void initUdp(void)
 {
 #ifdef MAX_NODES
-    nodeData = newHash(MAX_NODES);
-    nodeCalibration = newHash(MAX_NODES);
+    for (uint8_t i = 0; i < MAX_NODES; i++)
+    {
+        memset(nodeData[i], 0, IPV6_ADDR_MAX_STR_LEN);
+    }
 #endif
     msg_init_queue(msg_q, MUDP_Q_SZ);
 }
@@ -310,66 +282,5 @@ int udp_cmd(int argc, char **argv)
 
     printf("usage: %s <IPv6-address> <message>\n", argv[0]);
     return 1;
-}
-
-char *nodeCalibrationJson(void)
-{
-    uint16_t count = nodeCalibration->currentSize;
-    sprintf(json, "{\"t\":\"cal\",\"c\":%d,\"n\":[", count);
-    for (uint8_t i = 0; i < count; i++)
-    {
-        if (i != 0)
-        {
-            // add leading comma if not first line
-            strncat(json, ",", 1);
-        }
-        char *key = nodeCalibration->keySet[i];
-        sprintf(jsonBit, "{\"a\":\"%s\",\"v\":\"%s\"}", key, getValue(nodeCalibration, key));
-        strncat(json, jsonBit, MAX_MESSAGE_LENGTH - strlen(json) - 1);
-    }
-    strncat(json, "]}", MAX_MESSAGE_LENGTH - strlen(json) - 1);
-    return json;
-}
-
-void dumpNodeCalibration(void)
-{
-    uint16_t count = nodeCalibration->currentSize;
-    printf("hash has %d values\n", count);
-    for (uint8_t i = 0; i < count; i++)
-    {
-        char *key = nodeCalibration->keySet[i];
-        printf("key:'%s' = '%s'\n", key, getValue(nodeCalibration, key));
-    }
-}
-
-
-char *nodeDataJson(void)
-{
-    uint16_t count = nodeData->currentSize;
-    sprintf(json, "{\"t\":\"dat\",\"c\":%d,\"n\":[", count);
-    for (uint8_t i = 0; i < count; i++)
-    {
-        if (i != 0)
-        {
-            // add leading comma if not first line
-            strncat(json, ",", 1);
-        }
-        char *key = nodeData->keySet[i];
-        sprintf(jsonBit, "{\"a\":\"%s\",\"v\":\"%s\"}", key, getValue(nodeData, key));
-        strncat(json, jsonBit, MAX_BIG_MESSAGE_LENGTH - strlen(json) - 1);
-    }
-    strncat(json, "]}", MAX_BIG_MESSAGE_LENGTH - strlen(json) - 1);
-    return json;
-}
-
-void dumpNodeData(void)
-{
-    uint16_t count = nodeData->currentSize;
-    printf("hash has %d values\n", count);
-    for (uint8_t i = 0; i < count; i++)
-    {
-        char *key = nodeData->keySet[i];
-        printf("key:'%s' = '%s'\n", key, getValue(nodeData, key));
-    }
 }
 
