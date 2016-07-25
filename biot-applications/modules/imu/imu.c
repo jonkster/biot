@@ -15,10 +15,7 @@ uint64_t t0;
 myQuat_t currentIMUPosition;
 imuData_t lastIMUData;
 
-int16_t magMin[3] = { 0, 0, 0 };
-int16_t magMax[3] = { 0, 0, 0 };
-/*int16_t magMin[3] = { -72, -90, -68 };
-int16_t magMax[3] = { 46, 33, 57 };*/
+int16_t magMinMax[6] = { 0, 0, 0, 0, 0, 0 };
 
 int16_t magHardCorrection[3] = { 0, 0, 0 };
 double magSoftCorrection[3] = { 1, 1, 1 };
@@ -69,8 +66,8 @@ void displayCorrections(void)
             "mag max: %"PRId16", %"PRId16", %"PRId16"\n"
             "hard correction offsets: %"PRId16", %"PRId16", %"PRId16"\n"
             "soft correction factors: %f, %f, %f\n",
-            magMin[0], magMin[1], magMin[2],
-            magMax[0], magMax[1], magMax[2],
+            magMinMax[0], magMinMax[1], magMinMax[2],
+            magMinMax[3], magMinMax[4], magMinMax[5],
             magHardCorrection[0], magHardCorrection[1], magHardCorrection[2],
             magSoftCorrection[0], magSoftCorrection[1], magSoftCorrection[2]);
     printf("+-------------------------------------+\n");
@@ -128,32 +125,35 @@ bool getIMUData(mpu9150_t dev, imuData_t *data)
 
 int16_t *getMagCalibration(void)
 {
-    return magMin;
+    return magMinMax;
 }
 
 
 
 void imuCalibrate(imuData_t *data)
 {
-    if (data->mag.x_axis > magMax[0])
-        magMax[0] = data->mag.x_axis;
+    // find minimums
+    if (data->mag.x_axis < magMinMax[0])
+        magMinMax[0] = data->mag.x_axis;
 
-    if (data->mag.y_axis > magMax[1])
-        magMax[1] = data->mag.y_axis;
+    if (data->mag.y_axis < magMinMax[1])
+        magMinMax[1] = data->mag.y_axis;
 
-    if (data->mag.z_axis > magMax[2])
-        magMax[2] = data->mag.z_axis;
+    if (data->mag.z_axis < magMinMax[2])
+        magMinMax[2] = data->mag.z_axis;
 
-    if (data->mag.x_axis < magMin[0])
-        magMin[0] = data->mag.x_axis;
+    // find maximums
+    if (data->mag.x_axis > magMinMax[3])
+        magMinMax[3] = data->mag.x_axis;
 
-    if (data->mag.y_axis < magMin[1])
-        magMin[1] = data->mag.y_axis;
+    if (data->mag.y_axis > magMinMax[4])
+        magMinMax[4] = data->mag.y_axis;
 
-    if (data->mag.z_axis < magMin[2])
-        magMin[2] = data->mag.z_axis;
+    if (data->mag.z_axis > magMinMax[5])
+        magMinMax[5] = data->mag.z_axis;
 
-    setMagCalibration(magMin);
+
+    setMagCalibration(magMinMax);
 }
 
 myQuat_t getPosition(mpu9150_t dev)
@@ -276,19 +276,19 @@ bool initialiseIMU(mpu9150_t *dev)
 
 void setMagCalibration(int16_t *cal)
 {
-    magMin[0] = cal[0];
-    magMin[1] = cal[1];
-    magMin[2] = cal[2];
-    magMax[0] = cal[3];
-    magMax[1] = cal[4];
-    magMax[2] = cal[5];
+    magMinMax[0] = cal[0];
+    magMinMax[1] = cal[1];
+    magMinMax[2] = cal[2];
+    magMinMax[3] = cal[3];
+    magMinMax[4] = cal[4];
+    magMinMax[5] = cal[5];
 
     // Hard corrections - try and make all mag readings be equally spread
     // across origin (rather than being offset).  Collect max and min values
     // and calculate an 'average centre'.
 
     for (uint8_t i = 0; i < 3; i++)
-        magHardCorrection[i] = (magMin[i] + magMax[i])/2;
+        magHardCorrection[i] = (magMinMax[i] + magMinMax[i+3])/2;
 
     // Soft corrections - try and reduce elongations along x,y,z
     // axis to make the data fit closer to a sphere (this is a bit of a quick and
@@ -300,8 +300,8 @@ void setMagCalibration(int16_t *cal)
     double vMin[3];
     for (uint8_t i = 0; i < 3; i++)
     {
-        vMax[i] = (double)magMax[i] - (magMin[i] + magMax[i])/2.0;
-        vMin[i] = (double)magMin[i] - (magMin[i] + magMin[i])/2.0;
+        vMax[i] = (double)magMinMax[i+3] - (magMinMax[i] + magMinMax[i+3])/2.0;
+        vMin[i] = (double)magMinMax[i] - (magMinMax[i] + magMinMax[i])/2.0;
     }
     // find 'average' distance from centre of the 3 axes
     double avg[3];
