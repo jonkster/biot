@@ -1,10 +1,6 @@
 <h3>Biotz</h3>
 
 <div nodes>
-    <p>
-    This application is currently not intended to be used other than as an
-    experimental platform. See: <a href="./#/about">About </a>
-    </p>
 
     <div>Currently Monitoring Biotz Nodes: <b>{{ monitoring }}</b></div>
     <button [ngClass]="{'active': monitoring}" (click)="toggleMonitoring()">Toggle Monitor</button>
@@ -12,6 +8,8 @@
     <hr/>
     <h3>Node Position Data</h3>
     <div>Biotz Nodes detected: {{ getDetectedAddresses().length }} <button [disabled]="wantAll" (click)="showAll(true);">Show All</button></div> 
+    <div myThreeD>
+    </div>
     <table>
         <thead>
             <tr>
@@ -46,11 +44,13 @@
     </table>
     <div style="float:right; clear:both; font-size:smaller;">++Identify can only be done if not actively monitoring nodes</div>
 
-    <div myThreeD>
-    </div>
-
 
     <button (click)="synchronise()">Force Synchronise Nodes</button>
     <button (click)="saveCalibrations()">Save Current Calibrations</button>
     <button (click)="sendCalibrations()">Send Saved Calibrations to Nodes</button>
+
+    <p>
+    This application is currently not intended to be used other than as an
+    experimental platform. See: <a href="./#/about">About </a>
+    </p>
 </div>

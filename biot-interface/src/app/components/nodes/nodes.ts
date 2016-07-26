@@ -174,7 +174,7 @@ export class Nodes {
                             if (this.nodes[addr] === undefined)
                                 {
                                     this.nodes[addr] = {};
-                                    this.threeD.addNode(addr, (i*200)-600, 0, 0, parseInt(colourSt, 16));
+                                    this.threeD.addNode(addr, i*200, 0, 0, parseInt(colourSt, 16));
                                 }
                                 this.nodes[addr] = q;
                             this.threeD.moveNode(addr, q);
@@ -270,8 +270,10 @@ export class Nodes {
             var addr = addresses[i];
             this.showOnlyAddress[addr] = value;
         }
-        if (value)
+        if (value) {
             this.wantAll = true;
+            this.threeD.unFocusNode();
+        }
     }
 
     showOne(addr, value) {
@@ -283,9 +285,11 @@ export class Nodes {
             this.showAll(false);
             this.showOne(addr, true);
             this.wantAll = false;
+            this.threeD.focusNode(addr);
         } else {
             this.showAll(true);
             this.wantAll = true;
+            this.threeD.unFocusNode();
         }
     }
 
