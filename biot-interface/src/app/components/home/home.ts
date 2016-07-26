@@ -17,6 +17,7 @@ export class Home {
     @ViewChildren(ThreeDirective) threeDirective;
     private biotzData:any = {};
     private biotzCalibration:any = {};
+    private biotzStatus:any = {};
     private savedCalibrations:any = {};
     private monitoring:boolean = true;
     private counter:number = 0;
@@ -36,10 +37,42 @@ export class Home {
         this.threeD = this.threeDirective.first;
     }
 
-    getCalibration(addr) {
+    dropNode(addr) {
+        var nodes = this.biotzData.nodes;
+        var activeNodes = [];
+        for (var i = 0; i < nodes.length; i++) {
+            var node = nodes[i];
+            if (node.address !== addr) {
+                activeNodes.push(node);
+            }
+        }
+        this.biotzData = {
+            'count' : activeNodes.length,
+            'nodes': activeNodes
+        }
+        this.biotzStatus[addr] = undefined;
+        this.nodes[addr] = undefined;
+        this.threeD.removeNode(addr);
+    }
+
+    getNodeCalibration(addr) {
         this.biotz.getCalibration(addr)
             .subscribe(rawData => {
                 this.biotzCalibration[addr] = rawData;
+            },
+            error => {
+                console.error("ERROR getting calibration!", error);
+            });
+    }
+
+    getNodeStatus(addr) {
+        this.biotz.getStatus(addr)
+            .subscribe(rawData => {
+                this.biotzStatus[addr] = rawData;
+            },
+            error => {
+                console.error("ERROR getting status!", error);
+                this.dropNode(addr);
             });
     }
 
@@ -48,7 +81,7 @@ export class Home {
             .subscribe(rawData => {
                 //this.biotzData = rawData;
                 this.biotzData = {
-                    'count': rawData.c,
+                    'count': 0,
                     'nodes': []
                 };
                 var colours = [
@@ -57,43 +90,56 @@ export class Home {
                 var nodesUpdated = [];
                 for (var i = 0; i < rawData.n.length; i++) {
                     var addr = rawData.n[i].a;
-                    var dataSt = rawData.n[i].v.split(/:/);
-                    var q = {
-                        'w': dataSt[1],
-                        'x': dataSt[2],
-                        'y': dataSt[3],
-                        'z': dataSt[4]
-                    };
-                    var idx = this.biotzData.nodes.length;
-                    var colour = colours[idx % colours.length];
-                    var colourSt = colour.toString(16);
-                    while (colourSt.length < 6)
+                    if (rawData.n[i].v !== undefined) {
+                        var dataSt = rawData.n[i].v.split(/:/);
+                        var q = {
+                            'w': dataSt[1],
+                            'x': dataSt[2],
+                            'y': dataSt[3],
+                            'z': dataSt[4]
+                        };
+                        var idx = this.biotzData.nodes.length;
+                        var colour = colours[idx % colours.length];
+                        var colourSt = colour.toString(16);
+                        while (colourSt.length < 6)
                         colourSt = '00' + colourSt;
-                    var cal = this.savedCalibrations[addr];
-                    if (cal === undefined) {
-                        cal = '';
-                    }
-                    this.biotzData.nodes.push({
-                        'address': addr,
-                        'colour': colourSt,
-                        'time': dataSt[0]/1000,
-                        'w': q.w,
-                        'x': q.x,
-                        'y': q.y,
-                        'z': q.z,
-                        'calibration' : this.biotzCalibration[addr],
-                        'savedCals' : cal
-                    });
 
-                    if (this.nodes[addr] === undefined)
-                    {
-                        this.nodes[addr] = {};
-                        this.threeD.addNode(addr, (i*200)-600, 0, 0, colour);
+                        var cal = this.savedCalibrations[addr];
+                        if (cal === undefined) 
+                            cal = '';
+
+                        var nStat = this.biotzStatus[addr];
+                        if (nStat === undefined) {
+                            nStat = 'unknown';
+                        } else {
+                            nStat = nStat.status;
+                        }
+
+
+                        this.biotzData.nodes.push({
+                            'address': addr,
+                            'colour': colourSt,
+                            'time': dataSt[0]/1000,
+                            'w': q.w,
+                            'x': q.x,
+                            'y': q.y,
+                            'z': q.z,
+                            'status': nStat,
+                            'calibration' : this.biotzCalibration[addr],
+                            'savedCals' : cal
+                        });
+
+                        if (this.nodes[addr] === undefined)
+                            {
+                                this.nodes[addr] = {};
+                                this.threeD.addNode(addr, (i*200)-600, 0, 0, colour);
+                            }
+                            this.nodes[addr] = q;
+                        this.threeD.moveNode(addr, q);
+                        nodesUpdated[addr] = true;
                     }
-                    this.nodes[addr] = q;
-                    this.threeD.moveNode(addr, q);
-                    nodesUpdated[addr] = true;
                 }
+                this.biotzData.count = this.biotzData.nodes.length;
                 // clean up expired nodes
                 var addressesKnown = Object.keys(this.nodes);
                 for (var i = 0; i < addressesKnown.length; i++) {
@@ -104,6 +150,9 @@ export class Home {
                         this.nodes[name] = undefined;
                     }
                 }
+            },
+            error => {
+                console.error("Error updating data!", error);
             });
     }
 
@@ -165,7 +214,8 @@ export class Home {
         else if (this.counter % 21 == 0) {
             for (var i = 0; i < this.biotzData.count; i++) {
                 var addr = this.biotzData.nodes[i].address;
-                this.getCalibration(addr);
+                this.getNodeCalibration(addr);
+                this.getNodeStatus(addr);
             }
         }
 
