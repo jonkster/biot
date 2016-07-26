@@ -11,7 +11,6 @@ var BROKER_HTTP_PORT = 8889;
 var BROKER_HOST = 'localhost'; 
 
 var dgram = require('dgram');
-
 var dataPath = './data';
 
 
@@ -25,13 +24,14 @@ brokerUdpListener.on('listening', function () {
 
 var biotzData = {};
 var biotzCal = {};
+var nodeStatus = {};
+
 // received an update message - store info
 brokerUdpListener.on('message', function (message, remote) {
     if (message.length > 0)
     {
         try {
             var jResponse = JSON.parse(message);
-            //console.log('json:', jResponse);
             addNodeData(jResponse);
         }
         catch(e) {
@@ -44,8 +44,10 @@ brokerUdpListener.on('message', function (message, remote) {
 var restify = require('restify');
 var brokerListener = restify.createServer();
 brokerListener.get('/', getRoot);
+
 brokerListener.get('/biotz', getAllBiotData);
 brokerListener.get('/biotz/count', getBiotCount);
+brokerListener.get('/biotz/status', getBiotzStatus);
 brokerListener.get('/biotz/synchronise', biotSync);
 brokerListener.get('/biotz/addresses', getBiotz);
 brokerListener.get('/biotz/addresses/:address', getBiotFull);
@@ -53,12 +55,16 @@ brokerListener.get('/biotz/addresses/:address', getBiotFull);
 brokerListener.get('/biotz/addresses/:address/data', getBiotData);
 brokerListener.get('/biotz/addresses/:address/identify', biotIdentify);
 brokerListener.get('/biotz/addresses/:address/calibration', getBiotCalibration);
+brokerListener.get('/biotz/addresses/:address/status', getBiotStatus);
 brokerListener.get('/biotz/addresses/:address/:quality', getBiotQuality);
+
 brokerListener.put('/biotz/addresses/:address/calibration', putBiotCalibration);
 
 brokerListener.get('/data/addresses', getCachedAddresses);
 brokerListener.get('/data/addresses/:address/calibration', getCachedCalibration);
+
 brokerListener.put('/data/addresses/:address/calibration/:data', putCachedCalibration);
+
 
 brokerListener.listen(BROKER_HTTP_PORT, BROKER_HOST, function() {
     console.log('Broker %s listening for HTTP requests at port:%s', brokerListener.name, brokerListener.url);
@@ -73,11 +79,18 @@ function addNodeData(jResponse) {
          *   s: 'affe::585a:6b64:95b5:846',
          *   v: '190150:0.828802:-0.104520:-0.535533:-0.123965' }
      */
+    var address = jResponse.s;
+
+    nodeStatus[address] = {
+        'ts' : new Date(),
+        'status' : 'active'
+    }
+
     if (jResponse['t'] == 'dat') {
-        biotzData[jResponse.s] = jResponse.v;
+        biotzData[address] = jResponse.v;
     }
     else if (jResponse['t'] == 'cal'){
-        biotzCal[jResponse.s] = jResponse.v;
+        biotzCal[address] = jResponse.v;
     }
     else{
         console.log("unknown response type", jResponse['t']);
@@ -188,7 +201,11 @@ function getBiotCalibration(req, res, next) {
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
     res.setHeader('Content-Type', 'application/json');
     var value = biotzCal[address];
-    res.send(value);
+    if (value === undefined) {
+        res.send(404, value);
+    } else {
+        res.send(200, value);
+    }
     next();
 }
 
@@ -273,6 +290,62 @@ function getBiotz(req, res, next) {
     next();
 }
 
+function getBiotStatus(req, res, next) {
+    var address = req.params['address'];
+    var now = new Date();
+    if (nodeStatus[address] !== undefined) {
+        var timeDiff = (now - nodeStatus[address].ts) / 1000; // as seconds
+
+            if (timeDiff > 20) {
+                nodeStatus[address] = undefined;
+            } else if (timeDiff > 10) {
+                nodeStatus[address].status = 'lost';
+            } else if (timeDiff > 5) {
+                nodeStatus[address].status = 'inactive';
+            } else {
+                nodeStatus[address].status = 'active';
+            }
+    }
+    if (nodeStatus[address] === undefined) {
+        biotzData[address] = undefined;
+    }
+
+    res.header("Access-Control-Allow-Origin", "*"); 
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+    res.setHeader('Content-Type', 'application/json');
+    if (nodeStatus[address] === undefined) {
+        res.send(404, 'does not exist');
+    }
+    else {
+        res.send(200, nodeStatus[address]);
+    }
+    next();
+}
+
+function getBiotzStatus(req, res, next) {
+    var addresses = Object.keys(nodeStatus);
+    var now = new Date();
+    for (var i = 0; i < addresses.length; i++) {
+        var address = addresses[i];
+        var timeDiff = (now - nodeStatus[address].ts) / 1000; // as seconds
+
+        if (timeDiff > 20) {
+            nodeStatus[address] = undefined;
+        } else if (timeDiff > 10) {
+            nodeStatus[address].status = 'lost';
+        } else if (timeDiff > 5) {
+            nodeStatus[address].status = 'inactive';
+        } else {
+            nodeStatus[address].status = 'active';
+        }
+    }
+    res.header("Access-Control-Allow-Origin", "*"); 
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+    res.setHeader('Content-Type', 'application/json');
+    res.send(nodeStatus);
+    next();
+}
+
 function getCachedAddresses(req, res, next) {
 
     res.header("Access-Control-Allow-Origin", "*"); 
@@ -294,12 +367,10 @@ function getCachedAddresses(req, res, next) {
 function getCachedCalibration(req, res, next) {
     var address = req.params['address'];
     var path = dataPath + '/addresses/' + address + '/calibration.json';
-    console.log(path);
 
     var fs = require('fs');
     fs.readFile(path, function(err, data) {
         data = JSON.parse(data);
-        console.log(data);
         res.header("Access-Control-Allow-Origin", "*"); 
         res.header("Access-Control-Allow-Headers", "X-Requested-With");
         res.setHeader('Content-Type', 'application/json');
