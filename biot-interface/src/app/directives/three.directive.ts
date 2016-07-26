@@ -89,6 +89,8 @@ export class ThreeDirective {
 	lgeometry.vertices.push(new THREE.Vector3(length, 0, 0));
 	var line = new THREE.Line(lgeometry, lmaterial);
 	group.add(line);
+	line.castShadow = true;
+	line.receiveShadow = true;
 
 	lmaterial = new THREE.LineBasicMaterial( {color: g.getHex(), linewidth: width} );
 	lgeometry = new THREE.Geometry();
@@ -96,6 +98,8 @@ export class ThreeDirective {
 	lgeometry.vertices.push(new THREE.Vector3(0, length, 0));
 	line = new THREE.Line(lgeometry, lmaterial);
 	group.add(line);
+	line.castShadow = true;
+	line.receiveShadow = true;
 
 	lmaterial = new THREE.LineBasicMaterial( {color: b.getHex(), linewidth: width} );
 	lgeometry = new THREE.Geometry();
@@ -103,6 +107,8 @@ export class ThreeDirective {
 	lgeometry.vertices.push(new THREE.Vector3(0, 0, length));
 	line = new THREE.Line(lgeometry, lmaterial);
 	group.add(line);
+	line.castShadow = true;
+	line.receiveShadow = true;
 
 	return group;
     }
