@@ -1,6 +1,6 @@
 <h3>Biotz</h3>
 
-<div home>
+<div nodes>
     <p>
     This application is currently not intended to be used other than as an
     experimental platform. See: <a href="./#/about">About </a>
@@ -11,7 +11,7 @@
 
     <hr/>
     <h3>Node Position Data</h3>
-    <div>Biotz Nodes detected: {{ biotzData.count }}</div>
+    <div>Biotz Nodes detected: {{ getDetectedAddresses().length }} <button [disabled]="wantAll" (click)="showAll(true);">Show All</button></div> 
     <table>
         <thead>
             <tr>
@@ -28,17 +28,19 @@
             </tr>
         </thead>
         <tbody>
-            <tr *ngFor="let biot of biotzData.nodes">
-                <td><span [style.background]="'#' + biot.colour">&nbsp;&nbsp;</span>{{ biot.address }}</td>
-                <td>{{ biot.time }}</td>
-                <td>{{ biot.w }}</td>
-                <td>{{ biot.x }}</td>
-                <td>{{ biot.y }}</td>
-                <td>{{ biot.z }}</td>
-                <td>{{ biot.status }}</td>
-                <td>{{ biot.calibration }}</td>
-                <td>{{ biot.savedCals }}</td>
-                <td><button [disabled]="monitoring" (click)="identify(biot.address)">Identify</button></td>
+            <tr *ngFor="let address of getVisibleAddresses()">
+                <td (click)="toggleShowAll(address)"><span [style.background]="'#' + getNodeColour(address)">&nbsp;&nbsp;</span>{{ address }}</td>
+                <td>{{ getBiotProperty(address,'time') }}</td>
+                <td>{{ getBiotProperty(address,'w') }}</td>
+                <td>{{ getBiotProperty(address,'x') }}</td>
+                <td>{{ getBiotProperty(address,'y') }}</td>
+                <td>{{ getBiotProperty(address,'z') }}</td>
+                <td>{{ getBiotProperty(address,'status') }}</td>
+                <td>{{ getBiotProperty(address,'calibration') }}</td>
+                <td>{{ getBiotProperty(address,'savedCals') }}</td>
+                <td>
+                    <button (click)="identify(address)">Identify</button>
+                </td>
             </tr>
         </tbody>
     </table>
@@ -46,6 +48,7 @@
 
     <div myThreeD>
     </div>
+
 
     <button (click)="synchronise()">Force Synchronise Nodes</button>
     <button (click)="saveCalibrations()">Save Current Calibrations</button>

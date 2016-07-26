@@ -67,7 +67,6 @@ export class ThreeDirective {
         var r = new THREE.Color(0.5, 0.1, 0.1).offsetHSL(0, 0, brightness);
         var g = new THREE.Color(0.1, 0.5, 0.1).offsetHSL(0, 0, brightness);
         var b = new THREE.Color(0.1, 0.1, 0.5).offsetHSL(0, 0, brightness);
-        console.log(r.getHSL(), g.getHSL(), b.getHSL());
 
         var lmaterial = new THREE.LineBasicMaterial( {color: r.getHex(), linewidth: width});
         var lgeometry = new THREE.Geometry();
@@ -158,8 +157,8 @@ export class ThreeDirective {
         this.camera.position.x = 30;
         this.camera.lookAt( this.scene.position );
 
-        var axisHelper = new THREE.AxisHelper( 125 );
-        this.scene.add( axisHelper );
+        /*var axisHelper = new THREE.AxisHelper( 125 );
+        this.scene.add( axisHelper );*/
 
         var ambientLight = new THREE.AmbientLight(0xddddff, 0.6);
         this.scene.add(ambientLight);
