@@ -1,15 +1,17 @@
-<h3>Biotz</h3>
+<h3>Biot Nodes</h3>
 
 <div nodes>
 
-    <div>Currently Monitoring Biotz Nodes: <b>{{ monitoring }}</b></div>
-    <button [ngClass]="{'active': monitoring}" (click)="toggleMonitoring()">Toggle Monitor</button>
 
     <hr/>
-    <h3>Node Position Data</h3>
     <div>Biotz Nodes detected: {{ getDetectedAddresses().length }} <button [disabled]="wantAll" (click)="showAll(true);">Show All</button></div> 
     <div myThreeD>
     </div>
+    <hr/>
+
+    <h3>Node Position Data</h3>
+    <div>Currently Monitoring Biotz Nodes: <b>{{ monitoring }}</b></div>
+    <button [ngClass]="{'active': monitoring}" (click)="toggleMonitoring()">Toggle Monitor</button>
     <table>
         <thead>
             <tr>
@@ -22,7 +24,7 @@
                 <th>status</th>
                 <th>cals</th>
                 <th>saved cals</th>
-                <th>Identify++</th>
+                <th>Identify</th>
             </tr>
         </thead>
         <tbody>
@@ -42,7 +44,6 @@
             </tr>
         </tbody>
     </table>
-    <div style="float:right; clear:both; font-size:smaller;">++Identify can only be done if not actively monitoring nodes</div>
 
 
     <button (click)="synchronise()">Force Synchronise Nodes</button>
