@@ -225,7 +225,7 @@ void *houseKeeper(void *arg)
             sendNodeData(mSecs);
         }
 
-        if (mSecs % 10000 == 0)
+        if (mSecs % 2000 == 0)
         {
             if (knowsRoot())
             {
