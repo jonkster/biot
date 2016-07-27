@@ -136,7 +136,6 @@ export class ThreeDirective {
 	    }
 	});
 	var midx = xmin + (xmax - xmin)/2;
-	console.log(midx);
 	return midx;
     }
 
@@ -164,7 +163,7 @@ export class ThreeDirective {
 	 this.renderer.preserveDrawingBuffer = true ;
 	 this.renderer.setClearColor(this.clearColour, 1);
 	 this.renderer.setSize( this.sizeX, this.sizeY );
-	 this.renderer.shadowMapEnabled = true;
+	 this.renderer.shadowMap.enabled = true;
 	 el.nativeElement.appendChild( this.renderer.domElement );
 
     }
@@ -208,12 +207,13 @@ export class ThreeDirective {
 	var ambientLight = new THREE.AmbientLight(0xddddff, 0.3);
 	this.scene.add(ambientLight);
 
+        // where lighting aims
 	this.lightTarget = new THREE.Object3D();
 	this.lightTarget.position.set(0, 0, 0);
 	this.scene.add(this.lightTarget);
+
 	this.hemiLight = new THREE.HemisphereLight(0xddddff, 0xddffdd, 0.6);
 	this.hemiLight.position.set(0, 0, 400);
-	this.hemiLight.castShadow = true;
 	this.scene.add(this.hemiLight);
 	this.hemiLight.target = this.lightTarget;
 

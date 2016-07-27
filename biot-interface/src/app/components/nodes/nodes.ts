@@ -237,14 +237,16 @@ export class Nodes {
         return this.nodeColours[addr];
     }
 
+    // store currently measured calibrations in cache for later use
     saveCalibrations() {
          var addresses = Object.keys(this.biotzCalibration);
          for (var i = 0; i < addresses.length; i++) {
              var address = addresses[i];
              (function(a, obj) {
                 var cal = obj.biotzCalibration[a];
-                 obj.biotz.putCachedCalibration(a, cal)
+                 obj.biotz.putCalibrationsToCache(a, cal)
                      .subscribe(res => {
+                         console.log(address, "measured calibrations should now be saved to cache");
                          obj.savedCalibrations[a] = obj.biotzCalibration[a];
                      });
              })(address, this)
@@ -256,8 +258,21 @@ export class Nodes {
         return (Object.keys(this.savedCalibrations).length > 0);
     }
 
+    // send cached calibrations to nodes
     sendCalibrations() {
-         this.biotzCalibration = this.savedCalibrations;
+         var addresses = Object.keys(this.savedCalibrations);
+         for (var i = 0; i < addresses.length; i++) {
+             var address = addresses[i];
+             (function(a, obj) {
+                var cal = obj.savedCalibrations[a];
+                 obj.biotz.putCalibrationToNode(a, cal)
+                     .subscribe(res => {
+                         console.log(address, "node should now have previously cached calibrations");
+                         //obj.savedCalibrations[a] = obj.biotzCalibration[a];
+                     });
+             })(address, this)
+         }
+
     }
 
     synchronise() {

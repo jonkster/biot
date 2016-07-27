@@ -65,8 +65,15 @@ export class Biotz {
       .catch(this.handleError);
   }
 
-  putCachedCalibration(addr, data: string) {
+  putCalibrationsToCache(addr, data: string) {
       var path = 'data/addresses/' + addr + '/calibration/' + data;
+      var url = "http://localhost:8889/" + path ;
+      return this.http.put(url, 'where_is_this?')
+          .map((response) => response.json());
+  }
+
+  putCalibrationToNode(addr, data: string) {
+      var path = 'biotz/addresses/' + addr + '/calibration/' + data;
       var url = "http://localhost:8889/" + path ;
       return this.http.put(url, 'where_is_this?')
           .map((response) => response.json());
