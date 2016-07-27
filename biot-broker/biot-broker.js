@@ -58,7 +58,7 @@ brokerListener.get('/biotz/addresses/:address/calibration', getBiotCalibration);
 brokerListener.get('/biotz/addresses/:address/status', getBiotStatus);
 brokerListener.get('/biotz/addresses/:address/:quality', getBiotQuality);
 
-brokerListener.put('/biotz/addresses/:address/calibration', putBiotCalibration);
+brokerListener.put('/biotz/addresses/:address/calibration/:data', putBiotCalibration);
 
 brokerListener.get('/data/addresses', getCachedAddresses);
 brokerListener.get('/data/addresses/:address/calibration', getCachedCalibration);
@@ -385,7 +385,28 @@ function getCachedCalibration(req, res, next) {
 }
 
 function putBiotCalibration(req, res, next) {
-    console.log("cannot send calibrations to biot node yet!");
+    res.header("Access-Control-Allow-Origin", "*"); 
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+    res.setHeader('Content-Type', 'application/json');
+
+    var address = req.params['address'];
+    var data = req.params['data'];
+    console.log("sending calibration", data, "to biot node", address);
+
+    var message = new Buffer('set-cal:' + data + '#' + address);
+    var client = dgram.createSocket('udp6');
+
+    client.send(message, 0, message.length, BIOTZ_UDP_PORT, BIOTZ_ROUTER_HOST, function(err, bytes) {
+        if (err) {
+            console.log('Error:', err);
+            res.send(500, err);
+        } else {
+            console.log("sent", message.toString());
+            res.send(200, 'OK');
+        }
+        client.close();
+        next();
+    });
 }
 
 function putCachedCalibration(req, res, next) {
