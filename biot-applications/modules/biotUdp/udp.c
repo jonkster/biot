@@ -113,13 +113,48 @@ void actOnUdpRequests(int res, char *srcAdd, char* selfAdd)
     }
     else if (strncmp(serverBuffer, "calib:", 6) == 0)
     {
-        // pass node's data to the current data destination
+        // pass node's calibration to the current data destination
         relayData(dataDestAdd, srcAdd, "cal", serverBuffer+6);
     }
     else if (strcmp(serverBuffer, "get-cal") == 0)
     {
         // record the sender as a destination for calibration data
         strcpy(dataDestAdd, srcAdd);
+    }
+    else if (strncmp(serverBuffer, "set-cal:", 8) == 0)
+    {
+        // relay calibration data to addressed node.
+        // Message will be in form: set-cal:DATA#ADDRESS eg:
+        //  set-cal:-89:-86:-82:88:3:54#affe::584b:3763:a0ca:19b6
+        char *msg = serverBuffer+8;
+        const char *delim = "#";
+        char *addr;
+        char *data;
+
+        data = strsep(&msg, delim);
+        if (msg == NULL)
+        {
+            printf("malformed message: %s\n", serverBuffer);
+            return;
+        }
+        addr = strsep(&msg, delim);
+        if (msg != NULL)
+        {
+            printf("malformed message: %s\n", serverBuffer);
+            return;
+        }
+        char s[25];
+        sprintf(s, "up-cal:%s", data);
+        udpSend(addr, s);
+    }
+    else if (strncmp(serverBuffer, "up-cal:", 7) == 0)
+    {
+        // update the nodes calibration.  Format is like:
+        //  up-cal:-89:-86:-82:88:3:54
+        char *data = serverBuffer + 7;
+        int16_t cal[6];
+        sscanf(data, "%"SCNd16":%"SCNd16":%"SCNd16":%"SCNd16":%"SCNd16":%"SCNd16, &cal[0], &cal[1], &cal[2], &cal[3], &cal[4], &cal[5]);
+        setMagCalibration(cal);
     }
     else if (strcmp(serverBuffer, "time-please") == 0)
     {
