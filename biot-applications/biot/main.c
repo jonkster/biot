@@ -9,7 +9,7 @@
 #include "net/gnrc/ipv6/netif.h"
 #include "net/gnrc/rpl/dodag.h"
 #include "shell.h"
-#include "../modules/ssd1306/ssd1306.h"
+//#include "../modules/ssd1306/ssd1306.h"
 #include "../modules/biotUdp/udp.h"
 #include "../modules/identify/biotIdentify.h"
 #include "../modules/sendData/sendData.h"
@@ -30,6 +30,7 @@ extern void timeInit(void);
 extern void sendData(char *address, nodeData_t data);
 bool imuReady = false;
 myQuat_t currentPosition;
+
 /* ########################################################################## */
 
 mpu9150_t imuDev;
@@ -186,6 +187,102 @@ int mag_cmd(int argc, char **argv)
     return 0;
 }
 
+int sensor_cmd(int argc, char **argv)
+{
+    printf("gyro: ");
+    if (getGyroUse())
+        puts("on");
+    else
+        puts("off");
+    printf("accelerometer: ");
+    if (getAccelUse())
+        puts("on");
+    else
+        puts("off");
+    printf("magnetometer: ");
+    if (getCompassUse())
+        puts("on");
+    else
+        puts("off");
+    return 0;
+}
+
+
+int accel_cmd(int argc, char **argv)
+{
+    if (argc == 2) {
+        if (strcmp(argv[1], "on") == 0)
+        {
+            setAccelUse(true);
+            return 0;
+        }
+        else if (strcmp(argv[1], "off") == 0)
+        {
+            setAccelUse(false);
+            return 0;
+        }
+        else if (strcmp(argv[1], "status") == 0)
+        {
+            return sensor_cmd(0, NULL);
+        }
+    }
+    else if (argc == 1) {
+        return sensor_cmd(0, NULL);
+    }
+    printf("usage: %s [on|off|status]\n", argv[0]);
+    return 1;
+}
+
+int compass_cmd(int argc, char **argv)
+{
+    if (argc == 2) {
+        if (strcmp(argv[1], "on") == 0)
+        {
+            setCompassUse(true);
+            return 0;
+        }
+        else if (strcmp(argv[1], "off") == 0)
+        {
+            setCompassUse(false);
+            return 0;
+        }
+        else if (strcmp(argv[1], "status") == 0)
+        {
+            return sensor_cmd(0, NULL);
+        }
+    }
+    else if (argc == 1) {
+        return sensor_cmd(0, NULL);
+    }
+    printf("usage: %s [on|off|status]\n", argv[0]);
+    return 1;
+}
+
+int gyro_cmd(int argc, char **argv)
+{
+    if (argc == 2) {
+        if (strcmp(argv[1], "on") == 0)
+        {
+            setGyroUse(true);
+            return 0;
+        }
+        else if (strcmp(argv[1], "off") == 0)
+        {
+            setGyroUse(false);
+            return 0;
+        }
+        else if (strcmp(argv[1], "status") == 0)
+        {
+            return sensor_cmd(0, NULL);
+        }
+    }
+    else if (argc == 1) {
+        return sensor_cmd(0, NULL);
+    }
+    printf("usage: %s [on|off|status]\n", argv[0]);
+    return 1;
+}
+
 
 
 
@@ -194,6 +291,10 @@ static const shell_command_t shell_commands[] = {
     { "identify", "visually identify board", identify_cmd },
     { "callRoot", "contact root node", callRoot_cmd },
     { "timeAsk", "ask for current net time", callTime_cmd },
+    { "gyro", "use gyro on/off", gyro_cmd },
+    { "accel", "use accelerometer on/off", accel_cmd },
+    { "compass", "use compass on/off", compass_cmd },
+    { "sensors", "current sensor status", sensor_cmd },
     { "udp", "send a message: udp <IPv6-address> <message>", udp_cmd },
     { "imu", "get IMU position data", imu_cmd },
     { "imuinit", "reset IMU", imuinit_cmd },

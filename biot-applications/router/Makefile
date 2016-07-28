@@ -20,6 +20,8 @@ DIRS += ../modules/identify/
 USEMODULE += biotIdentify
 DIRS += ../modules/sendData/
 USEMODULE += sendData
+DIRS += ../modules/imu/
+USEMODULE += imu
 #DIRS += ../modules/dataCache/
 #USEMODULE += dataCache
 

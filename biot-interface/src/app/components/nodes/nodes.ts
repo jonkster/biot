@@ -28,6 +28,10 @@ export class Nodes {
     private showOnlyAddress: any = {};
     private wantAll: boolean = true;
 
+    private gyro:boolean = true;
+    private accel:boolean = true;
+    private compass:boolean = true;
+
     constructor(public biotz:Biotz) {}
 
     ngOnInit() {
@@ -204,6 +208,16 @@ export class Nodes {
         this.biotz.identify(addr).subscribe();
     }
 
+    setSensors(g, a, c) {
+        this.gyro = g;
+        this.accel = a;
+        this.compass = c;
+        var addresses = Object.keys(this.savedCalibrations);
+        for (var i = 0; i < addresses.length; i++) {
+            var address = addresses[i];
+            this.biotz.putBiotzSensors(address, this.gyro, this.accel, this.compass).subscribe();
+        }
+    }
 
     readStoredCalibrations() {
         var knownAddresses = [];

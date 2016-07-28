@@ -19,8 +19,8 @@
 #include "periph/gpio.h"
 #include "shell.h"
 #include "../modules/identify/biotIdentify.h"
+#include "../modules/imu/imu.h"
 #include "../modules/biotUdp/udp.h"
-
 
 
 #define PRIO    (THREAD_PRIORITY_MAIN + 1)

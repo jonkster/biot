@@ -44,6 +44,29 @@
             </tr>
         </tbody>
     </table>
+    <table class="table-small">
+        <tr>
+            <td>Gyroscopes: </td>
+            <td>
+                <input type="radio" name="useGyro" value="{{true}}" #gy [checked]="gyro == true" (click)="setSensors(true, accel, compass)"> on
+                <input type="radio" name="useGyro" value="{{false}}" #gn [checked]="gyro == false" (click)="setSensors(false, accel, compass)"> off
+            </td>
+        </tr>
+        <tr>
+            <td>Accelerometers: </td>
+            <td>
+                <input type="radio" name="useAccel" value="{{true}}" #ay [checked]="accel == true" (click)="setSensors(gyro, true, compass)"> on
+                <input type="radio" name="useAccel" value="{{false}}" #an [checked]="accel == false" (click)="setSensors(gyro, false, compass)"> off
+            </td>
+        </tr>
+        <tr>
+            <td>Magnetometers: </td>
+            <td>
+                <input type="radio" name="useCompass" value="{{true}}" #cy [checked]="compass == true" (click)="setSensors(gyro, accel, true)"> on
+                <input type="radio" name="useCompass" value="{{false}}" #cn [checked]="compass == false" (click)="setSensors(gyro, accel, false)"> off
+        </td>
+        </tr>
+    </table>
 
 
     <button (click)="synchronise()">Force Synchronise Nodes</button>

@@ -13,9 +13,10 @@
 #include <unistd.h>
 #include "msg.h"
 #include "board.h"
-#include "udp.h"
 #include "../identify/biotIdentify.h"
 #include "../imu/imu.h"
+
+#include "udp.h"
 
 #define XSTR(x) STR(x)
 #define STR(x) #x
@@ -100,6 +101,65 @@ void actOnUdpRequests(int res, char *srcAdd, char* selfAdd)
 #ifdef MAX_NODES
         syncKnown();
 #endif
+    }
+    else if (strncmp(serverBuffer, "set-sens:", 9) == 0)
+    {
+        printf("got %s\n", serverBuffer);
+        // Message will be in form:
+        //  set-sens:GAC#ADDRESS (bounce message)
+        // or:
+        //  set-sens:GAC (direct message)
+        // where G = gyroscope on/off [1|0]
+        // where A = accelerometer on/off [1|0]
+        // where C = magnetometer on/off [1|0]
+        // eg:
+        //  set-sens:010#affe::584b:3763:a0ca:19b6
+        // or
+        //  set-sens:111
+        // if no '#ADDRESS' (ie a 'direct message') then set this nodes sensors,
+        // if '#ADDRESS' (ie a 'bounce message') then send a 'direct message' to the given address
+        char *msg = serverBuffer+9;
+        const char *delim = "#";
+        char *addr;
+        char *data;
+
+        data = strsep(&msg, delim);
+        if (msg == NULL)
+        {
+            printf("setting %s\n", data);
+            if (strlen(data) != 3)
+            {
+                printf("malformed GAC: '%s'\n", data);
+                return;
+            }
+
+            if (data[0] == '0')
+                setGyroUse(false);
+            else
+                setGyroUse(true);
+
+            if (data[1] == '0')
+                setAccelUse(false);
+            else
+                setAccelUse(true);
+
+            if (data[2] == '0')
+                setCompassUse(false);
+            else
+                setCompassUse(true);
+
+            return;
+        }
+        addr = strsep(&msg, delim);
+        if (msg != NULL)
+        {
+            printf("malformed message: %s\n", serverBuffer);
+            return;
+        }
+        char s[25];
+        sprintf(s, "set-sens:%s", data);
+        printf("bouncing %s to %s\n", s, addr);
+        udpSend(addr, s);
     }
     else if (strcmp(serverBuffer, "get-data") == 0)
     {

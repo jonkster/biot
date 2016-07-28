@@ -30,6 +30,8 @@ extern "C" {
 
     myQuat_t quatFrom2Vecs(double *u, double *v);
 
+    double qAngle(myQuat_t q);
+
     myQuat_t slerp(myQuat_t qa, myQuat_t qb, double t);
 
     void vecCross(double *dest, double *u, double *v);

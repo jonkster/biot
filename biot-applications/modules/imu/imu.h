@@ -7,11 +7,11 @@
 
 #include "../position/position.h"
 
-#define GA_SAMPLE_RATE_HZ   300 // must be between 4 and 1000.  200 works
+#define GA_SAMPLE_RATE_HZ   200 // must be between 4 and 1000.  200 works
 #define C_SAMPLE_RATE_HZ     25 // should be between 1 and 100Hz and an integral fraction of comapss/gyro rate
 
 #define GFSR                MPU9150_GYRO_FSR_2000DPS
-#define AFSR                MPU9150_ACCEL_FSR_2G
+#define AFSR                MPU9150_ACCEL_FSR_16G
 
 typedef struct {
     uint32_t ts;
@@ -47,6 +47,18 @@ extern "C" {
     bool initialiseIMU(mpu9150_t *dev);
 
     void setMagCalibration(int16_t *cal);
+
+    bool getAccelUse(void);
+
+    bool getCompassUse(void);
+
+    bool getGyroUse(void);
+
+    void setAccelUse(bool onoff);
+
+    void setCompassUse(bool onoff);
+
+    void setGyroUse(bool onoff);
 
 #ifdef __cplusplus
 }

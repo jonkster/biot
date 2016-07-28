@@ -79,6 +79,29 @@ export class Biotz {
           .map((response) => response.json());
   }
 
+  putBiotzSensors(addr:string, g:boolean, a:boolean, c:boolean) {
+
+      var data = '';
+      if (g) {
+          data += '1';
+      } else {
+          data += '0';
+      } if (a) {
+          data += '1';
+      } else {
+          data += '0';
+      } if (c) {
+          data += '1';
+      } else {
+          data += '0';
+      }
+
+      var path = 'biotz/addresses/' + addr + '/sensors/' + data;
+      var url = "http://localhost:8889/" + path ;
+      return this.http.put(url, 'where_is_this?')
+          .map((response) => response.json());
+  }
+
   synchronise() {
     var result = this.makeBrokerRequest('biotz/synchronise');
     return result;

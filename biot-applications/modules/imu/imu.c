@@ -22,6 +22,11 @@ double magSoftCorrection[3] = { 1, 1, 1 };
 bool magValid = false;
 
 
+bool useAccelerometers = true;
+bool useMagnetometers = true;
+bool useGyroscopes = true;
+
+
 uint16_t aFsrRange2Int(mpu9150_accel_ranges_t fsr)
 {
     uint16_t rate = 0;
@@ -163,30 +168,47 @@ myQuat_t getPosition(mpu9150_t dev)
     {
         // get orientation as deduced by adding gyro measured rotational
         // velocity (times time interval) to previous orientation.
-        double gx1 = (double)imuData.gyro.x_axis/1024;
-        double gy1 = (double)imuData.gyro.y_axis/1024;
-        double gz1 = (double)imuData.gyro.z_axis/1024;
+        double gx1 = (double)imuData.gyro.x_axis / 1024.;
+        double gy1 = (double)imuData.gyro.y_axis / 1024.;
+        double gz1 = (double)imuData.gyro.z_axis / 1024.;
         double omega[3] = { gx1, gy1, gz1 }; 
 
         uint32_t dt = imuData.ts - lastIMUData.ts;
         myQuat_t gRot = makeQuatFromAngularVelocityTime(omega, dt/50000);
+        double magRot = qAngle(gRot);
+        if (abs(magRot) > 0.5)
+            printf("gy %f\n", qAngle(gRot));
         myQuat_t gyroDeducedOrientation =  quatMultiply(currentIMUPosition, gRot);
 
         // get gravity direction from accelerometer
         double ax1 = imuData.accel.x_axis;
         double ay1 = imuData.accel.y_axis;
         double az1 = imuData.accel.z_axis;
+        if (! useAccelerometers) {
+            ax1 = 0;
+            ay1 = 0;
+            az1 = 1;
+        }
         double downVec[3] = { ax1, ay1, az1 };
 
         // check if acceleration has a large non-gravity component.
-        double acclMagnitude = vecLength(downVec) / 1024;
+        /*double acclMagnitude = vecLength(downVec) / 1024.0;
         if ((acclMagnitude > 1.1) || (acclMagnitude < 0.9))
+        {
+            printf("mag:%f\n", acclMagnitude);
+        }*/
+        bool accelOrMag = (useAccelerometers || useMagnetometers);
+        //if (noAcclMag || (acclMagnitude > 1.1) || (acclMagnitude < 0.9))
+        if (! accelOrMag)
         {
             // just use gyro deduced orientation as accelerometer probably
             // skewed by non gravity acceleration component.
-            myQuat_t gyroDeducedOrientation =  quatMultiply(currentIMUPosition, gRot);
             lastIMUData = imuData;
-            return gyroDeducedOrientation;
+            if (useGyroscopes)
+            {
+                currentIMUPosition = gyroDeducedOrientation;
+            }
+            return currentIMUPosition;
         }
 
         vecNormalise(downVec);
@@ -210,10 +232,16 @@ myQuat_t getPosition(mpu9150_t dev)
         vecCross(northVec, eastVec, downVec);
         vecNormalise(northVec);
 
+        if (! useMagnetometers) {
+            northVec[0] = 1;
+            northVec[1] = 0;
+            northVec[2] = 0;
+        }
+
         // calculate rotation quats by seeing how measured down and north are
         // different from un rotated down and north
-        double downRef[3] = {0, 0, 1};
         double northRef[3] = {1, 0, 0};
+        double downRef[3] = {0, 0, 1};
 
         myQuat_t downRot = quatFrom2Vecs(downVec, downRef);
         myQuat_t northRot = quatFrom2Vecs(northVec, northRef);
@@ -223,7 +251,14 @@ myQuat_t getPosition(mpu9150_t dev)
 
         // calculate an orientation that is slightly towards accl/magnetometer
         // calculated orientation (starting from gyro deduced orientation).
-        currentIMUPosition = slerp(gyroDeducedOrientation, amMeasuredOrientation, 0.1);
+        if (useGyroscopes)
+        {
+            currentIMUPosition = slerp(gyroDeducedOrientation, amMeasuredOrientation, 0.1);
+        }
+        else
+        {
+            currentIMUPosition = amMeasuredOrientation;
+        }
     }
     lastIMUData = imuData;
     return currentIMUPosition;
@@ -332,6 +367,36 @@ void setMagCalibration(int16_t *cal)
     {
         magSoftCorrection[i] = averageRadius/avg[i];
     }
+}
+
+bool getAccelUse(void)
+{
+    return useAccelerometers;
+}
+
+bool getCompassUse(void)
+{
+    return useMagnetometers;
+}
+
+bool getGyroUse(void)
+{
+    return useGyroscopes;
+}
+
+void setAccelUse(bool onoff)
+{
+    useAccelerometers = onoff;
+}
+
+void setCompassUse(bool onoff)
+{
+    useMagnetometers = onoff;
+}
+
+void setGyroUse(bool onoff)
+{
+    useGyroscopes = onoff;
 }
 
 

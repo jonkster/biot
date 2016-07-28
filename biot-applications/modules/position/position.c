@@ -126,42 +126,17 @@ myQuat_t oldquatFrom2Vecs(double *u, double *v)
  */
 myQuat_t quatFrom2Vecs(double *u, double *v)
 {
-    vecNormalise(u);
-    vecNormalise(v);
-
-    double cosTheta = vecDot(u, v);
-    double rotationAxis[3];
-
-    if (cosTheta < -1.0 + 1.0e-6 ) // vectors are anti-parallel
-    {
-        // we have 180d rotation, there is no "ideal" rotation axis, any axis 90
-        // deg to the vectors
-	double up[3] = { 0, 0, 1 };
-	vecCross(rotationAxis, up, u);
-	if (vecLength(rotationAxis) < 0.000001 ) // bad luck, up is parallel to our vector!
-	{
-	    double north[3] = { 1, 0, 0 };
-	    vecCross(rotationAxis, north, u);
-	}
-	vecNormalise(rotationAxis);
-	return quatAngleAxis(180.0, rotationAxis);
-    }
-    else if (cosTheta > 1.0 - 1.0e-6 ) // vectors are parallel
-    {
-        // there is no rotation! return an identity quaternion
-        return newQuat();
-    }
-
-    vecCross(rotationAxis, u, v);
-
-    double s = sqrt( (1+cosTheta)*2 );
-    float invs = 1 / s;
-
     myQuat_t q;
-    q.w = s * 0.5;
-    q.x = rotationAxis[0] * invs;
-    q.y = rotationAxis[1] * invs;
-    q.z = rotationAxis[2] * invs;
+
+    double w[3];
+    vecCross(w, u, v);
+    double ww = vecDot(u, v);
+    q.w = ww;
+    q.x = w[0];
+    q.y = w[1];
+    q.z = w[2];
+    q.w += quatLength(q);
+    quatNormalise(&q);
     return q;
 }
 
@@ -171,6 +146,13 @@ void makeIdentityQuat(myQuat_t *q)
     q->x = 0;
     q->y = 0;
     q->z = 0;
+}
+
+// magnitude of rotation??
+double qAngle(myQuat_t q)
+{
+    double vecPart[3] = { q.x, q.y, q.z };
+    return 2 * atan2(vecLength(vecPart), q.w);
 }
 
 

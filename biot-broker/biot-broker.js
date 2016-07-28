@@ -55,10 +55,12 @@ brokerListener.get('/biotz/addresses/:address', getBiotFull);
 brokerListener.get('/biotz/addresses/:address/data', getBiotData);
 brokerListener.get('/biotz/addresses/:address/identify', biotIdentify);
 brokerListener.get('/biotz/addresses/:address/calibration', getBiotCalibration);
+brokerListener.get('/biotz/addresses/:address/sensors', getBiotSensors);
 brokerListener.get('/biotz/addresses/:address/status', getBiotStatus);
 brokerListener.get('/biotz/addresses/:address/:quality', getBiotQuality);
 
 brokerListener.put('/biotz/addresses/:address/calibration/:data', putBiotCalibration);
+brokerListener.put('/biotz/addresses/:address/sensors/:data', putBiotSensors);
 
 brokerListener.get('/data/addresses', getCachedAddresses);
 brokerListener.get('/data/addresses/:address/calibration', getCachedCalibration);
@@ -280,6 +282,18 @@ function getBiotQuality(req, res, next) {
     next();
 }
 
+function getBiotSensors(req, res, next) {
+
+    var address = req.params['address'];
+
+    res.header("Access-Control-Allow-Origin", "*"); 
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+    res.setHeader('Content-Type', 'application/json');
+    res.send(501, 'not implemented yet');
+    next();
+}
+
+
 function getBiotz(req, res, next) {
 
     sendBiotzRouterMessage();
@@ -391,9 +405,32 @@ function putBiotCalibration(req, res, next) {
 
     var address = req.params['address'];
     var data = req.params['data'];
-    console.log("sending calibration", data, "to biot node", address);
 
     var message = new Buffer('set-cal:' + data + '#' + address);
+    var client = dgram.createSocket('udp6');
+
+    client.send(message, 0, message.length, BIOTZ_UDP_PORT, BIOTZ_ROUTER_HOST, function(err, bytes) {
+        if (err) {
+            console.log('Error:', err);
+            res.send(500, err);
+        } else {
+            console.log("sent", message.toString());
+            res.send(200, 'OK');
+        }
+        client.close();
+        next();
+    });
+}
+
+function putBiotSensors(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*"); 
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+    res.setHeader('Content-Type', 'application/json');
+
+    var address = req.params['address'];
+    var data = req.params['data'];
+
+    var message = new Buffer('set-sens:' + data + '#' + address);
     var client = dgram.createSocket('udp6');
 
     client.send(message, 0, message.length, BIOTZ_UDP_PORT, BIOTZ_ROUTER_HOST, function(err, bytes) {
