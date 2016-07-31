@@ -8,17 +8,17 @@
 #include "../position/position.h"
 
 #define GA_SAMPLE_RATE_HZ   200 // must be between 4 and 1000.  200 works
-#define C_SAMPLE_RATE_HZ     25 // should be between 1 and 100Hz and an integral fraction of comapss/gyro rate
+#define C_SAMPLE_RATE_HZ     25 // should be between 1 and 100Hz and an integral fraction of compass/gyro rate
 
 #define GFSR                MPU9150_GYRO_FSR_2000DPS
-#define AFSR                MPU9150_ACCEL_FSR_16G
+#define AFSR                MPU9150_ACCEL_FSR_4G
 
 typedef struct {
     uint32_t ts;
     mpu9150_results_t accel;
     mpu9150_results_t gyro;
     mpu9150_results_t mag;
-    float temperature;
+    double temperature;
 } imuData_t;
 
 

@@ -3,10 +3,10 @@
 
 typedef struct nodeDataStructure {
     uint32_t timeStamp;
-    float w;    
-    float x;    
-    float y;    
-    float z;    
+    double w;    
+    double x;    
+    double y;    
+    double z;    
 } nodeData_t;
 
 void sendCalibration(char *address, int16_t *cal);

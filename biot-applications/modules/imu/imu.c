@@ -22,9 +22,9 @@ double magSoftCorrection[3] = { 1, 1, 1 };
 bool magValid = false;
 
 
-bool useAccelerometers = true;
+bool useAccelerometers = false;
 bool useMagnetometers = true;
-bool useGyroscopes = true;
+bool useGyroscopes = false;
 
 
 uint16_t aFsrRange2Int(mpu9150_accel_ranges_t fsr)
@@ -161,6 +161,33 @@ void imuCalibrate(imuData_t *data)
     setMagCalibration(magMinMax);
 }
 
+myQuat_t rollPitchYawToQ(double *rpy)
+{
+    double c1 = cos(rpy[2]);
+    double s1 = sin(rpy[2]);
+    double c2 = cos(rpy[1]);
+    double s2 = sin(rpy[1]);
+    double c3 = cos(rpy[0]);
+    double s3 = sin(rpy[0]);
+    myQuat_t q;
+
+    q.w = sqrt(1.0 + c1 * c2 + c1*c3 - s1 * s2 * s3 + c2*c3) / 2.0;
+    double w4 = (4.0 * q.w);
+    q.x = (c2 * s3 + c1 * s3 + s1 * s2 * c3) / w4 ;
+    q.y = (s1 * c2 + s1 * c3 + c1 * s2 * s3) / w4 ;
+    q.z = (-s1 * s3 + c1 * s2 * c3 +s2) / w4 ;
+    return q;
+}
+
+void accelToRollPitchYaw(double *downVec, double *rpy)
+{
+    vecNormalise(downVec);
+    rpy[0] = atan2(downVec[1], downVec[2]);
+    rpy[1] = -atan2(downVec[0], sqrt(downVec[1]*downVec[1] + downVec[2]*downVec[2]));
+    rpy[2] = 0;
+    vecNormalise(rpy);
+}
+
 myQuat_t getPosition(mpu9150_t dev)
 {
     imuData_t imuData;
@@ -175,9 +202,10 @@ myQuat_t getPosition(mpu9150_t dev)
 
         uint32_t dt = imuData.ts - lastIMUData.ts;
         myQuat_t gRot = makeQuatFromAngularVelocityTime(omega, dt/50000);
-        double magRot = qAngle(gRot);
-        if (abs(magRot) > 0.5)
-            printf("gy %f\n", qAngle(gRot));
+        // check if gyro readings indicate big position jump
+        /*double magRot = qAngle(gRot);
+        if (fabs(magRot) > 0.5)
+            printf("gy %f\n", qAngle(gRot));*/
         myQuat_t gyroDeducedOrientation =  quatMultiply(currentIMUPosition, gRot);
 
         // get gravity direction from accelerometer
@@ -190,6 +218,7 @@ myQuat_t getPosition(mpu9150_t dev)
             az1 = 1;
         }
         double downVec[3] = { ax1, ay1, az1 };
+        vecNormalise(downVec);
 
         // check if acceleration has a large non-gravity component.
         /*double acclMagnitude = vecLength(downVec) / 1024.0;
@@ -197,6 +226,7 @@ myQuat_t getPosition(mpu9150_t dev)
         {
             printf("mag:%f\n", acclMagnitude);
         }*/
+
         bool accelOrMag = (useAccelerometers || useMagnetometers);
         //if (noAcclMag || (acclMagnitude > 1.1) || (acclMagnitude < 0.9))
         if (! accelOrMag)
@@ -211,7 +241,6 @@ myQuat_t getPosition(mpu9150_t dev)
             return currentIMUPosition;
         }
 
-        vecNormalise(downVec);
 
         // get magnetometer indication of North
         double mx1 = (double)(imuData.mag.x_axis - magHardCorrection[0]);
@@ -237,14 +266,63 @@ myQuat_t getPosition(mpu9150_t dev)
             northVec[1] = 0;
             northVec[2] = 0;
         }
+        
 
         // calculate rotation quats by seeing how measured down and north are
         // different from un rotated down and north
         double northRef[3] = {1, 0, 0};
         double downRef[3] = {0, 0, 1};
+        myQuat_t downRot = quatFrom2Vecs(downVec, downRef, false);
 
-        myQuat_t downRot = quatFrom2Vecs(downVec, downRef);
-        myQuat_t northRot = quatFrom2Vecs(northVec, northRef);
+double magRot = qAngle(downRot);
+if (magRot > PI/2)
+{
+    downRef[2] = -1;
+    downRot = quatFrom2Vecs(downVec, downRef, false);
+    if (fabs(downVec[0]) > fabs(downVec[1]))
+    {
+        myQuat_t cy180 = quatFromValues(0, 0, 1, 0);
+        downRot = quatMultiply(cy180, downRot);
+    }
+    else if (fabs(downVec[1]) > fabs(downVec[0]))
+    {
+        myQuat_t cx180 = quatFromValues(0, 1, 0, 0);
+        downRot = quatMultiply(cx180, downRot);
+    }
+    else
+    {
+        puts("WOAH!");
+    }
+    //myQuat_t cy90 = quatFromValues(0, -sqrt(0.5), 0, 0);
+    //downRot = quatMultiply(cy90, downRot);
+    //puts("reverse");
+    /*vecScalarMultiply(downRef, -1);
+    downRot = quatFrom2Vecs(downVec, downRef, false);
+    myQuat_t cx180 = quatFromValues(0, 1, 0, 0);
+    myQuat_t cy180 = quatFromValues(0, 0, 1, 0);
+    myQuat_t cz180 = quatFromValues(0, 0, 0, 1);
+    if ((fabs(downVec[1])+0.00001 < fabs(downVec[0])) && (fabs(downVec[1])+0.00001 < fabs(downVec[2])))
+    {
+        puts("about y");
+        downRot = quatMultiply(cy180, downRot);
+    }
+    else if ((fabs(downVec[0])+0.00001 < fabs(downVec[1])) && (fabs(downVec[0])+0.00001 < fabs(downVec[2])))
+    {
+        puts("about x");
+        downRot = quatMultiply(cx180, downRot);
+    }
+    else if ((fabs(downVec[2])+0.00001 < fabs(downVec[0])) && (fabs(downVec[2])+0.00001 < fabs(downVec[1])))
+    {
+        puts("about z");
+        downRot = quatMultiply(cz180, downRot);
+    }
+    else
+    {
+        printf("nothing: %f\n", magRot);
+    }*/
+}
+
+        myQuat_t northRot = quatFrom2Vecs(northVec, northRef, false);
 
         // get combined orientation quat using down and north rotations
         myQuat_t amMeasuredOrientation = quatMultiply(northRot, downRot);

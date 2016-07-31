@@ -2,11 +2,12 @@
 #define _POSITION_H_
 
 typedef struct {
-    float w;
-    float x;
-    float y;
-    float z;
+    double w;
+    double x;
+    double y;
+    double z;
 } myQuat_t;
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -22,13 +23,19 @@ extern "C" {
 
     myQuat_t newQuat(void);
 
-    float quatLength(myQuat_t q);
+    myQuat_t quatConjugate(myQuat_t q);
+
+    myQuat_t quatFromValues(double w, double x, double y, double z);
+
+    double quatLength(myQuat_t q);
 
     void quatNormalise(myQuat_t *q);
 
     myQuat_t quatMultiply(myQuat_t p, myQuat_t q);
 
-    myQuat_t quatFrom2Vecs(double *u, double *v);
+    void quatMultiplyVec(double *destVec, myQuat_t q, double *v);
+
+    myQuat_t quatFrom2Vecs(double *u, double *v, bool jk_debug);
 
     double qAngle(myQuat_t q);
 
@@ -39,6 +46,8 @@ extern "C" {
     double vecLength(double *v);
 
     double *vecNormalise(double *v);
+
+    void vecScalarMultiply(double *dest, double s);
 
 #ifdef __cplusplus
 }

@@ -32,7 +32,7 @@ void vecCross(double *dest, double *u, double *v)
 
 double vecLength(double *v)
 {
-     return sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+     return sqrt((v[0]*v[0]) + (v[1]*v[1]) + (v[2]*v[2]));
 }
 
 double *vecNormalise(double *v)
@@ -44,15 +44,38 @@ double *vecNormalise(double *v)
     return v;
 }
 
-myQuat_t quatAngleAxis(double angleDeg, double *axis)
+void vecScalarMultiply(double *dest, double s)
 {
-    double angle = angleDeg * PI/180;
+    dest[0] *= s;
+    dest[1] *= s;
+    dest[2] *= s;
+}
 
-    myQuat_t q;
-    q.w = cos(angle/2);
-    q.x = axis[0] * sin(angle/2);
-    q.y = axis[1] * sin(angle/2);
-    q.z = axis[2] * sin(angle/2);
+myQuat_t quatConjugate(myQuat_t q)
+{
+    return quatFromValues(q.w, -q.x, -q.y, -q.z);
+}
+
+void quatMultiplyVec(double *destVec, myQuat_t q, double *v)
+{
+    myQuat_t qOfVec = quatFromValues(0, v[0], v[1], v[2]);
+    myQuat_t qConj = quatConjugate(q);
+    myQuat_t dest = quatMultiply(q, qOfVec);
+    dest = quatMultiply(dest, qConj);
+    destVec[0] = dest.x;
+    destVec[1] = dest.y;
+    destVec[2] = dest.z;
+}
+
+myQuat_t quatAngleAxis(double angleRad, double *axis)
+{
+    myQuat_t q = quatFromValues(
+            cos(angleRad/2),
+            axis[0] * sin(angleRad/2),
+            axis[1] * sin(angleRad/2),
+            axis[2] * sin(angleRad/2)
+            );
+    quatNormalise(&q);
     return q;
 }
 
@@ -78,65 +101,84 @@ myQuat_t newQuat(void)
     return q;
 }
 
-myQuat_t oldquatFrom2Vecs(double *u, double *v)
+myQuat_t quatFromValues(double w, double x, double y, double z)
 {
-    double normUV = sqrt(abs(vecDot(u, u) * vecDot(v, v)));
-    double realPart = normUV + vecDot(u, v);
-    double vec[3];
-
-    if (realPart < 1.e-6f * normUV)
-    {
-	/* If u and v are exactly opposite, rotate 180 degrees
-	 * around an arbitrary orthogonal axis. Axis normalisation
-	 * can happen later, when we normalise the quaternion. */
-	realPart = 0.0f;
-	if (abs(u[0]) > abs(u[2]))
-	{
-	    vec[0] = -u[1];
-	    vec[1] = u[0];
-	    vec[2] = 0.f;
-	}
-	else
-	{
-	    vec[0] = 0.f;
-	    vec[1] = u[2];
-	    vec[2] = u[1];
-	} 
-    }
-    else
-    {
-	/* Otherwise, build quaternion the standard way. */
-	double vTemp[3];
-	vecCross(vTemp, u, v);
-        vec[0] = vTemp[0];
-        vec[1] = vTemp[1];
-        vec[2] = vTemp[2];
-    }
     myQuat_t q;
-    q.w = realPart;
-    q.x = vec[0];
-    q.y = vec[1];
-    q.z = vec[2];
-    quatNormalise(&q);
+    q.w = w;
+    q.x = x;
+    q.y = y;
+    q.z = z;
     return q;
 }
+
 
 /*
  * return a quaternion representing the rotation from vector u to vector v
  */
-myQuat_t quatFrom2Vecs(double *u, double *v)
+/*myQuat_t quatFrom2Vecs(double *u, double *v)
 {
     myQuat_t q;
 
     double w[3];
     vecCross(w, u, v);
     double ww = vecDot(u, v);
+    if (ww < -0)
+    {
+        puts("flip?");
+    }
     q.w = ww;
     q.x = w[0];
     q.y = w[1];
     q.z = w[2];
     q.w += quatLength(q);
     quatNormalise(&q);
+    return q;
+}*/
+
+myQuat_t quatFrom2Vecs(double *u, double *v, bool jk_debug)
+{
+    // Based on Stan Melax's article in Game Programming Gems
+    myQuat_t q;
+    vecNormalise(u);
+    vecNormalise(v);
+
+    double d = vecDot(u, v);
+    // If dot == 1, vectors are parallel
+    if (d >= 1.0f)
+    {
+	makeIdentityQuat(&q);
+	return q;
+    }
+
+    // If dot == -1 vectors are anti parallel, do a 180 about any axis
+    if (d < (1e-6f - 1.0f))
+    {
+        if (jk_debug)
+            printf("anti p! %f\n", d);
+	double axis[3];
+	double anyAxis[3] = { 0, 0, 1 };
+	vecCross(axis, u, anyAxis);
+	if (vecLength(axis) < 1e-6f) // uh oh, picked an axis parallel to u!!
+	{
+	    anyAxis[2] = 0;
+	    anyAxis[1] = 1;
+	    vecCross(axis, u, anyAxis);
+	}
+	vecNormalise(axis);
+	q = quatAngleAxis(PI, axis);
+    }
+    else
+    {
+	double s = sqrt( (1+d)*2 );
+	double invs = 1 / s;
+	double c[3];
+	vecCross(c, u, v);
+	q.x = c[0] * invs;
+	q.y = c[1] * invs;
+	q.z = c[2] * invs;
+	q.w = s * 0.5f;
+    	quatNormalise(&q);
+    }
     return q;
 }
 
@@ -156,40 +198,36 @@ double qAngle(myQuat_t q)
 }
 
 
-myQuat_t quatMultiply(myQuat_t p, myQuat_t q)
+myQuat_t quatMultiply(myQuat_t q1, myQuat_t q2)
 {
     myQuat_t dest;
 
-    dest.w = p.w * q.w - p.x * q.x - p.y * q.y - p.z * q.z;
-    dest.x = p.x * q.w + p.w * q.x + p.y * q.z - p.z * q.y;
-    dest.y = p.y * q.w + p.w * q.y + p.z * q.x - p.x * q.z;
-    dest.z = p.z * q.w + p.w * q.z + p.x * q.y - p.y * q.x;
+    dest.x =  q1.x * q2.w + q1.y * q2.z - q1.z * q2.y + q1.w * q2.x;
+    dest.y = -q1.x * q2.z + q1.y * q2.w + q1.z * q2.x + q1.w * q2.y;
+    dest.z =  q1.x * q2.y - q1.y * q2.x + q1.z * q2.w + q1.w * q2.z;
+    dest.w = -q1.x * q2.x - q1.y * q2.y - q1.z * q2.z + q1.w * q2.w;
 
-    p.w = dest.w;
-    p.x = dest.x;
-    p.y = dest.y;
-    p.z = dest.z;
-    quatNormalise(&p);
-    return p;
+    quatNormalise(&dest);
+    return dest;
 }
 
-float quatLength(myQuat_t q)
+double quatLength(myQuat_t q)
 {
-    float w = q.w;
-    float x = q.x;
-    float y = q.y;
-    float z = q.z;
-    return sqrt(x * x + y * y + z * z + w * w);
+    double w = q.w;
+    double x = q.x;
+    double y = q.y;
+    double z = q.z;
+    return sqrt((x * x) + (y * y) + (z * z) + (w * w));
 }
 
 void quatNormalise(myQuat_t *q)
 {
-    float w = q->w;
-    float x = q->x;
-    float y = q->y;
-    float z = q->z;
+    double w = q->w;
+    double x = q->x;
+    double y = q->y;
+    double z = q->z;
 
-    float len = quatLength(*q);
+    double len = quatLength(*q);
     if (len == 0) {
         q->w = 0;
         q->x = 0;
@@ -206,39 +244,39 @@ void quatNormalise(myQuat_t *q)
     }
 }
 
-myQuat_t slerp(myQuat_t qa, myQuat_t qb, double t)
+myQuat_t slerp(myQuat_t q1, myQuat_t q2, double t)
 {
     myQuat_t dest = newQuat();
 
-    double cosHalfTheta = qa.w * qb.w + qa.x * qb.x + qa.y * qb.y + qa.z * qb.z;
-    // if qa=qb or qa=-qb then theta = 0 and we can return qa
+    double cosHalfTheta = q1.w * q2.w + q1.x * q2.x + q1.y * q2.y + q1.z * q2.z;
+    // if q1=q2 or q1=-q2 then theta = 0 and we can return q1
     if (abs(cosHalfTheta) >= 1.0)
     {
-	dest.w = qa.w;
-	dest.x = qa.x;
-	dest.y = qa.y;
-	dest.z = qa.z;
+	dest.w = q1.w;
+	dest.x = q1.x;
+	dest.y = q1.y;
+	dest.z = q1.z;
 	return dest;
     }
 
     double halfTheta = acos(cosHalfTheta);
     double sinHalfTheta = sqrt(1.0 - cosHalfTheta*cosHalfTheta);
     // if theta = 180 degrees then result is not fully defined
-    // we could rotate around any axis normal to qa or qb
-    if (fabs(sinHalfTheta) < 0.001)
+    // we could rotate around any axis normal to q1 or q2
+    if (abs(sinHalfTheta) < 0.001)
     {
-	dest.w = (qa.w * 0.5 + qb.w * 0.5);
-	dest.x = (qa.x * 0.5 + qb.x * 0.5);
-	dest.y = (qa.y * 0.5 + qb.y * 0.5);
-	dest.z = (qa.z * 0.5 + qb.z * 0.5);
+	dest.w = (q1.w * 0.5 + q2.w * 0.5);
+	dest.x = (q1.x * 0.5 + q2.x * 0.5);
+	dest.y = (q1.y * 0.5 + q2.y * 0.5);
+	dest.z = (q1.z * 0.5 + q2.z * 0.5);
 	return dest;
     }
     double ratioA = sin((1 - t) * halfTheta) / sinHalfTheta;
     double ratioB = sin(t * halfTheta) / sinHalfTheta; 
-    dest.w = (qa.w * ratioA + qb.w * ratioB);
-    dest.x = (qa.x * ratioA + qb.x * ratioB);
-    dest.y = (qa.y * ratioA + qb.y * ratioB);
-    dest.z = (qa.z * ratioA + qb.z * ratioB);
+    dest.w = (q1.w * ratioA + q2.w * ratioB);
+    dest.x = (q1.x * ratioA + q2.x * ratioB);
+    dest.y = (q1.y * ratioA + q2.y * ratioB);
+    dest.z = (q1.z * ratioA + q2.z * ratioB);
     return dest;
 }
 
