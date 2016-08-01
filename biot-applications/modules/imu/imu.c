@@ -272,55 +272,63 @@ myQuat_t getPosition(mpu9150_t dev)
         // different from un rotated down and north
         double northRef[3] = {1, 0, 0};
         double downRef[3] = {0, 0, 1};
-        myQuat_t downRot = quatFrom2Vecs(downVec, downRef, false);
 
-double magRot = qAngle(downRot);
-if (magRot > PI/2)
-{
-    downRef[2] = -1;
-    downRot = quatFrom2Vecs(downVec, downRef, false);
-    if (fabs(downVec[0]) > fabs(downVec[1]))
-    {
-        myQuat_t cy180 = quatFromValues(0, 0, 1, 0);
-        downRot = quatMultiply(cy180, downRot);
-    }
-    else if (fabs(downVec[1]) > fabs(downVec[0]))
-    {
-        myQuat_t cx180 = quatFromValues(0, 1, 0, 0);
-        downRot = quatMultiply(cx180, downRot);
-    }
-    else
-    {
-        puts("WOAH!");
-    }
-    //myQuat_t cy90 = quatFromValues(0, -sqrt(0.5), 0, 0);
-    //downRot = quatMultiply(cy90, downRot);
-    //puts("reverse");
-    /*vecScalarMultiply(downRef, -1);
-    downRot = quatFrom2Vecs(downVec, downRef, false);
-    myQuat_t cx180 = quatFromValues(0, 1, 0, 0);
-    myQuat_t cy180 = quatFromValues(0, 0, 1, 0);
-    myQuat_t cz180 = quatFromValues(0, 0, 0, 1);
-    if ((fabs(downVec[1])+0.00001 < fabs(downVec[0])) && (fabs(downVec[1])+0.00001 < fabs(downVec[2])))
-    {
-        puts("about y");
-        downRot = quatMultiply(cy180, downRot);
-    }
-    else if ((fabs(downVec[0])+0.00001 < fabs(downVec[1])) && (fabs(downVec[0])+0.00001 < fabs(downVec[2])))
-    {
-        puts("about x");
-        downRot = quatMultiply(cx180, downRot);
-    }
-    else if ((fabs(downVec[2])+0.00001 < fabs(downVec[0])) && (fabs(downVec[2])+0.00001 < fabs(downVec[1])))
-    {
-        puts("about z");
-        downRot = quatMultiply(cz180, downRot);
-    }
-    else
-    {
-        printf("nothing: %f\n", magRot);
-    }*/
-}
+
+        myQuat_t downRot = quatFrom2Vecs(downVec, downRef, false);
+        //myQuat_t r90ZQ = quatFromValues(sqrt(0.5), 0, 0, sqrt(0.5));
+//        myQuat_t newQ = quatMultiply(currentIMUPosition, downRot);
+        myQuat_t newQ = downRot;
+
+        double maxRot = PI/2;
+        double magRot = qAngle(downRot);
+        if (magRot > maxRot)
+        {
+            /*downRef[0] = 1; downRef[2] = 0; // rotate down 90d about Y
+            downRot = quatFrom2Vecs(downVec, downRef, false);
+            myQuat_t rot = quatFromValues(sqrt(0.5), 0, -sqrt(0.5), 0);
+            myQuat_t newQ1 = quatMultiply(downRot, rot); // unrotate quat by 90d
+            myQuat_t dq1 = deltaQuat(currentIMUPosition, newQ1);
+            double magRot1 = qAngle(dq1);
+
+            downRef[0] = 0; downRef[1] = 1; // rotate down 90d about X
+            downRot = quatFrom2Vecs(downVec, downRef, false);
+            rot = quatFromValues(sqrt(0.5), -sqrt(0.5), 0, 0);
+            myQuat_t newQ2 = quatMultiply(downRot, rot); // unrotate quat by 90d
+            myQuat_t dq2 = deltaQuat(currentIMUPosition, newQ2);
+            double magRot2 = qAngle(dq2);*/
+
+            downRef[2] = -1; // rotate down 180d
+            downRot = quatFrom2Vecs(downVec, downRef, false);
+            myQuat_t rot = quatFromValues(0, 0, 1, 0);
+            newQ = quatMultiply(downRot, rot); // unrotate quat by 180d
+            
+            // now need to rotate 180d about either X or Y
+            //myQuat_t xrot = quatFromValues(0, 1, 0, 0);
+            myQuat_t zrot = quatFromValues(0, 0, 0, 1);
+            //myQuat_t newQx = quatMultiply(newQ, xrot);
+            myQuat_t newQz = quatMultiply(newQ, zrot);
+            //myQuat_t dqx = deltaQuat(currentIMUPosition, newQx);
+            myQuat_t dq0 = deltaQuat(currentIMUPosition, newQ);
+            myQuat_t dqz = deltaQuat(currentIMUPosition, newQz);
+            double magRot0 = qAngle(dq0);
+            double magRotz = qAngle(dqz);
+
+            printf("%f  dq0 = %f dqz = %f", magRot, magRot0, magRotz);
+            if (magRotz < magRot0)
+            {
+                newQ = newQz;
+                printf("   z < 0\n");
+            }
+            else
+            {
+                printf("\n");
+            }
+        }
+        
+lastIMUData = imuData;
+currentIMUPosition = newQ;
+return currentIMUPosition;
+        
 
         myQuat_t northRot = quatFrom2Vecs(northVec, northRef, false);
 

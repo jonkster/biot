@@ -19,6 +19,8 @@ extern "C" {
 
     void makeIdentityQuat(myQuat_t *q);
 
+    myQuat_t deltaQuat(myQuat_t startQ, myQuat_t finalQ);
+
     myQuat_t makeQuatFromAngularVelocityTime(double *omega, double dt);
 
     myQuat_t newQuat(void);

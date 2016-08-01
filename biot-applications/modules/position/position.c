@@ -56,6 +56,19 @@ myQuat_t quatConjugate(myQuat_t q)
     return quatFromValues(q.w, -q.x, -q.y, -q.z);
 }
 
+/**
+ * Calculate the quaternion that would move startQ to finalQ
+ */
+myQuat_t deltaQuat(myQuat_t startQ, myQuat_t finalQ)
+{
+    // deltaq = finalQ * startQ^-1
+    myQuat_t invStart = quatConjugate(startQ);
+    return quatMultiply(finalQ, invStart);
+}
+
+/**
+ * Rotate vector by quaternion
+ */
 void quatMultiplyVec(double *destVec, myQuat_t q, double *v)
 {
     myQuat_t qOfVec = quatFromValues(0, v[0], v[1], v[2]);
@@ -194,7 +207,10 @@ void makeIdentityQuat(myQuat_t *q)
 double qAngle(myQuat_t q)
 {
     double vecPart[3] = { q.x, q.y, q.z };
-    return 2 * atan2(vecLength(vecPart), q.w);
+    double angle =  2 * atan2(vecLength(vecPart), q.w);
+    if (angle > PI)
+        angle = fabs(2*PI - angle);
+    return angle;
 }
 
 
