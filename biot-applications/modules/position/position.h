@@ -17,6 +17,8 @@ extern "C" {
 
     void dumpVec(double *v);
 
+    double vecDot(double *u, double *v);
+
     void makeIdentityQuat(myQuat_t *q);
 
     myQuat_t deltaQuat(myQuat_t startQ, myQuat_t finalQ);
@@ -24,6 +26,8 @@ extern "C" {
     myQuat_t makeQuatFromAngularVelocityTime(double *omega, double dt);
 
     myQuat_t newQuat(void);
+
+    myQuat_t quatAngleAxis(double angleRad, double *axis);
 
     myQuat_t quatConjugate(myQuat_t q);
 
@@ -38,6 +42,8 @@ extern "C" {
     void quatMultiplyVec(double *destVec, myQuat_t q, double *v);
 
     myQuat_t quatFrom2Vecs(double *u, double *v, bool jk_debug);
+
+    myQuat_t quatScalarMultiply(myQuat_t q, double s);
 
     double qAngle(myQuat_t q);
 

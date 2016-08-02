@@ -38,9 +38,12 @@ double vecLength(double *v)
 double *vecNormalise(double *v)
 {
     double length = vecLength(v);
-    v[0] = v[0]/length;
-    v[1] = v[1]/length;
-    v[2] = v[2]/length;
+    if (length > 0)
+    {
+        v[0] = v[0]/length;
+        v[1] = v[1]/length;
+        v[2] = v[2]/length;
+    }
     return v;
 }
 
@@ -94,17 +97,12 @@ myQuat_t quatAngleAxis(double angleRad, double *axis)
 
 myQuat_t makeQuatFromAngularVelocityTime(double *omega, double dt)
 {
-    double d[3] = { omega[0]*dt,  omega[1]*dt,  omega[2]*dt };
+    // we are rotating a number of degrees about an axis;
+    double dToRad = PI/180.0;
+    double d[3] = { dToRad*omega[0]*dt,  dToRad*omega[1]*dt,  dToRad*omega[2]*dt };
     double angle = vecLength(d);
-    myQuat_t q = newQuat();
-    if (angle != 0)
-    {
-        q.x = omega[0] * sin(angle/2)/angle;
-        q.y = omega[1] * sin(angle/2)/angle;
-        q.z = omega[2] * sin(angle/2)/angle;
-        q.w = cos(angle/2);
-    }
-    return q;
+    double *axis = vecNormalise(d);
+    return quatAngleAxis(angle, axis);
 }
 
 myQuat_t newQuat(void)
@@ -168,17 +166,8 @@ myQuat_t quatFrom2Vecs(double *u, double *v, bool jk_debug)
     {
         if (jk_debug)
             printf("anti p! %f\n", d);
-	double axis[3];
-	double anyAxis[3] = { 0, 0, 1 };
-	vecCross(axis, u, anyAxis);
-	if (vecLength(axis) < 1e-6f) // uh oh, picked an axis parallel to u!!
-	{
-	    anyAxis[2] = 0;
-	    anyAxis[1] = 1;
-	    vecCross(axis, u, anyAxis);
-	}
-	vecNormalise(axis);
-	q = quatAngleAxis(PI, axis);
+        // rotation 180d about... X axis?
+        q = quatFromValues(0, 1, 0, 0);
     }
     else
     {
@@ -192,6 +181,15 @@ myQuat_t quatFrom2Vecs(double *u, double *v, bool jk_debug)
 	q.w = s * 0.5f;
     	quatNormalise(&q);
     }
+    return q;
+}
+
+myQuat_t quatScalarMultiply(myQuat_t q, double s)
+{
+    q.w *= s;
+    q.x *= s;
+    q.y *= s;
+    q.z *= s;
     return q;
 }
 

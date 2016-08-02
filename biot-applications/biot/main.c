@@ -127,7 +127,7 @@ int sendTimeRequest(void)
 }
 
 
-int callRoot_cmd(int argc, char **argv)
+/*int callRoot_cmd(int argc, char **argv)
 {
     if (findRoot() == 0)
     {
@@ -136,7 +136,7 @@ int callRoot_cmd(int argc, char **argv)
     }
     puts("I have no DODAG");
     return 1;
-}
+}*/
 
 int callTime_cmd(int argc, char **argv)
 {
@@ -184,6 +184,12 @@ int imuinit_cmd(int argc, char **argv)
 int mag_cmd(int argc, char **argv)
 {
     displayCorrections();
+    return 0;
+}
+
+int quat_cmd(int argc, char **argv)
+{
+    dumpQuat(currentPosition);
     return 0;
 }
 
@@ -289,15 +295,16 @@ int gyro_cmd(int argc, char **argv)
 static const shell_command_t shell_commands[] = {
     /* Add a new shell commands here */
     { "identify", "visually identify board", identify_cmd },
-    { "callRoot", "contact root node", callRoot_cmd },
+    { "imu", "get IMU position data", imu_cmd },
+    { "imuinit", "reset IMU", imuinit_cmd },
+    { "quat", "get IMU orientation", quat_cmd },
+    //{ "callRoot", "contact root node", callRoot_cmd },
     { "timeAsk", "ask for current net time", callTime_cmd },
     { "gyro", "use gyro on/off", gyro_cmd },
     { "accel", "use accelerometer on/off", accel_cmd },
     { "compass", "use compass on/off", compass_cmd },
     { "sensors", "current sensor status", sensor_cmd },
     { "udp", "send a message: udp <IPv6-address> <message>", udp_cmd },
-    { "imu", "get IMU position data", imu_cmd },
-    { "imuinit", "reset IMU", imuinit_cmd },
     { "mag", "display compass correction data", mag_cmd },
     { NULL, NULL, NULL }
 };

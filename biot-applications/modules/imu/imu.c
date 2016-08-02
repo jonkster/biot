@@ -12,7 +12,7 @@
 #define CHECK_BIT(var,pos) ((var) & (1<<(pos))) != 0
 
 uint64_t t0;
-myQuat_t currentIMUPosition;
+myQuat_t currentQ;
 imuData_t lastIMUData;
 
 int16_t magMinMax[6] = { 0, 0, 0, 0, 0, 0 };
@@ -179,13 +179,85 @@ myQuat_t rollPitchYawToQ(double *rpy)
     return q;
 }
 
-void accelToRollPitchYaw(double *downVec, double *rpy)
+void accelToRollPitchYaw(double *downSensor, double *rpy)
 {
-    vecNormalise(downVec);
-    rpy[0] = atan2(downVec[1], downVec[2]);
-    rpy[1] = -atan2(downVec[0], sqrt(downVec[1]*downVec[1] + downVec[2]*downVec[2]));
-    rpy[2] = 0;
-    vecNormalise(rpy);
+    vecNormalise(downSensor);
+    rpy[0] = atan2(downSensor[1], downSensor[2]);
+    rpy[1] = -atan2(downSensor[0], sqrt(downSensor[1]*downSensor[1] + downSensor[2]*downSensor[2]));
+    rpy[2] = 0;  // yaw == 0, accelerometer cannot measure yaw
+}
+
+myQuat_t eulerToQuat(double *rpy)
+{
+    double cosXTerm = cos(rpy[0] / 2.0);
+    double sinXTerm = sin(rpy[0] / 2.0);
+    double cosYTerm = cos(rpy[1] / 2.0);
+    double sinYTerm = sin(rpy[1] / 2.0);
+    double cosZTerm = cos(rpy[2] / 2.0);
+    double sinZTerm = sin(rpy[2] / 2.0);
+
+    double w = cosXTerm * cosYTerm * cosZTerm + sinXTerm * sinYTerm * sinZTerm;
+    double x = sinXTerm * cosYTerm * cosZTerm - cosXTerm * sinYTerm * sinZTerm;
+    double y = cosXTerm * sinYTerm * cosZTerm + sinXTerm * cosYTerm * sinZTerm;
+    double z = cosXTerm * cosYTerm * sinZTerm - sinXTerm * sinYTerm * cosZTerm;
+    myQuat_t q = quatFromValues(w, x, y, z);
+    quatNormalise(&q);
+    return q;
+}
+
+void quatToEuler(myQuat_t q, double *rpy)
+{
+    rpy[0] = (atan2(2.0 * (q.y * q.z + q.w * q.x), 1 - 2.0 * (q.x * q.x + q.y * q.y)));
+    rpy[1] = (asin(2.0 * (q.w * q.y - q.x * q.z)));
+    rpy[2] = (atan2(2.0 * (q.x * q.y + q.w * q.z), 1 - 2.0 * (q.y * q.y + q.z * q.z)));
+}
+
+
+myQuat_t magToQuat(double *mag)
+{
+    double worldNorth[3] = { 1.0, 0, 0 };
+    double angle = acos(vecDot(mag, worldNorth));
+
+    double vec[3];
+    vecCross(vec, mag, worldNorth);
+    vecNormalise(vec);
+
+    return quatAngleAxis(angle, vec);
+}
+
+myQuat_t adjustForCongruence(myQuat_t measuredQ, myQuat_t deducedQ)
+{
+    // find largest component of quaternion
+    double max = -1000;
+    double measuredQComponent = measuredQ.w;
+    double deducedQComponent = deducedQ.w;
+    if (fabs(measuredQ.w) > max)
+    {
+        max = fabs(measuredQ.w);
+    }
+    if (fabs(measuredQ.x) > max)
+    {
+        max = fabs(measuredQ.x);
+        measuredQComponent = measuredQ.x;
+        deducedQComponent = deducedQ.x;
+    }
+    if (fabs(measuredQ.y) > max)
+    {
+        max = fabs(measuredQ.y);
+        measuredQComponent = measuredQ.y;
+        deducedQComponent = deducedQ.y;
+    }
+    if (fabs(measuredQ.z) > max)
+    {
+        max = fabs(measuredQ.z);
+        measuredQComponent = measuredQ.z;
+        deducedQComponent = deducedQ.z;
+    }
+    if (((measuredQComponent < 0) && (deducedQComponent > 0)) || ((measuredQComponent > 0) && (deducedQComponent < 0)))
+    {
+        measuredQ = quatScalarMultiply(measuredQ, -1);
+    }
+    return measuredQ;
 }
 
 myQuat_t getPosition(mpu9150_t dev)
@@ -195,51 +267,49 @@ myQuat_t getPosition(mpu9150_t dev)
     {
         // get orientation as deduced by adding gyro measured rotational
         // velocity (times time interval) to previous orientation.
-        double gx1 = (double)imuData.gyro.x_axis / 1024.;
-        double gy1 = (double)imuData.gyro.y_axis / 1024.;
-        double gz1 = (double)imuData.gyro.z_axis / 1024.;
-        double omega[3] = { gx1, gy1, gz1 }; 
+        double gx1 = (double)(imuData.gyro.x_axis);
+        double gy1 = (double)(imuData.gyro.y_axis);
+        double gz1 = (double)(imuData.gyro.z_axis);
+        double omega[3] = { gx1, gy1, gz1 }; // this will be in degrees/sec
 
-        uint32_t dt = imuData.ts - lastIMUData.ts;
-        myQuat_t gRot = makeQuatFromAngularVelocityTime(omega, dt/50000);
-        // check if gyro readings indicate big position jump
-        /*double magRot = qAngle(gRot);
-        if (fabs(magRot) > 0.5)
-            printf("gy %f\n", qAngle(gRot));*/
-        myQuat_t gyroDeducedOrientation =  quatMultiply(currentIMUPosition, gRot);
+        uint32_t dt = imuData.ts - lastIMUData.ts; // dt in microseconds
+        myQuat_t gRot = makeQuatFromAngularVelocityTime(omega, dt/1000000.0);
+        myQuat_t gyroDeducedQ =  quatMultiply(currentQ, gRot);
+        if (! useGyroscopes)
+        {
+            makeIdentityQuat(&gyroDeducedQ);
+        }
+
+        // get current orientation as Roll Pitch Yaw (ie Euler angles)
+        double currentRPY[3];
+        quatToEuler(gyroDeducedQ, currentRPY);
 
         // get gravity direction from accelerometer
-        double ax1 = imuData.accel.x_axis;
-        double ay1 = imuData.accel.y_axis;
-        double az1 = imuData.accel.z_axis;
-        if (! useAccelerometers) {
-            ax1 = 0;
-            ay1 = 0;
-            az1 = 1;
-        }
-        double downVec[3] = { ax1, ay1, az1 };
-        vecNormalise(downVec);
+        double ax1 = imuData.accel.x_axis / 1024.0;
+        double ay1 = imuData.accel.y_axis / 1024.0;
+        double az1 = imuData.accel.z_axis / 1024.0;
+        double downSensor[3] = { ax1, ay1, az1 };
+        vecNormalise(downSensor);
 
-        // check if acceleration has a large non-gravity component.
-        /*double acclMagnitude = vecLength(downVec) / 1024.0;
-        if ((acclMagnitude > 1.1) || (acclMagnitude < 0.9))
+        // Calculate a roll/pich/yaw from the accelerometers and magnetometers.
+        // The accelerometers can only measure pitch and roll (in the world reference
+        // frame), calculate the pitch and roll values to account for
+        // accelerometer readings, make yaw = 0.
+        double rpy[3];
+        rpy[0] = atan2(downSensor[1], downSensor[2]);
+        rpy[1] = -atan2(downSensor[0], sqrt(downSensor[1]*downSensor[1] + downSensor[2]*downSensor[2]));
+        rpy[2] = 0;  // yaw == 0, accelerometer cannot measure yaw
+        if (! useAccelerometers) 
         {
-            printf("mag:%f\n", acclMagnitude);
-        }*/
-
-        bool accelOrMag = (useAccelerometers || useMagnetometers);
-        //if (noAcclMag || (acclMagnitude > 1.1) || (acclMagnitude < 0.9))
-        if (! accelOrMag)
-        {
-            // just use gyro deduced orientation as accelerometer probably
-            // skewed by non gravity acceleration component.
-            lastIMUData = imuData;
-            if (useGyroscopes)
-            {
-                currentIMUPosition = gyroDeducedOrientation;
-            }
-            return currentIMUPosition;
+            // if no accelerometers, use roll and pitch values from gyroscope
+            // derived orientation
+            rpy[0] = currentRPY[0];
+            rpy[1] = currentRPY[1];
+            rpy[2] = 0;
         }
+
+        myQuat_t accelQ = eulerToQuat(rpy);
+        myQuat_t invAccelQ = quatConjugate(accelQ);
 
 
         // get magnetometer indication of North
@@ -249,112 +319,50 @@ myQuat_t getPosition(mpu9150_t dev)
         mx1 *= magSoftCorrection[0];
         my1 *= magSoftCorrection[1];
         mz1 *= magSoftCorrection[2];
-        double magRawVec[3] = { my1, mx1, -mz1 };
+        // NB how MPU9150 has different XYZ axis for magnetometers than for
+        // gyros and accelerometers...
+        myQuat_t magQ = quatFromValues(0, my1, mx1, -mz1);
 
-        // make a north vector without dip by using the gravity and raw
-        // magnetometer vectors - create an east vector (which is 90deg to down
-        // and raw) and then find undipped north (which is 90deg to east and
-        // down)
-        double eastVec[3];
-        vecCross(eastVec, downVec, magRawVec);
-        double northVec[3];
-        vecCross(northVec, eastVec, downVec);
-        vecNormalise(northVec);
-
-        if (! useMagnetometers) {
-            northVec[0] = 1;
-            northVec[1] = 0;
-            northVec[2] = 0;
-        }
-        
-
-        // calculate rotation quats by seeing how measured down and north are
-        // different from un rotated down and north
-        double northRef[3] = {1, 0, 0};
-        double downRef[3] = {0, 0, 1};
-
-
-        myQuat_t downRot = quatFrom2Vecs(downVec, downRef, false);
-        //myQuat_t r90ZQ = quatFromValues(sqrt(0.5), 0, 0, sqrt(0.5));
-//        myQuat_t newQ = quatMultiply(currentIMUPosition, downRot);
-        myQuat_t newQ = downRot;
-
-        double maxRot = PI/2;
-        double magRot = qAngle(downRot);
-        if (magRot > maxRot)
+        // the magnetometers can only measure yaw (in the world reference
+        // frame), adjust the yaw of the roll/pitch/yaw values calculated
+        // earlier to account for the magnetometer readings.
+        if (! useMagnetometers) 
         {
-            /*downRef[0] = 1; downRef[2] = 0; // rotate down 90d about Y
-            downRot = quatFrom2Vecs(downVec, downRef, false);
-            myQuat_t rot = quatFromValues(sqrt(0.5), 0, -sqrt(0.5), 0);
-            myQuat_t newQ1 = quatMultiply(downRot, rot); // unrotate quat by 90d
-            myQuat_t dq1 = deltaQuat(currentIMUPosition, newQ1);
-            double magRot1 = qAngle(dq1);
-
-            downRef[0] = 0; downRef[1] = 1; // rotate down 90d about X
-            downRot = quatFrom2Vecs(downVec, downRef, false);
-            rot = quatFromValues(sqrt(0.5), -sqrt(0.5), 0, 0);
-            myQuat_t newQ2 = quatMultiply(downRot, rot); // unrotate quat by 90d
-            myQuat_t dq2 = deltaQuat(currentIMUPosition, newQ2);
-            double magRot2 = qAngle(dq2);*/
-
-            downRef[2] = -1; // rotate down 180d
-            downRot = quatFrom2Vecs(downVec, downRef, false);
-            myQuat_t rot = quatFromValues(0, 0, 1, 0);
-            newQ = quatMultiply(downRot, rot); // unrotate quat by 180d
-            
-            // now need to rotate 180d about either X or Y
-            //myQuat_t xrot = quatFromValues(0, 1, 0, 0);
-            myQuat_t zrot = quatFromValues(0, 0, 0, 1);
-            //myQuat_t newQx = quatMultiply(newQ, xrot);
-            myQuat_t newQz = quatMultiply(newQ, zrot);
-            //myQuat_t dqx = deltaQuat(currentIMUPosition, newQx);
-            myQuat_t dq0 = deltaQuat(currentIMUPosition, newQ);
-            myQuat_t dqz = deltaQuat(currentIMUPosition, newQz);
-            double magRot0 = qAngle(dq0);
-            double magRotz = qAngle(dqz);
-
-            printf("%f  dq0 = %f dqz = %f", magRot, magRot0, magRotz);
-            if (magRotz < magRot0)
-            {
-                newQ = newQz;
-                printf("   z < 0\n");
-            }
-            else
-            {
-                printf("\n");
-            }
-        }
-        
-lastIMUData = imuData;
-currentIMUPosition = newQ;
-return currentIMUPosition;
-        
-
-        myQuat_t northRot = quatFrom2Vecs(northVec, northRef, false);
-
-        // get combined orientation quat using down and north rotations
-        myQuat_t amMeasuredOrientation = quatMultiply(northRot, downRot);
-
-        // calculate an orientation that is slightly towards accl/magnetometer
-        // calculated orientation (starting from gyro deduced orientation).
-        if (useGyroscopes)
-        {
-            currentIMUPosition = slerp(gyroDeducedOrientation, amMeasuredOrientation, 0.1);
+            rpy[2] = currentRPY[2];
         }
         else
         {
-            currentIMUPosition = amMeasuredOrientation;
+            myQuat_t amQ = quatMultiply(accelQ, magQ);
+            amQ = quatMultiply(amQ, invAccelQ);
+            rpy[2] = -atan2(amQ.y, amQ.x);
+        }
+
+
+        // measuredQ is the orientation as measured using the
+        // accelerometer/magnetometer readings
+        myQuat_t measuredQ = eulerToQuat(rpy);
+        // check measured and deduced orientations are not wildly different (eg
+        // due to a 360d alias flip) and adjust if problem...
+        measuredQ = adjustForCongruence(measuredQ, gyroDeducedQ);
+
+        if (useGyroscopes)
+        {
+            // the new orientation is the gyro deduced position corrected
+            // towards the accel/mag measured position
+            currentQ = slerp(gyroDeducedQ, measuredQ, 0.1);
+        }
+        else
+        {
+            currentQ = measuredQ;
         }
     }
     lastIMUData = imuData;
-    return currentIMUPosition;
+    return currentQ;
 }
 
 void initialisePosition(mpu9150_t *dev)
 {
-    makeIdentityQuat(&currentIMUPosition);
-
-    currentIMUPosition = getPosition(*dev);
+    makeIdentityQuat(&currentQ);
 }
 
 
