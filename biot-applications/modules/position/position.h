@@ -41,7 +41,7 @@ extern "C" {
 
     void quatMultiplyVec(double *destVec, myQuat_t q, double *v);
 
-    myQuat_t quatFrom2Vecs(double *u, double *v, bool jk_debug);
+    myQuat_t quatFrom2Vecs(double *u, double *v);
 
     myQuat_t quatScalarMultiply(myQuat_t q, double s);
 

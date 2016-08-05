@@ -127,17 +127,6 @@ int sendTimeRequest(void)
 }
 
 
-/*int callRoot_cmd(int argc, char **argv)
-{
-    if (findRoot() == 0)
-    {
-        findParent();
-        return 0;
-    }
-    puts("I have no DODAG");
-    return 1;
-}*/
-
 int callTime_cmd(int argc, char **argv)
 {
     if (sendTimeRequest() == 0)
@@ -153,6 +142,10 @@ void initIMU(void)
     if (initialiseIMU(&imuDev))
     {
         displayConfiguration(imuDev);
+        if (knowsRoot())
+            udpSend(dodagRoot, "cal-please");
+        else
+            udpSend("affe::2", "cal-please");
     }
     else
     {

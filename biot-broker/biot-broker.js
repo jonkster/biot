@@ -35,7 +35,7 @@ brokerUdpListener.on('message', function (message, remote) {
             addNodeData(jResponse);
         }
         catch(e) {
-            console.log(e, "unrecognised broker message:", message);
+            console.log(e, "unrecognised broker message:", message.toString());
         }
     }
 });
@@ -93,6 +93,9 @@ function addNodeData(jResponse) {
     }
     else if (jResponse['t'] == 'cal'){
         biotzCal[address] = jResponse.v;
+    }
+    else if (jResponse['t'] == 'getc'){
+        console.log("calibration cache of:", address);
     }
     else{
         console.log("unknown response type", jResponse['t']);
@@ -414,7 +417,6 @@ function putBiotCalibration(req, res, next) {
             console.log('Error:', err);
             res.send(500, err);
         } else {
-            console.log("sent", message.toString());
             res.send(200, 'OK');
         }
         client.close();
@@ -438,7 +440,6 @@ function putBiotSensors(req, res, next) {
             console.log('Error:', err);
             res.send(500, err);
         } else {
-            console.log("sent", message.toString());
             res.send(200, 'OK');
         }
         client.close();

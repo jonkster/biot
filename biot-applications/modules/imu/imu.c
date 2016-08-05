@@ -8,6 +8,7 @@
 
 
 #include "imu.h"
+#include "../identify/biotIdentify.h"
 
 #define CHECK_BIT(var,pos) ((var) & (1<<(pos))) != 0
 
@@ -20,11 +21,12 @@ int16_t magMinMax[6] = { 0, 0, 0, 0, 0, 0 };
 int16_t magHardCorrection[3] = { 0, 0, 0 };
 double magSoftCorrection[3] = { 1, 1, 1 };
 bool magValid = false;
+uint16_t failureCount = 0;
 
 
-bool useAccelerometers = false;
+bool useAccelerometers = true;
 bool useMagnetometers = true;
-bool useGyroscopes = false;
+bool useGyroscopes = true;
 
 
 uint16_t aFsrRange2Int(mpu9150_accel_ranges_t fsr)
@@ -225,6 +227,11 @@ myQuat_t magToQuat(double *mag)
     return quatAngleAxis(angle, vec);
 }
 
+bool oppositeSign(double a, double b)
+{
+    return (((a > 0) && (b < 0)) || ((a < 0) && (b > 0)));
+}
+
 myQuat_t adjustForCongruence(myQuat_t measuredQ, myQuat_t deducedQ)
 {
     // find largest component of quaternion
@@ -253,7 +260,8 @@ myQuat_t adjustForCongruence(myQuat_t measuredQ, myQuat_t deducedQ)
         measuredQComponent = measuredQ.z;
         deducedQComponent = deducedQ.z;
     }
-    if (((measuredQComponent < 0) && (deducedQComponent > 0)) || ((measuredQComponent > 0) && (deducedQComponent < 0)))
+
+    if (oppositeSign(measuredQComponent, deducedQComponent))
     {
         measuredQ = quatScalarMultiply(measuredQ, -1);
     }
@@ -265,6 +273,21 @@ myQuat_t getPosition(mpu9150_t dev)
     imuData_t imuData;
     if (getIMUData(dev, &imuData))
     {
+        if (! validIMUData(imuData))
+        {
+            if (failureCount++ > 20)
+            {
+                puts("Error in IMU, restarting!\n");
+                identifyYourself("imu failure");
+                if (! initialiseIMU(&dev))
+                {
+                    puts("Could not initialise IMU!\n");
+                    exit(1);
+                }
+            }
+            return currentQ;
+        }
+        failureCount = 0;
         // get orientation as deduced by adding gyro measured rotational
         // velocity (times time interval) to previous orientation.
         double gx1 = (double)(imuData.gyro.x_axis);
@@ -289,6 +312,7 @@ myQuat_t getPosition(mpu9150_t dev)
         double ay1 = imuData.accel.y_axis / 1024.0;
         double az1 = imuData.accel.z_axis / 1024.0;
         double downSensor[3] = { ax1, ay1, az1 };
+        //double tempV[3]; tempV[0] = downSensor[0]; tempV[1] = downSensor[1]; tempV[2] = downSensor[2];
         vecNormalise(downSensor);
 
         // Calculate a roll/pich/yaw from the accelerometers and magnetometers.
@@ -321,7 +345,9 @@ myQuat_t getPosition(mpu9150_t dev)
         mz1 *= magSoftCorrection[2];
         // NB how MPU9150 has different XYZ axis for magnetometers than for
         // gyros and accelerometers...
-        myQuat_t magQ = quatFromValues(0, my1, mx1, -mz1);
+        double magV[3] = { my1, mx1, -mz1 };
+        vecNormalise(magV);
+        myQuat_t magQ = quatFromValues(0, magV[0], magV[1], magV[2]);
 
         // the magnetometers can only measure yaw (in the world reference
         // frame), adjust the yaw of the roll/pitch/yaw values calculated
@@ -332,11 +358,13 @@ myQuat_t getPosition(mpu9150_t dev)
         }
         else
         {
+            // pitch and roll the mag direction using accelerometer info
             myQuat_t amQ = quatMultiply(accelQ, magQ);
+            quatNormalise(&amQ);
             amQ = quatMultiply(amQ, invAccelQ);
+            quatNormalise(&amQ);
             rpy[2] = -atan2(amQ.y, amQ.x);
         }
-
 
         // measuredQ is the orientation as measured using the
         // accelerometer/magnetometer readings
@@ -349,7 +377,7 @@ myQuat_t getPosition(mpu9150_t dev)
         {
             // the new orientation is the gyro deduced position corrected
             // towards the accel/mag measured position
-            currentQ = slerp(gyroDeducedQ, measuredQ, 0.1);
+            currentQ = slerp(gyroDeducedQ, measuredQ, 0.01);
         }
         else
         {
@@ -491,6 +519,23 @@ void setCompassUse(bool onoff)
 void setGyroUse(bool onoff)
 {
     useGyroscopes = onoff;
+}
+
+bool validIMUData(imuData_t imuData)
+{
+    if ((imuData.accel.x_axis == 0) && (imuData.accel.y_axis == 0) && (imuData.accel.z_axis == 0))
+    {
+        return false;
+    }
+    if ((imuData.mag.x_axis == 0) && (imuData.mag.y_axis == 0) && (imuData.mag.z_axis == 0))
+    {
+        return false;
+    }
+    if ((imuData.gyro.x_axis == 0) && (imuData.gyro.y_axis == 0) && (imuData.gyro.z_axis == 0))
+    {
+        return false;
+    }
+    return true;
 }
 
 

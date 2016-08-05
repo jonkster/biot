@@ -32,6 +32,7 @@ extern void setCurrentTime(uint32_t t);
 static int serverSocket = -1;
 struct sockaddr_in6 serverSocketAddr;
 static char serverBuffer[SERVER_BUFFER_SIZE];
+static char gpTextBuf[25];
 static msg_t msg_q[MUDP_Q_SZ];
 
 #ifdef MAX_NODES
@@ -104,7 +105,6 @@ void actOnUdpRequests(int res, char *srcAdd, char* selfAdd)
     }
     else if (strncmp(serverBuffer, "set-sens:", 9) == 0)
     {
-        printf("got %s\n", serverBuffer);
         // Message will be in form:
         //  set-sens:GAC#ADDRESS (bounce message)
         // or:
@@ -126,7 +126,6 @@ void actOnUdpRequests(int res, char *srcAdd, char* selfAdd)
         data = strsep(&msg, delim);
         if (msg == NULL)
         {
-            printf("setting %s\n", data);
             if (strlen(data) != 3)
             {
                 printf("malformed GAC: '%s'\n", data);
@@ -156,10 +155,8 @@ void actOnUdpRequests(int res, char *srcAdd, char* selfAdd)
             printf("malformed message: %s\n", serverBuffer);
             return;
         }
-        char s[25];
-        sprintf(s, "set-sens:%s", data);
-        printf("bouncing %s to %s\n", s, addr);
-        udpSend(addr, s);
+        sprintf(gpTextBuf, "set-sens:%s", data);
+        udpSend(addr, gpTextBuf);
     }
     else if (strcmp(serverBuffer, "get-data") == 0)
     {
@@ -203,9 +200,8 @@ void actOnUdpRequests(int res, char *srcAdd, char* selfAdd)
             printf("malformed message: %s\n", serverBuffer);
             return;
         }
-        char s[25];
-        sprintf(s, "up-cal:%s", data);
-        udpSend(addr, s);
+        sprintf(gpTextBuf, "up-cal:%s", data);
+        udpSend(addr, gpTextBuf);
     }
     else if (strncmp(serverBuffer, "up-cal:", 7) == 0)
     {
@@ -216,11 +212,17 @@ void actOnUdpRequests(int res, char *srcAdd, char* selfAdd)
         sscanf(data, "%"SCNd16":%"SCNd16":%"SCNd16":%"SCNd16":%"SCNd16":%"SCNd16, &cal[0], &cal[1], &cal[2], &cal[3], &cal[4], &cal[5]);
         setMagCalibration(cal);
     }
+    else if (strcmp(serverBuffer, "cal-please") == 0)
+    {
+#ifdef MAX_NODES
+        sprintf(gpTextBuf, "{\"t\":\"getc\",\"s\":\"%s\"}", srcAdd);
+        udpSend("affe::1", gpTextBuf);
+#endif
+    }
     else if (strcmp(serverBuffer, "time-please") == 0)
     {
-        char ts[25];
-        sprintf(ts, "ts:%lu", getCurrentTime());
-        udpSend(srcAdd, ts);
+        sprintf(gpTextBuf, "ts:%lu", getCurrentTime());
+        udpSend(srcAdd, gpTextBuf);
     }
     else if (strncmp(serverBuffer, "ts:", 3) == 0)
     {
@@ -241,11 +243,11 @@ int udpSend(char *addrStr, char *data)
     size_t dataLen = strlen(data);
     if (dataLen > 0)
     {
-        //printf("sending: %s msg: %s\n", addrStr, data);
         struct sockaddr_in6 dst;
         dst.sin6_family = AF_INET6;
         if (inet_pton(AF_INET6, addrStr, &dst.sin6_addr) != 1) {
             puts("Error: unable to parse destination address");
+            printf("sending: %s msg: %s\n", addrStr, data);
             return 1;
         }
         dst.sin6_port = htons(UDP_PORT);
@@ -351,9 +353,8 @@ bool relayData(char * destAdd, char *srcAdd, char *type, char *val)
 void syncKnown(void)
 {
 #ifdef MAX_NODES
-    char ts[25];
-    sprintf(ts, "ts:%lu", getCurrentTime());
-    udpSend("ff02::1", ts);
+    sprintf(gpTextBuf, "ts:%lu", getCurrentTime());
+    udpSend("ff02::1", gpTextBuf);
     return;
 #endif
 }

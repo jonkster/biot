@@ -146,7 +146,7 @@ myQuat_t quatFromValues(double w, double x, double y, double z)
     return q;
 }*/
 
-myQuat_t quatFrom2Vecs(double *u, double *v, bool jk_debug)
+myQuat_t quatFrom2Vecs(double *u, double *v)
 {
     // Based on Stan Melax's article in Game Programming Gems
     myQuat_t q;
@@ -164,8 +164,6 @@ myQuat_t quatFrom2Vecs(double *u, double *v, bool jk_debug)
     // If dot == -1 vectors are anti parallel, do a 180 about any axis
     if (d < (1e-6f - 1.0f))
     {
-        if (jk_debug)
-            printf("anti p! %f\n", d);
         // rotation 180d about... X axis?
         q = quatFromValues(0, 1, 0, 0);
     }
@@ -201,7 +199,7 @@ void makeIdentityQuat(myQuat_t *q)
     q->z = 0;
 }
 
-// magnitude of rotation??
+// magnitude of rotation
 double qAngle(myQuat_t q)
 {
     double vecPart[3] = { q.x, q.y, q.z };
@@ -264,7 +262,7 @@ myQuat_t slerp(myQuat_t q1, myQuat_t q2, double t)
 
     double cosHalfTheta = q1.w * q2.w + q1.x * q2.x + q1.y * q2.y + q1.z * q2.z;
     // if q1=q2 or q1=-q2 then theta = 0 and we can return q1
-    if (abs(cosHalfTheta) >= 1.0)
+    if (fabs(cosHalfTheta) >= 1.0)
     {
 	dest.w = q1.w;
 	dest.x = q1.x;
@@ -277,7 +275,7 @@ myQuat_t slerp(myQuat_t q1, myQuat_t q2, double t)
     double sinHalfTheta = sqrt(1.0 - cosHalfTheta*cosHalfTheta);
     // if theta = 180 degrees then result is not fully defined
     // we could rotate around any axis normal to q1 or q2
-    if (abs(sinHalfTheta) < 0.001)
+    if (fabs(sinHalfTheta) < 0.001)
     {
 	dest.w = (q1.w * 0.5 + q2.w * 0.5);
 	dest.x = (q1.x * 0.5 + q2.x * 0.5);

@@ -179,6 +179,9 @@ export class Nodes {
                                 {
                                     this.nodes[addr] = {};
                                     this.threeD.addNode(addr, i*200, 0, 0, parseInt(colourSt, 16));
+                                    console.log("sending calibrations for", addr);
+                                    var cal = this.savedCalibrations[addr];
+                                    this.biotz.putCalibrationToNode(addr, cal)
                                 }
                                 this.nodes[addr] = q;
                             this.threeD.moveNode(addr, q);
