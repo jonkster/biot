@@ -211,6 +211,7 @@ void actOnUdpRequests(int res, char *srcAdd, char* selfAdd)
         int16_t cal[6];
         sscanf(data, "%"SCNd16":%"SCNd16":%"SCNd16":%"SCNd16":%"SCNd16":%"SCNd16, &cal[0], &cal[1], &cal[2], &cal[3], &cal[4], &cal[5]);
         setMagCalibration(cal);
+        forceReorientation();
     }
     else if (strcmp(serverBuffer, "cal-please") == 0)
     {

@@ -20,8 +20,8 @@ int16_t magMinMax[6] = { 0, 0, 0, 0, 0, 0 };
 
 int16_t magHardCorrection[3] = { 0, 0, 0 };
 double magSoftCorrection[3] = { 1, 1, 1 };
-bool magValid = false;
 uint16_t failureCount = 0;
+uint16_t magValid = 0;
 
 
 bool useAccelerometers = true;
@@ -73,20 +73,20 @@ void displayCorrections(void)
             "mag max: %"PRId16", %"PRId16", %"PRId16"\n"
             "hard correction offsets: %"PRId16", %"PRId16", %"PRId16"\n"
             "soft correction factors: %f, %f, %f\n",
-            magMinMax[0], magMinMax[1], magMinMax[2],
+            magMinMax[X_AXIS], magMinMax[Y_AXIS], magMinMax[Z_AXIS],
             magMinMax[3], magMinMax[4], magMinMax[5],
-            magHardCorrection[0], magHardCorrection[1], magHardCorrection[2],
-            magSoftCorrection[0], magSoftCorrection[1], magSoftCorrection[2]);
+            magHardCorrection[X_AXIS], magHardCorrection[Y_AXIS], magHardCorrection[Z_AXIS],
+            magSoftCorrection[X_AXIS], magSoftCorrection[Y_AXIS], magSoftCorrection[Z_AXIS]);
     printf("+-------------------------------------+\n");
 }
 
 
 void displayData(imuData_t data)
 {
-    printf( "%"PRIu32", "
-            "%"PRId16", %"PRId16", %"PRId16", "
-            "%"PRId16", %"PRId16", %"PRId16", "
-            "%"PRId16", %"PRId16", %"PRId16", "
+    printf( "%"PRIu32", a("
+            "%"PRId16", %"PRId16", %"PRId16"), g("
+            "%"PRId16", %"PRId16", %"PRId16"), m( "
+            "%"PRId16", %"PRId16", %"PRId16"), t"
             "%6.2f\n",
             data.ts,
             data.accel.x_axis, data.accel.y_axis, data.accel.z_axis,
@@ -116,6 +116,11 @@ uint16_t gFsrRange2Int(mpu9150_gyro_ranges_t fsr)
     return rate;
 }
 
+void forceReorientation(void)
+{
+    magValid = 0;
+}
+
 bool getIMUData(mpu9150_t dev, imuData_t *data)
 {
     data->ts = xtimer_now64() - t0;
@@ -140,14 +145,14 @@ int16_t *getMagCalibration(void)
 void imuCalibrate(imuData_t *data)
 {
     // find minimums
-    if (data->mag.x_axis < magMinMax[0])
-        magMinMax[0] = data->mag.x_axis;
+    if (data->mag.x_axis < magMinMax[X_AXIS])
+        magMinMax[X_AXIS] = data->mag.x_axis;
 
-    if (data->mag.y_axis < magMinMax[1])
-        magMinMax[1] = data->mag.y_axis;
+    if (data->mag.y_axis < magMinMax[Y_AXIS])
+        magMinMax[Y_AXIS] = data->mag.y_axis;
 
-    if (data->mag.z_axis < magMinMax[2])
-        magMinMax[2] = data->mag.z_axis;
+    if (data->mag.z_axis < magMinMax[Z_AXIS])
+        magMinMax[Z_AXIS] = data->mag.z_axis;
 
     // find maximums
     if (data->mag.x_axis > magMinMax[3])
@@ -163,14 +168,14 @@ void imuCalibrate(imuData_t *data)
     setMagCalibration(magMinMax);
 }
 
-myQuat_t rollPitchYawToQ(double *rpy)
+/*myQuat_t rollPitchYawToQ(double *ypr)
 {
-    double c1 = cos(rpy[2]);
-    double s1 = sin(rpy[2]);
-    double c2 = cos(rpy[1]);
-    double s2 = sin(rpy[1]);
-    double c3 = cos(rpy[0]);
-    double s3 = sin(rpy[0]);
+    double c1 = cos(ypr[Z_AXIS]);
+    double s1 = sin(ypr[Z_AXIS]);
+    double c2 = cos(ypr[Y_AXIS]);
+    double s2 = sin(ypr[Y_AXIS]);
+    double c3 = cos(ypr[X_AXIS]);
+    double s3 = sin(ypr[X_AXIS]);
     myQuat_t q;
 
     q.w = sqrt(1.0 + c1 * c2 + c1*c3 - s1 * s2 * s3 + c2*c3) / 2.0;
@@ -179,43 +184,10 @@ myQuat_t rollPitchYawToQ(double *rpy)
     q.y = (s1 * c2 + s1 * c3 + c1 * s2 * s3) / w4 ;
     q.z = (-s1 * s3 + c1 * s2 * c3 +s2) / w4 ;
     return q;
-}
-
-void accelToRollPitchYaw(double *downSensor, double *rpy)
-{
-    vecNormalise(downSensor);
-    rpy[0] = atan2(downSensor[1], downSensor[2]);
-    rpy[1] = -atan2(downSensor[0], sqrt(downSensor[1]*downSensor[1] + downSensor[2]*downSensor[2]));
-    rpy[2] = 0;  // yaw == 0, accelerometer cannot measure yaw
-}
-
-myQuat_t eulerToQuat(double *rpy)
-{
-    double cosXTerm = cos(rpy[0] / 2.0);
-    double sinXTerm = sin(rpy[0] / 2.0);
-    double cosYTerm = cos(rpy[1] / 2.0);
-    double sinYTerm = sin(rpy[1] / 2.0);
-    double cosZTerm = cos(rpy[2] / 2.0);
-    double sinZTerm = sin(rpy[2] / 2.0);
-
-    double w = cosXTerm * cosYTerm * cosZTerm + sinXTerm * sinYTerm * sinZTerm;
-    double x = sinXTerm * cosYTerm * cosZTerm - cosXTerm * sinYTerm * sinZTerm;
-    double y = cosXTerm * sinYTerm * cosZTerm + sinXTerm * cosYTerm * sinZTerm;
-    double z = cosXTerm * cosYTerm * sinZTerm - sinXTerm * sinYTerm * cosZTerm;
-    myQuat_t q = quatFromValues(w, x, y, z);
-    quatNormalise(&q);
-    return q;
-}
-
-void quatToEuler(myQuat_t q, double *rpy)
-{
-    rpy[0] = (atan2(2.0 * (q.y * q.z + q.w * q.x), 1 - 2.0 * (q.x * q.x + q.y * q.y)));
-    rpy[1] = (asin(2.0 * (q.w * q.y - q.x * q.z)));
-    rpy[2] = (atan2(2.0 * (q.x * q.y + q.w * q.z), 1 - 2.0 * (q.y * q.y + q.z * q.z)));
-}
+}*/
 
 
-myQuat_t magToQuat(double *mag)
+/*myQuat_t magToQuat(double *mag)
 {
     double worldNorth[3] = { 1.0, 0, 0 };
     double angle = acos(vecDot(mag, worldNorth));
@@ -225,7 +197,7 @@ myQuat_t magToQuat(double *mag)
     vecNormalise(vec);
 
     return quatAngleAxis(angle, vec);
-}
+}*/
 
 bool oppositeSign(double a, double b)
 {
@@ -265,6 +237,15 @@ myQuat_t adjustForCongruence(myQuat_t measuredQ, myQuat_t deducedQ)
     {
         measuredQ = quatScalarMultiply(measuredQ, -1);
     }
+    /*double dq = quatDiffMagnitude(measuredQ, deducedQ);
+    if (dq > PI/6.0)
+    {
+        printf("%6.2f > %6.2f\n", dq, PI/4.0);
+        if (magValid < 20)
+            magValid++;
+        else
+            measuredQ = fallBackQ;
+    }*/
     return measuredQ;
 }
 
@@ -298,77 +279,88 @@ myQuat_t getPosition(mpu9150_t dev)
         uint32_t dt = imuData.ts - lastIMUData.ts; // dt in microseconds
         myQuat_t gRot = makeQuatFromAngularVelocityTime(omega, dt/1000000.0);
         myQuat_t gyroDeducedQ =  quatMultiply(currentQ, gRot);
+        quatNormalise(&gyroDeducedQ);
         if (! useGyroscopes)
         {
             makeIdentityQuat(&gyroDeducedQ);
         }
 
-        // get current orientation as Roll Pitch Yaw (ie Euler angles)
-        double currentRPY[3];
-        quatToEuler(gyroDeducedQ, currentRPY);
+        // get orientation from the gyro as Roll Pitch Yaw (ie Euler angles)
+        double gyroDeducedYPR[3];
+        quatToEuler(gyroDeducedQ, gyroDeducedYPR);
 
         // get gravity direction from accelerometer
         double ax1 = imuData.accel.x_axis / 1024.0;
         double ay1 = imuData.accel.y_axis / 1024.0;
         double az1 = imuData.accel.z_axis / 1024.0;
         double downSensor[3] = { ax1, ay1, az1 };
-        //double tempV[3]; tempV[0] = downSensor[0]; tempV[1] = downSensor[1]; tempV[2] = downSensor[2];
+        if (fabs(vecLength(downSensor) - 1) > 0.2)
+        {
+            // excessive accelerometer reading, bail out
+            currentQ = gyroDeducedQ;
+            lastIMUData = imuData;
+            return currentQ;
+        }
         vecNormalise(downSensor);
 
         // Calculate a roll/pich/yaw from the accelerometers and magnetometers.
+     
+    
         // The accelerometers can only measure pitch and roll (in the world reference
         // frame), calculate the pitch and roll values to account for
         // accelerometer readings, make yaw = 0.
-        double rpy[3];
-        rpy[0] = atan2(downSensor[1], downSensor[2]);
-        rpy[1] = -atan2(downSensor[0], sqrt(downSensor[1]*downSensor[1] + downSensor[2]*downSensor[2]));
-        rpy[2] = 0;  // yaw == 0, accelerometer cannot measure yaw
+        double ypr[3];
+        ypr[ROLL] = atan2(downSensor[Y_AXIS], downSensor[Z_AXIS]);
+        ypr[PITCH] = -atan2(downSensor[X_AXIS], sqrt(downSensor[Y_AXIS]*downSensor[Y_AXIS] + downSensor[Z_AXIS]*downSensor[Z_AXIS]));
+        ypr[YAW] = 0;  // yaw == 0, accelerometer cannot measure yaw
         if (! useAccelerometers) 
         {
             // if no accelerometers, use roll and pitch values from gyroscope
             // derived orientation
-            rpy[0] = currentRPY[0];
-            rpy[1] = currentRPY[1];
-            rpy[2] = 0;
+            ypr[PITCH] = gyroDeducedYPR[PITCH];
+            ypr[ROLL] = gyroDeducedYPR[ROLL];
+            ypr[YAW] = 0;
         }
-
-        myQuat_t accelQ = eulerToQuat(rpy);
+        myQuat_t accelQ = eulerToQuat(ypr);
         myQuat_t invAccelQ = quatConjugate(accelQ);
 
 
         // get magnetometer indication of North
-        double mx1 = (double)(imuData.mag.x_axis - magHardCorrection[0]);
-        double my1 = (double)(imuData.mag.y_axis - magHardCorrection[1]);
-        double mz1 = (double)(imuData.mag.z_axis - magHardCorrection[2]);
-        mx1 *= magSoftCorrection[0];
-        my1 *= magSoftCorrection[1];
-        mz1 *= magSoftCorrection[2];
-        // NB how MPU9150 has different XYZ axis for magnetometers than for
-        // gyros and accelerometers...
+        double mx1 = (double)(imuData.mag.x_axis - magHardCorrection[X_AXIS]);
+        double my1 = (double)(imuData.mag.y_axis - magHardCorrection[Y_AXIS]);
+        double mz1 = (double)(imuData.mag.z_axis - magHardCorrection[Z_AXIS]);
+        mx1 *= magSoftCorrection[X_AXIS];
+        my1 *= magSoftCorrection[Y_AXIS];
+        mz1 *= magSoftCorrection[Z_AXIS];
+        // NB MPU9150 has different XYZ axis for magnetometers than for gyros
+        // and accelerometers so juggle x,y,z here...
         double magV[3] = { my1, mx1, -mz1 };
         vecNormalise(magV);
-        myQuat_t magQ = quatFromValues(0, magV[0], magV[1], magV[2]);
+        // make quaternion representing mag readings
+        myQuat_t magQ = quatFromValues(0, magV[X_AXIS], magV[Y_AXIS], magV[Z_AXIS]);
 
         // the magnetometers can only measure yaw (in the world reference
         // frame), adjust the yaw of the roll/pitch/yaw values calculated
         // earlier to account for the magnetometer readings.
         if (! useMagnetometers) 
         {
-            rpy[2] = currentRPY[2];
+            ypr[YAW] = gyroDeducedYPR[Z_AXIS];
         }
         else
         {
-            // pitch and roll the mag direction using accelerometer info
-            myQuat_t amQ = quatMultiply(accelQ, magQ);
-            quatNormalise(&amQ);
-            amQ = quatMultiply(amQ, invAccelQ);
-            quatNormalise(&amQ);
-            rpy[2] = -atan2(amQ.y, amQ.x);
+            // pitch and roll the mag direction using accelerometer info to
+            // create a quaternion that represents the IMU as if it was
+            // horizontal (so we can get pure yaw)
+            myQuat_t horizQ = quatMultiply(accelQ, magQ);
+            horizQ = quatMultiply(horizQ, invAccelQ);
+
+            // calculate pure yaw
+            ypr[YAW] = fabs(atan2(horizQ.y, horizQ.x));
         }
 
         // measuredQ is the orientation as measured using the
         // accelerometer/magnetometer readings
-        myQuat_t measuredQ = eulerToQuat(rpy);
+        myQuat_t measuredQ = eulerToQuat(ypr);
         // check measured and deduced orientations are not wildly different (eg
         // due to a 360d alias flip) and adjust if problem...
         measuredQ = adjustForCongruence(measuredQ, gyroDeducedQ);
@@ -377,12 +369,17 @@ myQuat_t getPosition(mpu9150_t dev)
         {
             // the new orientation is the gyro deduced position corrected
             // towards the accel/mag measured position
-            currentQ = slerp(gyroDeducedQ, measuredQ, 0.01);
+            currentQ = slerp(gyroDeducedQ, measuredQ, 0.2);
         }
         else
         {
             currentQ = measuredQ;
         }
+    }
+    if (! isQuatValid(currentQ))
+    {
+        puts("error in quaternion, reseting orientation...");
+        makeIdentityQuat(&currentQ);
     }
     lastIMUData = imuData;
     return currentQ;
@@ -448,9 +445,9 @@ bool initialiseIMU(mpu9150_t *dev)
 
 void setMagCalibration(int16_t *cal)
 {
-    magMinMax[0] = cal[0];
-    magMinMax[1] = cal[1];
-    magMinMax[2] = cal[2];
+    magMinMax[X_AXIS] = cal[X_AXIS];
+    magMinMax[Y_AXIS] = cal[Y_AXIS];
+    magMinMax[Z_AXIS] = cal[Z_AXIS];
     magMinMax[3] = cal[3];
     magMinMax[4] = cal[4];
     magMinMax[5] = cal[5];
@@ -481,7 +478,7 @@ void setMagCalibration(int16_t *cal)
     {
         avg[i] = (vMax[i] - vMin[i])/2;
     }
-    double averageRadius = (avg[0] + avg[1] + avg[2]) / 3;
+    double averageRadius = (avg[X_AXIS] + avg[Y_AXIS] + avg[Z_AXIS]) / 3;
 
     // calculate scale factor along each axis that would squash the readings
     // into something closer to a sphere

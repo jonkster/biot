@@ -144,8 +144,8 @@ export class ThreeDirective {
 
 	this.scene = new THREE.Scene();
 
-	//this.camera = new THREE.OrthographicCamera( -800, 800, 200, -200, 0.1, 1000);
-	this.camera = new THREE.PerspectiveCamera( 45, this.sizeX/this.sizeY, 0.1, 10000 );
+	this.camera = new THREE.OrthographicCamera( -800, 800, 200, -200, 0.1, 1000);
+	//this.camera = new THREE.PerspectiveCamera( 45, this.sizeX/this.sizeY, 0.1, 10000 );
 	this.scene.add(this.camera);
 	this.camera.up.set( 0, 0, 1 )
 	this.camera.position.z = 200;

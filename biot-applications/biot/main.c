@@ -137,7 +137,7 @@ int callTime_cmd(int argc, char **argv)
     return 1;
 }
 
-void initIMU(void)
+bool initIMU(void)
 {
     if (initialiseIMU(&imuDev))
     {
@@ -146,10 +146,12 @@ void initIMU(void)
             udpSend(dodagRoot, "cal-please");
         else
             udpSend("affe::2", "cal-please");
+        return true;
     }
     else
     {
         puts("could not initialise IMU device");
+        return false;
     }
 }
 
@@ -314,16 +316,18 @@ void *houseKeeper(void *arg)
     {
         if (! imuReady)
         {
-            initIMU();
-            imuReady = true;
+            imuReady = initIMU();
         }
 
         uint32_t secs = getCurrentTime()/1500000;
         uint32_t mSecs = getCurrentTime()/1500;
         if (mSecs % 50 == 0)
         {
-            updatePosition();
-            sendNodeData(mSecs);
+            if (imuReady)
+            {
+                updatePosition();
+                sendNodeData(mSecs);
+            }
         }
 
         if (mSecs % 2000 == 0)

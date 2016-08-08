@@ -13,6 +13,7 @@
 #define GFSR                MPU9150_GYRO_FSR_2000DPS
 #define AFSR                MPU9150_ACCEL_FSR_16G
 
+
 typedef struct {
     uint32_t ts;
     mpu9150_results_t accel;
@@ -26,6 +27,7 @@ typedef struct {
 extern "C" {
 #endif
 
+
     uint16_t aFsrRange2Int(mpu9150_accel_ranges_t fsr);
 
     void displayConfiguration(mpu9150_t dev);
@@ -33,6 +35,8 @@ extern "C" {
     void displayCorrections(void);
 
     void displayData(imuData_t data);
+
+    void forceReorientation(void);
 
     uint16_t gFsrRange2Int(mpu9150_gyro_ranges_t fsr);
 

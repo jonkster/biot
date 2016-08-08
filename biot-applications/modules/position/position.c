@@ -14,25 +14,25 @@ void dumpQuat(myQuat_t q)
 
 void dumpVec(double *v)
 {
-    printf("v{%f, %f, %f}\n", v[0], v[1], v[2]);
+    printf("v{%f, %f, %f}\n", v[X_AXIS], v[Y_AXIS], v[Z_AXIS]);
 }
 
 double vecDot(double *u, double *v)
 {
-    double d = u[0]*v[0] + u[1]*v[1] + u[2]*v[2]; 
+    double d = u[X_AXIS]*v[X_AXIS] + u[Y_AXIS]*v[Y_AXIS] + u[Z_AXIS]*v[Z_AXIS]; 
     return d; 
 }
 
 void vecCross(double *dest, double *u, double *v)
 {
-    dest[0] = u[1] * v[2] - u[2] * v[1];
-    dest[1] = u[2] * v[0] - u[0] * v[2];
-    dest[2] = u[0] * v[1] - u[1] * v[0];
+    dest[X_AXIS] = u[Y_AXIS] * v[Z_AXIS] - u[Z_AXIS] * v[Y_AXIS];
+    dest[Y_AXIS] = u[Z_AXIS] * v[X_AXIS] - u[X_AXIS] * v[Z_AXIS];
+    dest[Z_AXIS] = u[X_AXIS] * v[Y_AXIS] - u[Y_AXIS] * v[X_AXIS];
 }
 
 double vecLength(double *v)
 {
-     return sqrt((v[0]*v[0]) + (v[1]*v[1]) + (v[2]*v[2]));
+     return sqrt((v[X_AXIS]*v[X_AXIS]) + (v[Y_AXIS]*v[Y_AXIS]) + (v[Z_AXIS]*v[Z_AXIS]));
 }
 
 double *vecNormalise(double *v)
@@ -40,18 +40,18 @@ double *vecNormalise(double *v)
     double length = vecLength(v);
     if (length > 0)
     {
-        v[0] = v[0]/length;
-        v[1] = v[1]/length;
-        v[2] = v[2]/length;
+        v[X_AXIS] = v[X_AXIS]/length;
+        v[Y_AXIS] = v[Y_AXIS]/length;
+        v[Z_AXIS] = v[Z_AXIS]/length;
     }
     return v;
 }
 
 void vecScalarMultiply(double *dest, double s)
 {
-    dest[0] *= s;
-    dest[1] *= s;
-    dest[2] *= s;
+    dest[X_AXIS] *= s;
+    dest[Y_AXIS] *= s;
+    dest[Z_AXIS] *= s;
 }
 
 myQuat_t quatConjugate(myQuat_t q)
@@ -74,22 +74,22 @@ myQuat_t deltaQuat(myQuat_t startQ, myQuat_t finalQ)
  */
 void quatMultiplyVec(double *destVec, myQuat_t q, double *v)
 {
-    myQuat_t qOfVec = quatFromValues(0, v[0], v[1], v[2]);
+    myQuat_t qOfVec = quatFromValues(0, v[X_AXIS], v[Y_AXIS], v[Z_AXIS]);
     myQuat_t qConj = quatConjugate(q);
     myQuat_t dest = quatMultiply(q, qOfVec);
     dest = quatMultiply(dest, qConj);
-    destVec[0] = dest.x;
-    destVec[1] = dest.y;
-    destVec[2] = dest.z;
+    destVec[X_AXIS] = dest.x;
+    destVec[Y_AXIS] = dest.y;
+    destVec[Z_AXIS] = dest.z;
 }
 
 myQuat_t quatAngleAxis(double angleRad, double *axis)
 {
     myQuat_t q = quatFromValues(
             cos(angleRad/2),
-            axis[0] * sin(angleRad/2),
-            axis[1] * sin(angleRad/2),
-            axis[2] * sin(angleRad/2)
+            axis[X_AXIS] * sin(angleRad/2),
+            axis[Y_AXIS] * sin(angleRad/2),
+            axis[Z_AXIS] * sin(angleRad/2)
             );
     quatNormalise(&q);
     return q;
@@ -99,7 +99,7 @@ myQuat_t makeQuatFromAngularVelocityTime(double *omega, double dt)
 {
     // we are rotating a number of degrees about an axis;
     double dToRad = PI/180.0;
-    double d[3] = { dToRad*omega[0]*dt,  dToRad*omega[1]*dt,  dToRad*omega[2]*dt };
+    double d[3] = { dToRad*omega[X_AXIS]*dt,  dToRad*omega[Y_AXIS]*dt,  dToRad*omega[Z_AXIS]*dt };
     double angle = vecLength(d);
     double *axis = vecNormalise(d);
     return quatAngleAxis(angle, axis);
@@ -138,9 +138,9 @@ myQuat_t quatFromValues(double w, double x, double y, double z)
         puts("flip?");
     }
     q.w = ww;
-    q.x = w[0];
-    q.y = w[1];
-    q.z = w[2];
+    q.x = w[X_AXIS];
+    q.y = w[Y_AXIS];
+    q.z = w[Z_AXIS];
     q.w += quatLength(q);
     quatNormalise(&q);
     return q;
@@ -173,9 +173,9 @@ myQuat_t quatFrom2Vecs(double *u, double *v)
 	double invs = 1 / s;
 	double c[3];
 	vecCross(c, u, v);
-	q.x = c[0] * invs;
-	q.y = c[1] * invs;
-	q.z = c[2] * invs;
+	q.x = c[X_AXIS] * invs;
+	q.y = c[Y_AXIS] * invs;
+	q.z = c[Z_AXIS] * invs;
 	q.w = s * 0.5f;
     	quatNormalise(&q);
     }
@@ -209,6 +209,13 @@ double qAngle(myQuat_t q)
     return angle;
 }
 
+// magnitude of difference between two orientations
+double quatDiffMagnitude(myQuat_t a, myQuat_t b)
+{
+    myQuat_t dq = deltaQuat(a, b);
+    return qAngle(dq);
+
+}
 
 myQuat_t quatMultiply(myQuat_t q1, myQuat_t q2)
 {
@@ -255,6 +262,68 @@ void quatNormalise(myQuat_t *q)
         q->z = z * len;
     }
 }
+
+bool isQuatValid(myQuat_t q)
+{
+    return (! isnan(q.w));
+}
+
+myQuat_t eulerToQuat(double *ypr)
+{
+    /*
+     * Order is YAW, PITCH then ROLL
+     * roll = φ, pitch = θ, yaw = ψ.
+     * q0 = cos(φ/2)*cos(θ/2)*cos(ψ/2)+sin(φ/2)*sin(θ/2)*sin(ψ/2)
+     * q1 = sin(φ/2)*cos(θ/2)*cos(ψ/2)-cos(φ/2)*sin(θ/2)*sin(ψ/2)
+     * q2 = cos(φ/2)*sin(θ/2)*cos(ψ/2)+sin(φ/2)*cos(θ/2)*sin(ψ/2)
+     * q3 = cos(φ/2)*cos(θ/2)*sin(ψ/2)-sin(φ/2)*sin(θ/2)*cos(ψ/2)
+     */
+
+    // do divisions by 2 once
+    double cosYawOver2 = cos(ypr[YAW] / 2.0);
+    double sinYawOver2 = sin(ypr[YAW] / 2.0);
+ 
+    double cosPitchOver2 = cos(ypr[PITCH] / 2.0);
+    double sinPitchOver2 = sin(ypr[PITCH] / 2.0);
+
+    double cosRollOver2 = cos(ypr[ROLL] / 2.0);
+    double sinRollOver2 = sin(ypr[ROLL] / 2.0);
+
+    double w = cosRollOver2 * cosPitchOver2 * cosYawOver2 + sinRollOver2 * sinPitchOver2 * sinYawOver2;
+    double x = sinRollOver2 * cosPitchOver2 * cosYawOver2 - cosRollOver2 * sinPitchOver2 * sinYawOver2;
+    double y = cosRollOver2 * sinPitchOver2 * cosYawOver2 + sinRollOver2 * cosPitchOver2 * sinYawOver2;
+    double z = cosRollOver2 * cosPitchOver2 * sinYawOver2 - sinRollOver2 * sinPitchOver2 * cosYawOver2;
+    myQuat_t q = quatFromValues(w, x, y, z);
+    quatNormalise(&q);
+    return q;
+}
+
+void quatToEuler(myQuat_t q, double *ypr)
+{
+    quatNormalise(&q);
+    /* gimble lock will be an issue if pointing straight up or straight down...  */
+    double pitchComp = q.w * q.y - q.z * q.x;
+    if (pitchComp > 0.499)
+    {
+        ypr[YAW] = 2 * atan2(q.x, q.w);
+        ypr[PITCH] = PI/2;
+        ypr[ROLL] = 0;
+    }
+    else if (pitchComp < -0.499)
+    {
+        ypr[YAW] = -2 * atan2(q.x, q.w);
+        ypr[PITCH] = PI/2;
+        ypr[ROLL] = 0;
+    }
+    else
+    {
+        double ysqrd = q.y * q.y;
+        ypr[ROLL] = (atan2(2.0 * (q.y * q.z + q.w * q.x), 1 - 2.0 * (q.x * q.x + ysqrd)));
+        ypr[PITCH] = (asin(2.0 * (q.w * q.y - q.z * q.x)));
+        ypr[YAW] = (atan2(2.0 * (q.x * q.y + q.w * q.z), 1 - 2.0 * (ysqrd + q.z * q.z)));
+    }
+}
+
 
 myQuat_t slerp(myQuat_t q1, myQuat_t q2, double t)
 {
