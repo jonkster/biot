@@ -26,6 +26,7 @@ export class Nodes {
     private nodes: any = {};
     private threeD: any = {};
     private showOnlyAddress: any = {};
+    private systemMessageRate: number = 0;
     private wantAll: boolean = true;
 
     private gyro:boolean = true;
@@ -37,7 +38,7 @@ export class Nodes {
     ngOnInit() {
         this.updateData();
         if (! this.savedCalibrationsExist()) {
-            this.readStoredCalibrations();
+            this.readSavedCalibrations();
         }
     }
 
@@ -207,6 +208,13 @@ export class Nodes {
             });
     }
 
+    getMessageRate() {
+        this.biotz.getSystemMessageRate().subscribe( res => {
+            console.log(res);
+            this.systemMessageRate = 1000 * res;
+        });
+    }
+
     identify(addr) {
         this.biotz.identify(addr).subscribe();
     }
@@ -222,7 +230,15 @@ export class Nodes {
         }
     }
 
-    readStoredCalibrations() {
+    // normally only needed on start up, reads data from cache on PC
+    readSavedCalibration(address) {
+        this.biotz.getCachedCalibration(address).subscribe( res => {
+            this.savedCalibrations[address] = res;
+        });
+    }
+
+    // normally only needed on start up, reads data from cache on PC
+    readSavedCalibrations() {
         var knownAddresses = [];
         this.biotz.getCachedCalibrationAddresses()
             .subscribe(addresses => {
@@ -230,9 +246,7 @@ export class Nodes {
                 for (var i = 0; i < knownAddresses.length; i++) {
                     var addr = knownAddresses[i];
                     (function(a, obj) {
-                        obj.biotz.getCachedCalibration(a).subscribe( res => {
-                            obj.savedCalibrations[a] = res;
-                        });
+                        obj.readSavedCalibration(a);
                     })(addr, this);
                 }
             });
@@ -254,6 +268,21 @@ export class Nodes {
         return this.nodeColours[addr];
     }
 
+    resetCalibration(addr) {
+        this.biotz.resetCalibrationOnNode(addr).subscribe( res => {
+            console.log('reset', res);
+        });
+    }
+
+
+    saveCalibration(addr, cal) {
+        this.biotz.putCalibrationsToCache(addr, cal)
+            .subscribe(res => {
+                console.log(addr, "measured calibrations should now be saved to cache");
+                this.savedCalibrations[addr] = this.biotzCalibration[addr];
+            });
+    }
+
     // store currently measured calibrations in cache for later use
     saveCalibrations() {
          var addresses = Object.keys(this.biotzCalibration);
@@ -261,11 +290,7 @@ export class Nodes {
              var address = addresses[i];
              (function(a, obj) {
                 var cal = obj.biotzCalibration[a];
-                 obj.biotz.putCalibrationsToCache(a, cal)
-                     .subscribe(res => {
-                         console.log(address, "measured calibrations should now be saved to cache");
-                         obj.savedCalibrations[a] = obj.biotzCalibration[a];
-                     });
+                obj.saveCalibration(a, cal);
              })(address, this)
          }
 
@@ -273,6 +298,13 @@ export class Nodes {
 
     savedCalibrationsExist() {
         return (Object.keys(this.savedCalibrations).length > 0);
+    }
+
+    sendCalibration(addr, cal) {
+        this.biotz.putCalibrationToNode(addr, cal)
+            .subscribe(res => {
+                console.log(addr, "node should now have previously cached calibration", cal);
+            });
     }
 
     // send cached calibrations to nodes
@@ -335,9 +367,9 @@ export class Nodes {
     }
 
     updateData() {
-        if (this.counter % 2 == 0)
-            this.getData();
-        else if (this.counter % 21 == 0) {
+        this.getData();
+        if (this.counter % 21 == 0) {
+            this.getMessageRate();
             for (var i = 0; i < this.biotzData.count; i++) {
                 var addr = this.biotzData.nodes[i].address;
                 this.getNodeCalibration(addr);

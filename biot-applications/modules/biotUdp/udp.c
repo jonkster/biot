@@ -22,7 +22,7 @@
 #define STR(x) #x
 
 
-#define MUDP_Q_SZ           (4)
+#define MUDP_Q_SZ           (64)
 #define SERVER_BUFFER_SIZE  (256)
 #define UDP_PORT            (8888)
 
@@ -31,9 +31,18 @@ extern void setCurrentTime(uint32_t t);
 
 static int serverSocket = -1;
 struct sockaddr_in6 serverSocketAddr;
+
+// define some variables globally here to keep them off the stack
 static char serverBuffer[SERVER_BUFFER_SIZE];
-static char gpTextBuf[25];
+static char gpTextBuf[30];
 static msg_t msg_q[MUDP_Q_SZ];
+static char json[MAX_MESSAGE_LENGTH];
+static char srcAdd[IPV6_ADDR_MAX_STR_LEN];
+static char selfAdd[IPV6_ADDR_MAX_STR_LEN];
+struct in6_addr srcSocketAddr; 
+
+uint32_t messagesRelayed = 0;
+uint32_t startTime = 0;
 
 #ifdef MAX_NODES
     char nodeData[MAX_NODES][IPV6_ADDR_MAX_STR_LEN];
@@ -41,7 +50,7 @@ static msg_t msg_q[MUDP_Q_SZ];
 
 char dataDestAdd[IPV6_ADDR_MAX_STR_LEN];
 
-bool relayData(char * destAdd, char *srcAdd, char *type, char *val);
+bool relayDataToBroker(char * destAdd, char *srcAdd, char *type, char *val);
 
 bool setupUdpServer(void)
 {
@@ -166,12 +175,12 @@ void actOnUdpRequests(int res, char *srcAdd, char* selfAdd)
     else if (strncmp(serverBuffer, "data:", 5) == 0)
     {
         // pass node's data to the current data destination
-        relayData(dataDestAdd, srcAdd, "dat", serverBuffer+5);
+        relayDataToBroker(dataDestAdd, srcAdd, "dat", serverBuffer+5);
     }
     else if (strncmp(serverBuffer, "calib:", 6) == 0)
     {
         // pass node's calibration to the current data destination
-        relayData(dataDestAdd, srcAdd, "cal", serverBuffer+6);
+        relayDataToBroker(dataDestAdd, srcAdd, "cal", serverBuffer+6);
     }
     else if (strcmp(serverBuffer, "get-cal") == 0)
     {
@@ -239,6 +248,12 @@ void actOnUdpRequests(int res, char *srcAdd, char* selfAdd)
     }
 }
 
+double getMessageRate(void)
+{
+    uint32_t dt = xtimer_now() - startTime;
+    return (1000000 * messagesRelayed)/dt;
+}
+
 int udpSend(char *addrStr, char *data)
 {
     size_t dataLen = strlen(data);
@@ -265,10 +280,12 @@ int udpSend(char *addrStr, char *data)
             close(s);
             return 1;
         }
-
         //printf("Success: send %u byte(s) to %s:%u\n", (unsigned)dataLen, addrStr, UDP_PORT);
-
         close(s);
+        /*if (! streq(dataDestAdd, addr))
+        {
+            messagesRelayed++;
+        }*/
     }
     else
     {
@@ -295,11 +312,8 @@ void udpGetRequestAndAct(void)
     //printf("w%lu\n", xtimer_now() - waitTimer);
 
     // get strings represnting source and server ipv6 addresses
-    struct in6_addr srcSocketAddr = src.sin6_addr; 
-    char srcAdd[IPV6_ADDR_MAX_STR_LEN];
+    srcSocketAddr = src.sin6_addr; 
     inet_ntop(AF_INET6, &(srcSocketAddr.s6_addr), srcAdd, IPV6_ADDR_MAX_STR_LEN);
-
-    char selfAdd[IPV6_ADDR_MAX_STR_LEN];
     inet_ntop(AF_INET6, &(serverSocketAddr.sin6_addr), selfAdd, IPV6_ADDR_MAX_STR_LEN);
 
     if (res < 0)
@@ -318,7 +332,6 @@ void udpGetRequestAndAct(void)
         puts("OVERFLOW!");
         return;
     }
-
     actOnUdpRequests(res, srcAdd, selfAdd);
 }
 
@@ -339,11 +352,10 @@ void *udpServer(void *arg)
     }
 }
 
-bool relayData(char * destAdd, char *srcAdd, char *type, char *val)
+bool relayDataToBroker(char * destAdd, char *srcAdd, char *type, char *val)
 {
     if (strlen(destAdd) > 0)
     {
-        char json[MAX_MESSAGE_LENGTH];
         sprintf(json, "{\"t\":\"%s\",\"s\":\"%s\",\"v\":\"%s\"}", type, srcAdd, val);
         udpSend(destAdd, json);
         return true;
@@ -367,8 +379,9 @@ void initUdp(void)
     {
         memset(nodeData[i], 0, IPV6_ADDR_MAX_STR_LEN);
     }
-#endif
     msg_init_queue(msg_q, MUDP_Q_SZ);
+#endif
+    startTime = xtimer_now();
 }
 
 int udp_cmd(int argc, char **argv)

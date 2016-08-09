@@ -4,7 +4,7 @@ APPLICATION = BIOT-Router
 # If no BOARD is found in the environment, use this default:
 BOARD ?= samr21-zllk
 
-CFLAGS += -DMAX_NODES=50
+CFLAGS += -DMAX_NODES=20
 
 # This has to be the absolute path to the RIOT base directory:
 RIOTBASE ?= $(CURDIR)/../../../RIOT
@@ -81,5 +81,7 @@ LINKFLAGS += -Wl,--no-wchar-size-warning
 
 # Change this to 0 show compiler invocation lines by default:
 QUIET ?= 1
+
+#CFLAGS += -DDEVELHELP -DNDEBUG # uncomment to allow detailed ps info
 
 include $(RIOTBASE)/Makefile.include

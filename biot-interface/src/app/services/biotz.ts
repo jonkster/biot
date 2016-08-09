@@ -43,6 +43,11 @@ export class Biotz {
     return result;
   }
 
+  getSystemMessageRate() {
+    var result = this.makeBrokerRequest('system/mrate');
+    return result;
+  }
+
   private handleError (error: any) {
       let errMsg = (error.message) ? error.message :
           error.status ? `${error.status} - ${error.statusText}` : 'Server error';
@@ -97,6 +102,13 @@ export class Biotz {
       }
 
       var path = 'biotz/addresses/' + addr + '/sensors/' + data;
+      var url = "http://localhost:8889/" + path ;
+      return this.http.put(url, 'where_is_this?')
+          .map((response) => response.json());
+  }
+
+  resetCalibrationOnNode(addr) {
+      var path = 'biotz/addresses/' + addr + '/calibration/0:0:0:0:0:0';
       var url = "http://localhost:8889/" + path ;
       return this.http.put(url, 'where_is_this?')
           .map((response) => response.json());

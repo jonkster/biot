@@ -25,7 +25,7 @@
 
 #define PRIO    (THREAD_PRIORITY_MAIN + 1)
 static char housekeeping_stack[THREAD_STACKSIZE_DEFAULT];
-static char udp_stack[THREAD_STACKSIZE_DEFAULT+1024];
+static char udp_stack[THREAD_STACKSIZE_DEFAULT+512];
 
 char dodagRoot[] = "affe::2";
 bool udpOK = false;
@@ -128,12 +128,12 @@ void setRoot(void)
 void *housekeeping_handler(void *arg)
 {
     uint32_t lastSecs = 0;
-    
+    uint32_t ct;
+    uint32_t secs;
     while(1)
     {
-
-        uint32_t ct = getCurrentTime();
-        uint32_t secs = ct/1500000;
+        ct = getCurrentTime();
+        secs = ct/1500000;
         if (secs != lastSecs)
         {
             if (isRootPending)
@@ -166,7 +166,7 @@ int main(void)
 
     thread_create(housekeeping_stack, sizeof(housekeeping_stack), PRIO, THREAD_CREATE_STACKTEST, housekeeping_handler, NULL, "housekeeping");
 
-    thread_create(udp_stack, sizeof(udp_stack), PRIO, THREAD_CREATE_STACKTEST, udpServer, NULL, "udp");
+    thread_create(udp_stack, sizeof(udp_stack), PRIO, THREAD_CREATE_STACKTEST, udpServer, NULL, "biotudp");
 
 
     batch(shell_commands, "rpl init 6");

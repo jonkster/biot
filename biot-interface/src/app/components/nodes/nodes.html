@@ -5,6 +5,7 @@
 
     <hr/>
     <div>Biotz Nodes detected: {{ getDetectedAddresses().length }} <button [disabled]="wantAll" (click)="showAll(true);">Show All</button></div> 
+    <div>Message rate: {{ systemMessageRate | number:'1.1-2' }} req/sec</div>
     <div myThreeD>
     </div>
     <hr/>
@@ -15,20 +16,22 @@
     <table>
         <thead>
             <tr>
+                <td>&nbsp;</td>
                 <th>Biotz Address</th>
-                <th>timestamp</th>
+                <th>Timestamp</th>
                 <th>w</th>
                 <th>x</th>
                 <th>y</th>
                 <th>z</th>
-                <th>status</th>
-                <th>cals</th>
-                <th>saved cals</th>
-                <th>Identify</th>
+                <th>Status</th>
+                <th>Node calibration</th>
+                <th>Calibration control</th>
+                <th>Saved calibration</th>
             </tr>
         </thead>
         <tbody>
             <tr *ngFor="let address of getVisibleAddresses()">
+                <td><button (click)="identify(address)">Identify</button></td>
                 <td (click)="toggleShowAll(address)"><span [style.background]="'#' + getNodeColour(address)">&nbsp;&nbsp;</span>{{ address }}</td>
                 <td>{{ getBiotProperty(address,'time') }}</td>
                 <td>{{ getBiotProperty(address,'w') }}</td>
@@ -37,10 +40,12 @@
                 <td>{{ getBiotProperty(address,'z') }}</td>
                 <td>{{ getBiotProperty(address,'status') }}</td>
                 <td>{{ getBiotProperty(address,'calibration') }}</td>
-                <td>{{ getBiotProperty(address,'savedCals') }}</td>
                 <td>
-                    <button (click)="identify(address)">Identify</button>
+                    <button (click)="resetCalibration(address)">Reset Calibration</button>
+                    <button (click)="saveCalibration(address, getBiotProperty(address,'calibration'))">node -&gt; saved cal</button>
+                    <button (click)="sendCalibration(address, savedCalibrations[address])">node &lt;- saved cal</button>
                 </td>
+                <td>{{ getBiotProperty(address,'savedCals') }}</td>
             </tr>
         </tbody>
     </table>

@@ -13,12 +13,17 @@ var BROKER_HOST = 'localhost';
 var dgram = require('dgram');
 var dataPath = './data';
 
+var messagesFromRouter = 0;
+
+
+var startTime = 0;
 
 // Listen to Biotz Router device
 var brokerUdpListener = dgram.createSocket('udp6');
 brokerUdpListener.on('listening', function () {
     var address = brokerUdpListener.address();
     console.log('UDP Server listening on ' + address.address + ":" + address.port);
+    startTime = new Date();
     sendBiotzRouterMessage();
 });
 
@@ -28,6 +33,8 @@ var nodeStatus = {};
 
 // received an update message - store info
 brokerUdpListener.on('message', function (message, remote) {
+    messagesFromRouter++;
+
     if (message.length > 0)
     {
         try {
@@ -66,6 +73,8 @@ brokerListener.get('/data/addresses', getCachedAddresses);
 brokerListener.get('/data/addresses/:address/calibration', getCachedCalibration);
 
 brokerListener.put('/data/addresses/:address/calibration/:data', putCachedCalibration);
+
+brokerListener.get('/system/mrate', getSystemMessageRate);
 
 
 brokerListener.listen(BROKER_HTTP_PORT, BROKER_HOST, function() {
@@ -401,6 +410,16 @@ function getCachedCalibration(req, res, next) {
     });
 }
 
+function getSystemMessageRate(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*"); 
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+    res.setHeader('Content-Type', 'application/json');
+    var now = new Date();
+    var messageRate = messagesFromRouter/(now - startTime);
+    res.send(200, messageRate);
+    next();
+}
+
 function putBiotCalibration(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*"); 
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
@@ -413,6 +432,7 @@ function putBiotCalibration(req, res, next) {
     var client = dgram.createSocket('udp6');
 
     client.send(message, 0, message.length, BIOTZ_UDP_PORT, BIOTZ_ROUTER_HOST, function(err, bytes) {
+        console.log('put cal', address, data, err);
         if (err) {
             console.log('Error:', err);
             res.send(500, err);
@@ -481,30 +501,33 @@ function putCachedCalibration(req, res, next) {
 }
 
 
+var xx = 0;
 // send message to Biotz Router device
 function sendBiotzRouterMessage() {
-    var message = new Buffer('get-data');
-    var client1 = dgram.createSocket('udp6');
+    if (xx++ % 15 == 0) {
+        var message = new Buffer('get-data');
+        var client1 = dgram.createSocket('udp6');
 
-    // ask for update on node data knowledge
-    client1.send(message, 0, message.length, BIOTZ_UDP_PORT, BIOTZ_ROUTER_HOST, function(err, bytes) {
-        if (err)
-        {
-            console.log('Error:', err);
-        }
-        client1.close();
-    });
+        // ask for update on node data knowledge
+        client1.send(message, 0, message.length, BIOTZ_UDP_PORT, BIOTZ_ROUTER_HOST, function(err, bytes) {
+            if (err)
+            {
+                console.log('Error:', err);
+            }
+            client1.close();
+        });
 
-    // ask for update on node calibration knowledge
-    message = new Buffer('get-cal');
-    client2 = dgram.createSocket('udp6');
-    client2.send(message, 0, message.length, BIOTZ_UDP_PORT, BIOTZ_ROUTER_HOST, function(err, bytes) {
-        if (err)
-        {
-            console.log('Error:', err);
-        }
-        client2.close();
-    });
+        // ask for update on node calibration knowledge
+        message = new Buffer('get-cal');
+        client2 = dgram.createSocket('udp6');
+        client2.send(message, 0, message.length, BIOTZ_UDP_PORT, BIOTZ_ROUTER_HOST, function(err, bytes) {
+            if (err)
+            {
+                console.log('Error:', err);
+            }
+            client2.close();
+        });
+    }
 }
 
 
