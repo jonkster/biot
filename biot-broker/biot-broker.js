@@ -504,7 +504,7 @@ function putCachedCalibration(req, res, next) {
 var xx = 0;
 // send message to Biotz Router device
 function sendBiotzRouterMessage() {
-    if (xx++ % 15 == 0) {
+    if (xx++ % 100 == 0) {
         var message = new Buffer('get-data');
         var client1 = dgram.createSocket('udp6');
 
