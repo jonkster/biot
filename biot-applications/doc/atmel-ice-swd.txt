@@ -1,0 +1,26 @@
+Eg to connect to ATSAMR21B18-MZ210AT board
+
+Use the 10 pin 50mil header with the loose flying leads.
+
+Connect the leads as follows:
+
+Name    ICE flylead     Description
+------------------------------------------------------------------------
+SWDCLK  4               Serial Wire Debug Clock.
+SWDIO   2               Serial Wire Debug Data Input/Output.
+SWO     NC              Serial Wire Output - not implemented on ATSAMR21B18 board)
+nSRST   10              Reset.
+VTG     4               Target voltage reference.
+GND     3, 5            Ground.
+
+To program the board, use the standard RIOT 'make flash'.
+
+Make sure only the ATMEL-ICE device has a USB connection (ie no other boards
+using USB/EDBG like the ATSAMR21-XPRO or ZLL-EK boards)  as I suspect it may
+try and program the USB connected devices(? not sure though - there may be ways
+to specify the ICE programmer)
+
+
+
+
+

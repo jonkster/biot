@@ -1,0 +1,38 @@
+Debugging using ICE
+
+Connect the ATMEL-ICE device to the board.
+
+1. start openocd (openocd -f openocd.cfg)
+
+2. start gdb
+   arm-none-eabi-gdb -tui ../bin/samXXX/YYY.elf
+
+   (this will open up 'tui' a "text gui" interface to gdb)
+
+3. now while in tui (or gdb), target the remote board via openocd   
+
+    target remote localhost:3333
+
+    to start program running:
+        continue
+
+    to reset cpu:
+         monitor reset init
+
+    other bits:
+        monitor resume (starts it running)
+        monitor halt (stops it)
+
+    show file:
+        list main.c:1
+
+    set breakpoint(s)
+        b main.c:35
+    
+    show breakpoints:
+        i b
+
+    dump trace of stack after crash:
+        bt
+
+
