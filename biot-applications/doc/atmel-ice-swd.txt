@@ -10,8 +10,10 @@ SWDCLK  4               Serial Wire Debug Clock.
 SWDIO   2               Serial Wire Debug Data Input/Output.
 SWO     NC              Serial Wire Output - not implemented on ATSAMR21B18 board)
 nSRST   10              Reset.
-VTG     4               Target voltage reference.
-GND     3, 5            Ground.
+VTG     1               Target voltage reference.
+GND     3,5,9           Ground.
+------------------------------------------------------------------------
+(see page 22 atmel-42330-atmel-ice_userguide.pdf)
 
 To program the board, use the standard RIOT 'make flash'.
 
