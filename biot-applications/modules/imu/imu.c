@@ -530,7 +530,7 @@ bool validIMUData(imuData_t imuData)
     }
     if ((imuData.gyro.x_axis == 0) && (imuData.gyro.y_axis == 0) && (imuData.gyro.z_axis == 0))
     {
-        return false;
+        // potentially valid?...
     }
     return true;
 }
