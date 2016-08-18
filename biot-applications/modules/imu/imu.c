@@ -29,21 +29,21 @@ bool useMagnetometers = true;
 bool useGyroscopes = true;
 
 
-uint16_t aFsrRange2Int(mpu9150_accel_ranges_t fsr)
+uint16_t aFsrRange2Int(mpu9250_accel_ranges_t fsr)
 {
     uint16_t rate = 0;
     switch(fsr)
     {
-        case MPU9150_ACCEL_FSR_2G:
+        case MPU9250_ACCEL_FSR_2G:
             rate = 2;
             break;
-        case MPU9150_ACCEL_FSR_4G:
+        case MPU9250_ACCEL_FSR_4G:
             rate = 4;
             break;
-        case MPU9150_ACCEL_FSR_8G:
+        case MPU9250_ACCEL_FSR_8G:
             rate = 8;
             break;
-        case MPU9150_ACCEL_FSR_16G:
+        case MPU9250_ACCEL_FSR_16G:
             rate = 16;
             break;
     }
@@ -52,7 +52,7 @@ uint16_t aFsrRange2Int(mpu9150_accel_ranges_t fsr)
 
 
 
-void displayConfiguration(mpu9150_t dev)
+void displayConfiguration(mpu9250_t dev)
 {
     printf("+------------Configuration------------+\n");
     printf("Sample rate: %u Hz\n", dev.conf.sample_rate);
@@ -95,21 +95,21 @@ void displayData(imuData_t data)
             data.temperature);
 }
 
-uint16_t gFsrRange2Int(mpu9150_gyro_ranges_t fsr)
+uint16_t gFsrRange2Int(mpu9250_gyro_ranges_t fsr)
 {
     uint16_t rate = 0;
     switch(fsr)
     {
-        case MPU9150_GYRO_FSR_250DPS:
+        case MPU9250_GYRO_FSR_250DPS:
             rate = 250;
             break;
-        case MPU9150_GYRO_FSR_500DPS:
+        case MPU9250_GYRO_FSR_500DPS:
             rate = 500;
             break;
-        case MPU9150_GYRO_FSR_1000DPS:
+        case MPU9250_GYRO_FSR_1000DPS:
             rate = 1000;
             break;
-        case MPU9150_GYRO_FSR_2000DPS:
+        case MPU9250_GYRO_FSR_2000DPS:
             rate = 2000;
             break;
     }
@@ -121,15 +121,25 @@ void forceReorientation(void)
     magValid = 0;
 }
 
-bool getIMUData(mpu9150_t dev, imuData_t *data)
+bool getIMUData(mpu9250_t dev, imuData_t *data)
 {
     data->ts = xtimer_now64() - t0;
-    mpu9150_read_accel(&dev, &data->accel);
-    mpu9150_read_gyro(&dev, &data->gyro);
-    mpu9150_read_compass(&dev, &data->mag);
+    if (mpu9250_read_accel(&dev, &data->accel))
+    {
+        return false;
+    }
+    if (mpu9250_read_gyro(&dev, &data->gyro))
+    {
+        return false;
+    }
+    if (mpu9250_read_compass(&dev, &data->mag))
+    {
+        return false;
+    }
+
     imuCalibrate(data);
     int32_t rawTemp;
-    mpu9150_read_temperature(&dev, &rawTemp);
+    mpu9250_read_temperature(&dev, &rawTemp);
     data->temperature = rawTemp/1000; // approx temperature in degrees C
 
     return true;
@@ -167,37 +177,6 @@ void imuCalibrate(imuData_t *data)
 
     setMagCalibration(magMinMax);
 }
-
-/*myQuat_t rollPitchYawToQ(double *ypr)
-{
-    double c1 = cos(ypr[Z_AXIS]);
-    double s1 = sin(ypr[Z_AXIS]);
-    double c2 = cos(ypr[Y_AXIS]);
-    double s2 = sin(ypr[Y_AXIS]);
-    double c3 = cos(ypr[X_AXIS]);
-    double s3 = sin(ypr[X_AXIS]);
-    myQuat_t q;
-
-    q.w = sqrt(1.0 + c1 * c2 + c1*c3 - s1 * s2 * s3 + c2*c3) / 2.0;
-    double w4 = (4.0 * q.w);
-    q.x = (c2 * s3 + c1 * s3 + s1 * s2 * c3) / w4 ;
-    q.y = (s1 * c2 + s1 * c3 + c1 * s2 * s3) / w4 ;
-    q.z = (-s1 * s3 + c1 * s2 * c3 +s2) / w4 ;
-    return q;
-}*/
-
-
-/*myQuat_t magToQuat(double *mag)
-{
-    double worldNorth[3] = { 1.0, 0, 0 };
-    double angle = acos(vecDot(mag, worldNorth));
-
-    double vec[3];
-    vecCross(vec, mag, worldNorth);
-    vecNormalise(vec);
-
-    return quatAngleAxis(angle, vec);
-}*/
 
 bool oppositeSign(double a, double b)
 {
@@ -249,26 +228,37 @@ myQuat_t adjustForCongruence(myQuat_t measuredQ, myQuat_t deducedQ)
     return measuredQ;
 }
 
-myQuat_t getPosition(mpu9150_t dev)
+myQuat_t getPosition(mpu9250_t dev)
 {
     imuData_t imuData;
     if (getIMUData(dev, &imuData))
     {
         if (! validIMUData(imuData))
         {
+            puts("invalid IMU data");
             if (failureCount++ > 20)
             {
-                puts("Error in IMU, restarting!\n");
-                identifyYourself("imu failure");
+                puts("Error in IMU, restarting!");
+                identifyYourself("IMU failure");
                 if (! initialiseIMU(&dev))
                 {
-                    puts("Could not initialise IMU!\n");
+                    puts("Could not initialise IMU! dying...");
                     exit(1);
                 }
             }
             return currentQ;
         }
         failureCount = 0;
+
+        /************************************************************************
+         * Get Gyro data that records current angular velocity and create an
+         * estimated quaternion representation of orientation using this
+         * velocity, the time interval between the last calculation and the
+         * previous orientation:
+         * change in position = velocity * time,
+         * new position = old position + change in position)
+         ************************************************************************/
+
         // get orientation as deduced by adding gyro measured rotational
         // velocity (times time interval) to previous orientation.
         double gx1 = (double)(imuData.gyro.x_axis);
@@ -277,6 +267,7 @@ myQuat_t getPosition(mpu9150_t dev)
         double omega[3] = { gx1, gy1, gz1 }; // this will be in degrees/sec
 
         uint32_t dt = imuData.ts - lastIMUData.ts; // dt in microseconds
+        lastIMUData = imuData;
         myQuat_t gRot = makeQuatFromAngularVelocityTime(omega, dt/1000000.0);
         myQuat_t gyroDeducedQ =  quatMultiply(currentQ, gRot);
         quatNormalise(&gyroDeducedQ);
@@ -285,33 +276,62 @@ myQuat_t getPosition(mpu9150_t dev)
             makeIdentityQuat(&gyroDeducedQ);
         }
 
+        if (! (useAccelerometers | useMagnetometers))
+        {
+            // return now with just the gyro data
+            currentQ = gyroDeducedQ;
+            lastIMUData = imuData;
+            return currentQ;
+        }
+
         // get orientation from the gyro as Roll Pitch Yaw (ie Euler angles)
         double gyroDeducedYPR[3];
         quatToEuler(gyroDeducedQ, gyroDeducedYPR);
+        double currentYPR[3];
+        quatToEuler(currentQ, currentYPR);
+
+
+        // Calculate a roll/pich/yaw from the accelerometers and magnetometers.
+
+        /************************************************************************
+         * Get Accelerometer data that records gravity direction and create a
+         * 'measured' Quaternion representation of orientation (will only be
+         * pitch and roll, not yaw)
+         ************************************************************************/
 
         // get gravity direction from accelerometer
         double ax1 = imuData.accel.x_axis / 1024.0;
         double ay1 = imuData.accel.y_axis / 1024.0;
         double az1 = imuData.accel.z_axis / 1024.0;
         double downSensor[3] = { ax1, ay1, az1 };
-        if (fabs(vecLength(downSensor) - 1) > 0.2)
+        if (fabs(vecLength(downSensor) - 0.98) > 0.5)
         {
             // excessive accelerometer reading, bail out
+            //printf("too much accel: %f ", fabs(vecLength(downSensor)));
+            //dumpVec(downSensor);
             currentQ = gyroDeducedQ;
             lastIMUData = imuData;
             return currentQ;
         }
         vecNormalise(downSensor);
 
-        // Calculate a roll/pich/yaw from the accelerometers and magnetometers.
-     
-    
         // The accelerometers can only measure pitch and roll (in the world reference
         // frame), calculate the pitch and roll values to account for
         // accelerometer readings, make yaw = 0.
+
         double ypr[3];
-        ypr[ROLL] = atan2(downSensor[Y_AXIS], downSensor[Z_AXIS]);
-        ypr[PITCH] = -atan2(downSensor[X_AXIS], sqrt(downSensor[Y_AXIS]*downSensor[Y_AXIS] + downSensor[Z_AXIS]*downSensor[Z_AXIS]));
+        double downX = downSensor[X_AXIS];
+        double downY = downSensor[Y_AXIS];
+        double downZ = downSensor[Z_AXIS];
+
+        // add a little X into Z when calculating roll to compensate for
+        // situations when pitching near vertical as Y, Z will be near 0 and
+        // the results will be unstable
+        double fiddledDownZ = sqrt(downZ*downZ + 0.001*downX*downX);
+        if (downZ <= 0) // compensate for loss of sign when squaring Z
+            fiddledDownZ *= -1.0;
+        ypr[ROLL] = atan2(downY, fiddledDownZ);
+        ypr[PITCH] = -atan2(downX, sqrt(downY*downY + downZ*downZ));
         ypr[YAW] = 0;  // yaw == 0, accelerometer cannot measure yaw
         if (! useAccelerometers) 
         {
@@ -319,11 +339,30 @@ myQuat_t getPosition(mpu9150_t dev)
             // derived orientation
             ypr[PITCH] = gyroDeducedYPR[PITCH];
             ypr[ROLL] = gyroDeducedYPR[ROLL];
-            ypr[YAW] = 0;
+            ypr[YAW] = gyroDeducedYPR[YAW];
+        }
+        else if (vecLength(downSensor) == 0)
+        {
+            puts("weightless?");
+            // something wrong! - weightless??
+            ypr[PITCH] = gyroDeducedYPR[PITCH];
+            ypr[ROLL] = gyroDeducedYPR[ROLL];
+            ypr[YAW] = gyroDeducedYPR[YAW];
+        }
+
+        if (! useMagnetometers)
+        {
+            ypr[YAW] = gyroDeducedYPR[YAW];
         }
         myQuat_t accelQ = eulerToQuat(ypr);
         myQuat_t invAccelQ = quatConjugate(accelQ);
 
+
+        /************************************************************************
+         * Get Magnetometer data that records north direction and create a
+         * 'measured' Quaternion representation of orientation (will only be
+         * yaw)
+         ************************************************************************/
 
         // get magnetometer indication of North
         double mx1 = (double)(imuData.mag.x_axis - magHardCorrection[X_AXIS]);
@@ -332,21 +371,23 @@ myQuat_t getPosition(mpu9150_t dev)
         mx1 *= magSoftCorrection[X_AXIS];
         my1 *= magSoftCorrection[Y_AXIS];
         mz1 *= magSoftCorrection[Z_AXIS];
-        // NB MPU9150 has different XYZ axis for magnetometers than for gyros
+        // NB MPU9250 has different XYZ axis for magnetometers than for gyros
         // and accelerometers so juggle x,y,z here...
         double magV[3] = { my1, mx1, -mz1 };
         vecNormalise(magV);
         // make quaternion representing mag readings
         myQuat_t magQ = quatFromValues(0, magV[X_AXIS], magV[Y_AXIS], magV[Z_AXIS]);
+        if (vecLength(magV) == 0)
+        {
+            // something wrong! - no magnetic field??
+            //puts("not on earth?");
+            magQ = quatFromValues(1, 0, 0, 0);
+        }
 
         // the magnetometers can only measure yaw (in the world reference
         // frame), adjust the yaw of the roll/pitch/yaw values calculated
         // earlier to account for the magnetometer readings.
-        if (! useMagnetometers) 
-        {
-            ypr[YAW] = gyroDeducedYPR[Z_AXIS];
-        }
-        else
+        if (useMagnetometers) 
         {
             // pitch and roll the mag direction using accelerometer info to
             // create a quaternion that represents the IMU as if it was
@@ -355,7 +396,7 @@ myQuat_t getPosition(mpu9150_t dev)
             horizQ = quatMultiply(horizQ, invAccelQ);
 
             // calculate pure yaw
-            ypr[YAW] = fabs(atan2(horizQ.y, horizQ.x));
+            ypr[YAW] = -atan2(horizQ.y, horizQ.x);
         }
 
         // measuredQ is the orientation as measured using the
@@ -365,39 +406,57 @@ myQuat_t getPosition(mpu9150_t dev)
         // due to a 360d alias flip) and adjust if problem...
         measuredQ = adjustForCongruence(measuredQ, gyroDeducedQ);
 
+        /*************************************************************************
+         * The gyro estimated orientation will be smooth and precise over short
+         * time intervals but small errors will accumulate causing it to
+         * drift over time.  The 'measured' orientation as obtained from the
+         * magnetometer and accelerometer will be jumpy but will always average
+         * around the correct orientation.
+         *
+         * Take the mag and accel 'measured' orientation and the gyro
+         * 'estimated' orientation and create a new 'current' orientation that
+         * is the estimated orientation corrected slightly towards the measured
+         * orientation.  That way we get the smooth precision of the gyros but
+         * eliminate the accumulation of drift errors.
+         ************************************************************************/
+
         if (useGyroscopes)
         {
             // the new orientation is the gyro deduced position corrected
-            // towards the accel/mag measured position
+            // towards the accel/mag measured position using interpolation
+            // between quaternions.
             currentQ = slerp(gyroDeducedQ, measuredQ, 0.2);
         }
         else
         {
             currentQ = measuredQ;
         }
+
+
+        if (! isQuatValid(currentQ))
+        {
+            puts("error in quaternion, reseting orientation...");
+            displayData(imuData);
+            dumpQuat(currentQ);
+            makeIdentityQuat(&currentQ);
+        }
     }
-    if (! isQuatValid(currentQ))
-    {
-        puts("error in quaternion, reseting orientation...");
-        makeIdentityQuat(&currentQ);
-    }
-    lastIMUData = imuData;
     return currentQ;
 }
 
-void initialisePosition(mpu9150_t *dev)
+void initialisePosition(void)
 {
     makeIdentityQuat(&currentQ);
 }
 
 
 
-bool initialiseIMU(mpu9150_t *dev)
+bool initialiseIMU(mpu9250_t *dev)
 {
     int result;
 
     printf("+------------Initializing------------+\n");
-    result = mpu9150_init(dev, I2C_0, MPU9150_HW_ADDR_HEX_68, MPU9150_COMP_ADDR_HEX_0C);
+    result = mpu9250_init(dev, I2C_0, MPU9250_HW_ADDR_HEX_68, MPU9250_COMP_ADDR_HEX_0C);
 
     if (result == -1) {
         puts("[Error] The given i2c is not enabled");
@@ -408,7 +467,7 @@ bool initialiseIMU(mpu9150_t *dev)
         return false;
     }
 
-    result = mpu9150_set_gyro_fsr(dev, GFSR);
+    result = mpu9250_set_gyro_fsr(dev, GFSR);
     if (result == -1) {
         puts("[Error] The given i2c is not enabled");
         return false;
@@ -418,7 +477,7 @@ bool initialiseIMU(mpu9150_t *dev)
         return false;
     }
 
-    result = mpu9150_set_accel_fsr(dev, AFSR);
+    result = mpu9250_set_accel_fsr(dev, AFSR);
     if (result == -1) {
         puts("[Error] The given i2c is not enabled");
         return false;
@@ -428,18 +487,18 @@ bool initialiseIMU(mpu9150_t *dev)
         return false;
     }
 
-    mpu9150_set_sample_rate(dev, GA_SAMPLE_RATE_HZ);
+    mpu9250_set_sample_rate(dev, GA_SAMPLE_RATE_HZ);
     uint16_t gaSampleRate = dev->conf.sample_rate;
     printf("G+A sample rate set to: %u (requested rate was %u)\n", gaSampleRate, GA_SAMPLE_RATE_HZ);
 
-    mpu9150_set_compass_sample_rate(dev, C_SAMPLE_RATE_HZ);
+    mpu9250_set_compass_sample_rate(dev, C_SAMPLE_RATE_HZ);
     uint16_t cSampleRate = dev->conf.compass_sample_rate;
     printf("Compass sample rate set to: %u (requested rate was %u)\n", cSampleRate, C_SAMPLE_RATE_HZ);
     printf("Initialization successful\n\n");
 
     t0 = xtimer_now64();
 
-    initialisePosition(dev);
+    initialisePosition();
     return true;
 }
 
@@ -457,7 +516,11 @@ void setMagCalibration(int16_t *cal)
     // and calculate an 'average centre'.
 
     for (uint8_t i = 0; i < 3; i++)
+    {
         magHardCorrection[i] = (magMinMax[i] + magMinMax[i+3])/2;
+        if (isnan(magHardCorrection[i]))
+            magHardCorrection[i] = 0;
+    }
 
     // Soft corrections - try and reduce elongations along x,y,z
     // axis to make the data fit closer to a sphere (this is a bit of a quick and
@@ -485,6 +548,8 @@ void setMagCalibration(int16_t *cal)
     for (uint8_t i = 0; i < 3; i++)
     {
         magSoftCorrection[i] = averageRadius/avg[i];
+        if (isnan(magSoftCorrection[i]))
+            magSoftCorrection[i] = 0;
     }
 }
 
@@ -522,11 +587,13 @@ bool validIMUData(imuData_t imuData)
 {
     if ((imuData.accel.x_axis == 0) && (imuData.accel.y_axis == 0) && (imuData.accel.z_axis == 0))
     {
-        return false;
+        /*displayData(imuData);
+        return false;*/
     }
     if ((imuData.mag.x_axis == 0) && (imuData.mag.y_axis == 0) && (imuData.mag.z_axis == 0))
     {
-        return false;
+        /*displayData(imuData);
+        return false;*/
     }
     if ((imuData.gyro.x_axis == 0) && (imuData.gyro.y_axis == 0) && (imuData.gyro.z_axis == 0))
     {

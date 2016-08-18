@@ -33,7 +33,7 @@ myQuat_t currentPosition;
 
 /* ########################################################################## */
 
-mpu9150_t imuDev;
+mpu9250_t imuDev;
 
 int identify_cmd(int argc, char **argv)
 {
@@ -259,6 +259,12 @@ int compass_cmd(int argc, char **argv)
     return 1;
 }
 
+int repos_cmd(int argc, char **argv)
+{
+    initialisePosition();
+    return 0;
+}
+
 int gyro_cmd(int argc, char **argv)
 {
     if (argc == 2) {
@@ -292,6 +298,7 @@ static const shell_command_t shell_commands[] = {
     { "identify", "visually identify board", identify_cmd },
     { "imu", "get IMU position data", imu_cmd },
     { "imuinit", "reset IMU", imuinit_cmd },
+    { "repos", "reset node orientation", repos_cmd },
     { "quat", "get IMU orientation", quat_cmd },
     //{ "callRoot", "contact root node", callRoot_cmd },
     { "timeAsk", "ask for current net time", callTime_cmd },

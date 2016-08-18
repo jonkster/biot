@@ -41,6 +41,7 @@ USEMODULE += position
 DIRS += ../modules/imu/
 USEMODULE += imu
 USEMODULE += mpu9150
+#USEMODULE += mpu9250
 CFLAGS += -DPI=3.14159265
 
 # Include packages that pull up and auto-init the link layer.

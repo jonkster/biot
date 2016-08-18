@@ -265,7 +265,15 @@ void quatNormalise(myQuat_t *q)
 
 bool isQuatValid(myQuat_t q)
 {
-    return (! isnan(q.w));
+    if (isnan(q.w))
+        return false;
+    if (isnan(q.x))
+        return false;
+    if (isnan(q.y))
+        return false;
+    if (isnan(q.z))
+        return false;
+    return true;
 }
 
 myQuat_t eulerToQuat(double *ypr)
