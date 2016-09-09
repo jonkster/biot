@@ -1,0 +1,423 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<export version="D">
+  <design>
+    <source>/home/jonk/KELLY/Projects/biotz/biot/hardware/biot_node_0.2/biot-node.sch</source>
+    <date>Thu 08 Sep 2016 11:18:47 AEST</date>
+    <tool>Eeschema 4.0.3+e1-6302~38~ubuntu16.04.1-stable</tool>
+    <sheet number="1" name="/" tstamps="/">
+      <title_block>
+        <title>Biot IMU Node</title>
+        <company>Motion Capture Systems</company>
+        <rev>0</rev>
+        <date/>
+        <source>biot-node.sch</source>
+        <comment number="1" value="Jon. Kelly"/>
+        <comment number="2" value="Modular Construction"/>
+        <comment number="3" value="Biot Node 0.2"/>
+        <comment number="4" value="Motion Capture Systems (c)2016"/>
+      </title_block>
+    </sheet>
+  </design>
+  <components>
+    <comp ref="P5">
+      <value>FTDI/Serial</value>
+      <footprint>Pin_Headers:Pin_Header_Straight_1x06</footprint>
+      <libsource lib="conn" part="CONN_01X06"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>57B543CA</tstamp>
+    </comp>
+    <comp ref="D2">
+      <value>PWR</value>
+      <footprint>LEDs:LED_1206</footprint>
+      <libsource lib="device" part="Led_Small"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>57B546DC</tstamp>
+    </comp>
+    <comp ref="D1">
+      <value>SIGNAL</value>
+      <footprint>LEDs:LED_1206</footprint>
+      <libsource lib="device" part="Led_Small"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>57B58E2E</tstamp>
+    </comp>
+    <comp ref="U1">
+      <value>MPU9250-Breakout</value>
+      <footprint>Pin_Headers:Pin_Header_Straight_1x10</footprint>
+      <libsource lib="atmelSAM" part="MPU9250-Breakout"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>57B66AB0</tstamp>
+    </comp>
+    <comp ref="P4">
+      <value>ATMEL-CORTEX</value>
+      <footprint>atmelSAM:ATMEL_cortex_header_smd</footprint>
+      <libsource lib="conn" part="CONN_02X05"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>57B66BB2</tstamp>
+    </comp>
+    <comp ref="R2">
+      <value>39</value>
+      <footprint>Resistors_SMD:R_1210</footprint>
+      <libsource lib="device" part="R"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>57B66E31</tstamp>
+    </comp>
+    <comp ref="R3">
+      <value>39</value>
+      <footprint>Resistors_SMD:R_1210</footprint>
+      <libsource lib="device" part="R"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>57B66E9C</tstamp>
+    </comp>
+    <comp ref="P1">
+      <value>ATSAMR21B</value>
+      <footprint>Pin_Headers:Pin_Header_Straight_1x07_Pitch2.00mm</footprint>
+      <libsource lib="conn" part="CONN_01X07"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>57C62951</tstamp>
+    </comp>
+    <comp ref="P2">
+      <value>ATSAMR21B-TEST-POINTs</value>
+      <footprint>Pin_Headers:Pin_Header_Straight_1x05</footprint>
+      <libsource lib="conn" part="CONN_01X05"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>57C62A9D</tstamp>
+    </comp>
+    <comp ref="P3">
+      <value>UP_CONVERTOR</value>
+      <footprint>Pin_Headers:Pin_Header_Straight_1x03</footprint>
+      <libsource lib="conn" part="CONN_01X03"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>57C7C389</tstamp>
+    </comp>
+    <comp ref="P6">
+      <value>On/Off Header</value>
+      <footprint>Pin_Headers:Pin_Header_Straight_1x03</footprint>
+      <libsource lib="conn" part="CONN_01X03"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>57C8AF85</tstamp>
+    </comp>
+    <comp ref="SW1">
+      <value>RESET</value>
+      <footprint>Buttons_Switches_SMD:SW_SPST_EVPBF</footprint>
+      <libsource lib="device" part="SW_PUSH"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>57D0BB8E</tstamp>
+    </comp>
+    <comp ref="R1">
+      <value>10k</value>
+      <footprint>Resistors_SMD:R_1210</footprint>
+      <libsource lib="device" part="R"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>57D0BE3E</tstamp>
+    </comp>
+    <comp ref="BT1">
+      <value>1.5V</value>
+      <footprint>atmelSAM:AAA_x1_Battery_Holder</footprint>
+      <libsource lib="device" part="Battery"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>57D0C172</tstamp>
+    </comp>
+  </components>
+  <libparts>
+    <libpart lib="device" part="Battery">
+      <fields>
+        <field name="Reference">BT</field>
+        <field name="Value">Battery</field>
+      </fields>
+      <pins>
+        <pin num="1" name="~" type="passive"/>
+        <pin num="2" name="~" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="conn" part="CONN_01X03">
+      <description>Connector 01x03</description>
+      <footprints>
+        <fp>Pin_Header_Straight_1X03</fp>
+        <fp>Pin_Header_Angled_1X03</fp>
+        <fp>Socket_Strip_Straight_1X03</fp>
+        <fp>Socket_Strip_Angled_1X03</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">P</field>
+        <field name="Value">CONN_01X03</field>
+      </fields>
+      <pins>
+        <pin num="1" name="P1" type="passive"/>
+        <pin num="2" name="P2" type="passive"/>
+        <pin num="3" name="P3" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="conn" part="CONN_01X05">
+      <description>Connector 01x05</description>
+      <footprints>
+        <fp>Pin_Header_Straight_1X05</fp>
+        <fp>Pin_Header_Angled_1X05</fp>
+        <fp>Socket_Strip_Straight_1X05</fp>
+        <fp>Socket_Strip_Angled_1X05</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">P</field>
+        <field name="Value">CONN_01X05</field>
+      </fields>
+      <pins>
+        <pin num="1" name="P1" type="passive"/>
+        <pin num="2" name="P2" type="passive"/>
+        <pin num="3" name="P3" type="passive"/>
+        <pin num="4" name="P4" type="passive"/>
+        <pin num="5" name="P5" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="conn" part="CONN_01X06">
+      <description>Connector 01x06</description>
+      <footprints>
+        <fp>Pin_Header_Straight_1X06</fp>
+        <fp>Pin_Header_Angled_1X06</fp>
+        <fp>Socket_Strip_Straight_1X06</fp>
+        <fp>Socket_Strip_Angled_1X06</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">P</field>
+        <field name="Value">CONN_01X06</field>
+      </fields>
+      <pins>
+        <pin num="1" name="P1" type="passive"/>
+        <pin num="2" name="P2" type="passive"/>
+        <pin num="3" name="P3" type="passive"/>
+        <pin num="4" name="P4" type="passive"/>
+        <pin num="5" name="P5" type="passive"/>
+        <pin num="6" name="P6" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="conn" part="CONN_01X07">
+      <description>Connector 01x07</description>
+      <footprints>
+        <fp>Pin_Header_Straight_1X07</fp>
+        <fp>Pin_Header_Angled_1X07</fp>
+        <fp>Socket_Strip_Straight_1X07</fp>
+        <fp>Socket_Strip_Angled_1X07</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">P</field>
+        <field name="Value">CONN_01X07</field>
+      </fields>
+      <pins>
+        <pin num="1" name="P1" type="passive"/>
+        <pin num="2" name="P2" type="passive"/>
+        <pin num="3" name="P3" type="passive"/>
+        <pin num="4" name="P4" type="passive"/>
+        <pin num="5" name="P5" type="passive"/>
+        <pin num="6" name="P6" type="passive"/>
+        <pin num="7" name="P7" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="conn" part="CONN_02X05">
+      <description>Connector 02x05</description>
+      <footprints>
+        <fp>Pin_Header_Straight_2X05</fp>
+        <fp>Pin_Header_Angled_2X05</fp>
+        <fp>Socket_Strip_Straight_2X05</fp>
+        <fp>Socket_Strip_Angled_2X05</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">P</field>
+        <field name="Value">CONN_02X05</field>
+      </fields>
+      <pins>
+        <pin num="1" name="P1" type="passive"/>
+        <pin num="2" name="P2" type="passive"/>
+        <pin num="3" name="P3" type="passive"/>
+        <pin num="4" name="P4" type="passive"/>
+        <pin num="5" name="P5" type="passive"/>
+        <pin num="6" name="P6" type="passive"/>
+        <pin num="7" name="P7" type="passive"/>
+        <pin num="8" name="P8" type="passive"/>
+        <pin num="9" name="P9" type="passive"/>
+        <pin num="10" name="P10" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="device" part="Led_Small">
+      <description>Led</description>
+      <footprints>
+        <fp>CP*</fp>
+        <fp>SM*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">D</field>
+        <field name="Value">Led_Small</field>
+      </fields>
+      <pins>
+        <pin num="1" name="K" type="passive"/>
+        <pin num="2" name="A" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="atmelSAM" part="MPU9250-Breakout">
+      <fields>
+        <field name="Reference">U</field>
+        <field name="Value">MPU9250-Breakout</field>
+      </fields>
+      <pins>
+        <pin num="1" name="VCC" type="input"/>
+        <pin num="2" name="GND" type="input"/>
+        <pin num="3" name="SCLK" type="input"/>
+        <pin num="4" name="SDA" type="input"/>
+        <pin num="5" name="EDA" type="input"/>
+        <pin num="6" name="ECL" type="input"/>
+        <pin num="7" name="ADD" type="input"/>
+        <pin num="8" name="INT" type="input"/>
+        <pin num="9" name="NICS" type="input"/>
+        <pin num="10" name="FSYNC" type="input"/>
+      </pins>
+    </libpart>
+    <libpart lib="device" part="R">
+      <description>Resistor</description>
+      <footprints>
+        <fp>R_*</fp>
+        <fp>Resistor_*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">R</field>
+        <field name="Value">R</field>
+      </fields>
+      <pins>
+        <pin num="1" name="~" type="passive"/>
+        <pin num="2" name="~" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="device" part="SW_PUSH">
+      <description>Button</description>
+      <fields>
+        <field name="Reference">SW</field>
+        <field name="Value">SW_PUSH</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+  </libparts>
+  <libraries>
+    <library logical="device">
+      <uri>/usr/share/kicad/library/device.lib</uri>
+    </library>
+    <library logical="conn">
+      <uri>/usr/share/kicad/library/conn.lib</uri>
+    </library>
+    <library logical="atmelSAM">
+      <uri>/home/jonk/KELLY/Projects/biotz/biot/hardware/biot_node_0.2/mylib/atmelSAM.lib</uri>
+    </library>
+  </libraries>
+  <nets>
+    <net code="1" name="GND">
+      <node ref="P4" pin="3"/>
+      <node ref="U1" pin="2"/>
+      <node ref="D2" pin="1"/>
+      <node ref="P4" pin="9"/>
+      <node ref="P4" pin="5"/>
+      <node ref="P3" pin="3"/>
+      <node ref="BT1" pin="2"/>
+      <node ref="SW1" pin="2"/>
+      <node ref="R2" pin="1"/>
+      <node ref="P5" pin="1"/>
+      <node ref="P1" pin="2"/>
+    </net>
+    <net code="2" name="Net-(P5-Pad2)">
+      <node ref="P5" pin="2"/>
+    </net>
+    <net code="3" name="Net-(P5-Pad6)">
+      <node ref="P5" pin="6"/>
+    </net>
+    <net code="4" name="+3V3">
+      <node ref="P3" pin="2"/>
+      <node ref="P4" pin="1"/>
+      <node ref="P5" pin="3"/>
+      <node ref="U1" pin="1"/>
+      <node ref="P1" pin="1"/>
+      <node ref="R3" pin="1"/>
+      <node ref="R1" pin="1"/>
+    </net>
+    <net code="5" name="SDA">
+      <node ref="P1" pin="3"/>
+      <node ref="U1" pin="4"/>
+    </net>
+    <net code="6" name="RX">
+      <node ref="P5" pin="5"/>
+      <node ref="P1" pin="5"/>
+    </net>
+    <net code="7" name="Net-(U1-Pad10)">
+      <node ref="U1" pin="10"/>
+    </net>
+    <net code="8" name="TX">
+      <node ref="P1" pin="6"/>
+      <node ref="P5" pin="4"/>
+    </net>
+    <net code="9" name="Net-(P3-Pad1)">
+      <node ref="P3" pin="1"/>
+      <node ref="P6" pin="2"/>
+      <node ref="P6" pin="3"/>
+    </net>
+    <net code="10" name="Net-(BT1-Pad1)">
+      <node ref="P6" pin="1"/>
+      <node ref="BT1" pin="1"/>
+    </net>
+    <net code="11" name="SWDCLK">
+      <node ref="P2" pin="1"/>
+      <node ref="P4" pin="4"/>
+    </net>
+    <net code="12" name="SWDIO">
+      <node ref="P2" pin="2"/>
+      <node ref="P4" pin="2"/>
+    </net>
+    <net code="13" name="Net-(P2-Pad3)">
+      <node ref="P2" pin="3"/>
+    </net>
+    <net code="14" name="Net-(P2-Pad4)">
+      <node ref="P2" pin="4"/>
+    </net>
+    <net code="15" name="NRST">
+      <node ref="R1" pin="2"/>
+      <node ref="SW1" pin="1"/>
+      <node ref="P4" pin="10"/>
+      <node ref="P2" pin="5"/>
+    </net>
+    <net code="16" name="Net-(U1-Pad9)">
+      <node ref="U1" pin="9"/>
+    </net>
+    <net code="17" name="Net-(U1-Pad5)">
+      <node ref="U1" pin="5"/>
+    </net>
+    <net code="18" name="Net-(U1-Pad6)">
+      <node ref="U1" pin="6"/>
+    </net>
+    <net code="19" name="Net-(U1-Pad7)">
+      <node ref="U1" pin="7"/>
+    </net>
+    <net code="20" name="Net-(U1-Pad8)">
+      <node ref="U1" pin="8"/>
+    </net>
+    <net code="21" name="Net-(P4-Pad6)">
+      <node ref="P4" pin="6"/>
+    </net>
+    <net code="22" name="Net-(P4-Pad7)">
+      <node ref="P4" pin="7"/>
+    </net>
+    <net code="23" name="Net-(P4-Pad8)">
+      <node ref="P4" pin="8"/>
+    </net>
+    <net code="24" name="Net-(D1-Pad2)">
+      <node ref="D1" pin="2"/>
+      <node ref="P1" pin="7"/>
+    </net>
+    <net code="25" name="Net-(D2-Pad2)">
+      <node ref="R3" pin="2"/>
+      <node ref="D2" pin="2"/>
+    </net>
+    <net code="26" name="Net-(D1-Pad1)">
+      <node ref="R2" pin="2"/>
+      <node ref="D1" pin="1"/>
+    </net>
+    <net code="27" name="SCLK">
+      <node ref="U1" pin="3"/>
+      <node ref="P1" pin="4"/>
+    </net>
+  </nets>
+</export>

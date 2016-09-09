@@ -1,0 +1,52 @@
+# UTF-8
+
+About
+SOT23_Diode_RevA_03Aug2010.mod
+SOT23_Transistor_RevA_03Aug2010.mod
+SOT143_SOT143R_Housing_26Jul2012.mod 
+SC70-6_Housing_26Jul2012.mod
+TSOT6-MK06A-Housing_26Jul2012.mod
+
+This Files are containing the KiCAD modules/footprints of some
+smd landpatterns SOT23, SOT143, SOT143R, SC70-6 and TSOT-6 / MK06A
+They are used by diodes, transistors, diode- and transistor arrays.
+Maybe they can used for generic types also, because there are 
+watchdogs or reset devices with similar housings.
+
+There are standard housings and housings with enlarged pads for
+handsoldering.
+
+There is an general preview pdf file named:
+SOT23_SOT143_SOT143R_TSOT6_MK06A_SC70-6_Housing_26Jul2012.pdf
+Because sometimes pdf gets troubled with fine structures, there is also an SVG-Preview file named:
+SOT23_SOT143_SOT143R_TSOT6_MK06A_SC70-6_Housing_26Jul2012.svg
+
+File SOT23_Diode_RevA_03Aug2010.mod contains 
+SOT23_Diode_RevA_03Aug2010
+SOT23_Diode_Handsoldering_RevA_03Aug2010
+
+File SOT23_Transistor_RevA_03Aug2010.mod contains
+SOT23_Transistor_RevA_03Aug2010
+SOT23_Transistor_Handsoldering_RevA_03Aug2010
+SOT23_Transistor_BC846_RevA_03Aug2010
+SOT23_Transistor_BC846_Handsoldering_RevA_03Aug2010
+
+File SOT143_SOT143R_Housing_26Jul2012.mod contains 
+SOT143R_Reverse_26Jul2012
+SOT143R_Reverse_Handsoldering_26Jul2012
+SOT143_26Jul2012
+SOT143_Handsoldering_26Jul2012
+
+File SC70-6_Housing_26Jul2012.mod contains
+SC70-6_26Jul2012
+SC70-6_Handsoldering_26Jul2012
+
+File TSOT6-MK06A-Housing_26Jul2012.mod contains 
+TSOT6-MK06A-Housing_26Jul2012
+TSOT6-MK06A-Housing_Handsoldering_26Jul2012
+
+Author: Bernd Wiebus / Uedem / Germany / 27 July 2012
+GNU-GPL, NO WARRANTY!
+For error reports, suggestions and improvements please
+contact me at bernd.Wiebus@gmx.de
+

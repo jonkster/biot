@@ -1,0 +1,28 @@
+Source,/home/jonk/KELLY/Projects/biotz/biot/hardware/biot_node_0.2/biot-node.sch
+Kicad Rev,Eeschema 4.0.3+e1-6302~38~ubuntu16.04.1-stable
+Generated Date,Thu 08 Sep 2016 11:18:47 AEST
+
+Title,Biot IMU Node
+Company,Motion Capture Systems
+Revision,0
+Date Issue,Not Set
+Comment,Jon. Kelly
+Comment,Modular Construction
+Comment,Biot Node 0.2
+Comment,Motion Capture Systems (c)2016
+
+Reference,Value,Library,Library Ref
+P5,FTDI/Serial,conn,CONN_01X06
+D2,PWR,device,Led_Small
+D1,SIGNAL,device,Led_Small
+U1,MPU9250-Breakout,atmelSAM,MPU9250-Breakout
+P4,ATMEL-CORTEX,conn,CONN_02X05
+R2,39,device,R
+R3,39,device,R
+P1,ATSAMR21B,conn,CONN_01X07
+P2,ATSAMR21B-TEST-POINTs,conn,CONN_01X05
+P3,UP_CONVERTOR,conn,CONN_01X03
+P6,On/Off Header,conn,CONN_01X03
+SW1,RESET,device,SW_PUSH
+R1,10k,device,R
+BT1,1.5V,device,Battery

@@ -1,0 +1,3 @@
+Attempt to have MPU9250 and NCP1402 as dicrete components rather than using the
+modules.
+

@@ -1,0 +1,37 @@
+Source,/home/jonk/KELLY/Projects/biotz/biot/hardware/biot_node_1.0/kicad.sch
+Kicad Rev,Eeschema 4.0.3+e1-6302~38~ubuntu16.04.1-stable
+Generated Date,Wed 07 Sep 2016 16:30:22 AEST
+
+Title,Biot Node
+Company,Motion Capture Systems
+Revision,0
+Date Issue,2016-09-06
+Comment,Jon Kelly
+Comment,Uses prebuilt ATSAMR21B18-MZ210PA module
+Comment,IMU sensor and Microcontroller
+Comment,Biot Node 0 1
+
+Reference,Value,Library,Library Ref
+SW1,SPST,device,SPST
+R1,10k,device,R_Small
+P4,Cortex Header,conn,CONN_02X05
+U1,MPU-9250,kicad-cache,MPU-9250
+C4,0.1uF,device,C_Small
+C3,0.1uF,device,C_Small
+C1,10nF,device,C_Small
+U2,NCP1402,kicad-cache,NCP1402
+L1,47uH,device,INDUCTOR_SMALL
+D3,MBRA140,device,D
+C5,68uF,device,CP1_Small
+C6,10uF,device,CP1_Small
+BT1,1.5V,device,Battery
+R2,330R,device,R_Small
+C2,100nF,device,C_Small
+D2,Red,device,Led_Small
+R4,39R,device,R_Small
+D1,Red,device,Led_Small
+R3,39R,device,R_Small
+P3,FTDI,conn,CONN_01X06
+P5,ON/OFF,conn,CONN_01X03
+P1,ATSAMR21B18-MZ210PA,conn,CONN_01X07
+P2,MCU Test Points,conn,CONN_01X05
