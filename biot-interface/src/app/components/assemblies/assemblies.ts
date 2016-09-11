@@ -1,7 +1,6 @@
 import {Component, ViewChildren} from '@angular/core';
 import {Observable} from 'rxjs/Observable';
 
-
 import {ThreeDirective} from '../../directives/three.directive';
 import {Biotz} from '../../services/biotz';
 
@@ -10,7 +9,7 @@ import {Biotz} from '../../services/biotz';
   pipes: [],
   providers: [ Biotz ],
   directives: [ ThreeDirective ],
-  styleUrls: ['./assemblies.css'],
+  styleUrls: ['./assemblies.css' ],
   templateUrl: './assemblies.html'
 })
 export class Assemblies {
@@ -51,6 +50,11 @@ export class Assemblies {
             return true;
         else
             return this.showOnlyAddress[addr];
+    }
+
+    connectNodes(node, parentNode) {
+        if (parentNode.length != 0)
+            alert("join " + node + " to " + parentNode.text);
     }
 
     dropNode(addr) {
@@ -95,6 +99,24 @@ export class Assemblies {
 
     getDetectedAddresses() {
         return Object.keys(this.detectedAddresses);
+    }
+
+    getOtherAddresses(thisAddr) {
+        var others = [{
+            'id': thisAddr,
+            'text': 'no parent'
+        }];
+        var addresses = this.getDetectedAddresses();
+        for (var i = 0; i < addresses.length; i++) {
+            var addr = addresses[i];
+            if (addr != thisAddr) {
+                others.push({
+                    'id': addr,
+                    'text': addr
+                });
+            }
+        }
+        return others;
     }
 
     getVisibleAddresses() {
