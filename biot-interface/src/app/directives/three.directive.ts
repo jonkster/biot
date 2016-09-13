@@ -32,8 +32,7 @@ export class ThreeDirective {
 	this.anim();
     }
 
-
-    addNode(parentNodeName, name, x, y, z, colour) {
+    addNode(parentNodeName, name, x, y, z, colour, showLimb) {
 
 	// make box
 	var geometry = new THREE.BoxGeometry(20, 25, 10);
@@ -44,15 +43,23 @@ export class ThreeDirective {
 	node.position.y = y;
 	node.position.z = z;
 
-	var cGeometry = new THREE.CylinderGeometry( 20, 20, 10, 50 );
-	var cMaterial = new THREE.MeshLambertMaterial({color: 0xa0a0a0});
-	var cylinder = new THREE.Mesh( cGeometry, cMaterial );
-	cylinder.rotateX(Math.PI/2);
-	cylinder.position.x = -10;
-	cylinder.position.z = -5;
-	cylinder.castShadow = true;
-	cylinder.receiveShadow = true;
-	node.add(cylinder);
+        if (showLimb) {
+            var limbRadius = 10;
+            var limbLength = 100;
+            var limbGeometry = new THREE.CylinderGeometry( limbRadius, limbRadius, limbLength, 50 );
+            var matrix = new THREE.Matrix4();
+            // shift so hinge point is at end of limb not middle
+            matrix  = new THREE.Matrix4().makeTranslation(5, -limbLength/2, 0 );
+            limbGeometry.applyMatrix( matrix );
+
+            var limbMaterial = new THREE.MeshLambertMaterial({color: 0xa0a0a0});
+            var limb = new THREE.Mesh( limbGeometry, limbMaterial );
+            limb.rotateZ(Math.PI/2);
+            limb.position.z = -(limbRadius+5);
+            limb.castShadow = true;
+            limb.receiveShadow = true;
+            node.add(limb);
+        }
 
 	var worldAxis = this.addWorldAxis(x, y, z, 100, 1, 0.35);
 	worldAxis.name = 'world-axis-' + name;
@@ -69,7 +76,9 @@ export class ThreeDirective {
 	node.receiveShadow = true;
         node.userData = {
             'parent': null,
-            'address': name
+            'address': name,
+            'limbLength': 100,
+            'defaultX' : x
         };
         if (parentNodeName == null) {
 	    this.scene.add(node);
@@ -90,12 +99,18 @@ export class ThreeDirective {
         var node = this.scene.getObjectByName('biot-node-' + address);
         var pNode = this.scene.getObjectByName('biot-node-' + parentAddress);
         if (node && pNode) {
-            this.removeNode(node);
-            node.userData['parent'] = parentAddress;
-            pNode.add(node);
+            if (this.noLoops(node, pNode)) {
+                this.removeNode(node);
+                node.userData['parent'] = parentAddress;
+                node.position.x = pNode.userData['limbLength'];
+                pNode.add(node);
+            } else {
+                console.log('cannot set parent due to loop');
+            }
         } else if (node) {
             this.removeNode(node);
             node.userData['parent'] = null;
+	    node.position.x = node.userData['defaultX'];
             this.scene.add(node);
         }
         else {
@@ -241,6 +256,20 @@ export class ThreeDirective {
             node.setRotationFromQuaternion(tq);
         }
         node.updateMatrix();
+    }
+
+    noLoops(node, pNode): boolean {
+        if (node.userData['address'] == pNode.userData['address'])
+            return false;
+        while (pNode) {
+            var pNodeAdd = pNode.userData['parent'];
+	    pNode = this.scene.getObjectByName('biot-node-' + pNodeAdd);
+            if (pNode) {
+                if (node.userData['address'] == pNode.userData['address'])
+                    return false;
+            }
+        }
+        return true;
     }
 
     removeNode(name) {

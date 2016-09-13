@@ -33,7 +33,7 @@ export class Assemblies {
     private accel:boolean = true;
     private compass:boolean = true;
 
-    private parents:Array<string> = [];
+    //private parents:Array<string> = [];
 
     constructor(public biotz:Biotz) {}
 
@@ -56,10 +56,10 @@ export class Assemblies {
             return this.showOnlyAddress[addr];
     }
 
-    connectNodes(node, parentNode) {
+    /*connectNodes(node, parentNode) {
         if (parentNode.length != 0)
             alert("join " + node + " to " + parentNode.text);
-    }
+    }*/
 
     dropNode(addr) {
         var nodes = this.biotzData.nodes;
@@ -200,7 +200,7 @@ export class Assemblies {
                             if (this.nodes[addr] === undefined)
                                 {
                                     this.nodes[addr] = {};
-                                    this.threeD.addNode(null, addr, i*200, 0, 0, parseInt(colourSt, 16));
+                                    this.threeD.addNode(null, addr, i*200, 0, 0, parseInt(colourSt, 16), true);
                                     console.log("sending calibrations for", addr);
                                     var cal = this.savedCalibrations[addr];
                                     this.biotz.putCalibrationToNode(addr, cal)
@@ -346,11 +346,6 @@ export class Assemblies {
 
     setParent(child, mother) {
         this.threeD.addParent(child, mother);
-        this.parents[child] = mother;
-        /*this.threeD.removeNode(child);
-        var colourSt = this.getNodeColour(child);
-        this.threeD.addNode(mother, child, 200, 0, 0, parseInt(colourSt, 16));*/
-
     }
 
     synchronise() {

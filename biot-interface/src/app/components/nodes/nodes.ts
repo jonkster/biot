@@ -180,7 +180,7 @@ export class Nodes {
                             if (this.nodes[addr] === undefined)
                                 {
                                     this.nodes[addr] = {};
-                                    this.threeD.addNode(null, addr, i*200, 0, 0, parseInt(colourSt, 16));
+                                    this.threeD.addNode(null, addr, i*200, 0, 0, parseInt(colourSt, 16), false);
                                     console.log("sending calibrations for", addr);
                                     var cal = this.savedCalibrations[addr];
                                     this.biotz.putCalibrationToNode(addr, cal)
