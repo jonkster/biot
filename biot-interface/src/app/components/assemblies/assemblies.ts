@@ -15,6 +15,7 @@ import {Biotz} from '../../services/biotz';
 })
 export class Assemblies {
     @ViewChildren(ThreeDirective) threeDirective;
+    private dummyNodeCount = 0;
     private biotzData:any = {};
     private biotzCalibration:any = {};
     private detectedAddresses:any = {};
@@ -47,6 +48,10 @@ export class Assemblies {
     ngAfterViewInit() {
         this.threeD = this.threeDirective.first;
         this.threeD.setFloorVisibility(false);
+    }
+
+    addDummyNode() {
+        this.biotz.addDummyNode('affe::1234:' + this.dummyNodeCount++).subscribe();
     }
 
     canShow(addr) {
@@ -237,6 +242,11 @@ export class Assemblies {
 
     identify(addr) {
         this.biotz.identify(addr).subscribe();
+    }
+
+    setLimbLength(addr, len) {
+        console.log("set", addr, "to length", len); 
+        this.threeD.setLimbLength(addr, len);
     }
 
     setSensors(g, a, c) {

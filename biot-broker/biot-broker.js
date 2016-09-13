@@ -31,6 +31,9 @@ var biotzData = {};
 var biotzCal = {};
 var nodeStatus = {};
 
+var dummyNodes = [];
+var dummyTime = 0;
+
 // received an update message - store info
 brokerUdpListener.on('message', function (message, remote) {
     messagesFromRouter++;
@@ -57,6 +60,8 @@ brokerListener.get('/biotz/count', getBiotCount);
 brokerListener.get('/biotz/status', getBiotzStatus);
 brokerListener.get('/biotz/synchronise', biotSync);
 brokerListener.get('/biotz/addresses', getBiotz);
+brokerListener.put('/biotz/addnode/:address', addDummyNode);
+
 brokerListener.get('/biotz/addresses/:address', getBiotFull);
 brokerListener.get('/biotz/addresses/:address', getBiotFull);
 brokerListener.get('/biotz/addresses/:address/data', getBiotData);
@@ -82,6 +87,12 @@ brokerListener.listen(BROKER_HTTP_PORT, BROKER_HOST, function() {
     console.log('eg: http://%s:%s/biotz', brokerListener.name, brokerListener.url);
     brokerUdpListener.bind(BIOTZ_UDP_PORT, UDP_LOCAL_HOST);
 });
+
+function addDummyNode(req, res, next) {
+    var address = req.params['address'];
+    dummyNodes.push(address);
+    console.log("adding dummy node:", address);
+}
 
 
 function addNodeData(jResponse) {
@@ -181,6 +192,41 @@ function getAllBiotData(req, res, next) {
             "a" : address,
             "v" : nodeValue
         });
+    }
+
+    for (var i = 0; i < dummyNodes.length; i++) {
+        var address = dummyNodes[i];
+        if (biotzData[address] == undefined) {
+            var w = 0.793339;
+            var x = 0.540891;
+            var y = 0.167431;
+            var z = 0.223644;
+            biotzData[address] = 0 + ":" + w + ":" + x + ":" + y + ":" + z;
+        }
+        var q = biotzData[address].split(':');
+        var t = parseInt(q[0]);
+        var w = parseFloat(q[1]);
+        var x = parseFloat(q[2]);
+        var y = parseFloat(q[3]);
+        var z = parseFloat(q[4]);
+        w += 0.1 * (0.5 - Math.random());
+        var norm = Math.sqrt(w * w + x * x + y * y + z * z);
+        w = w/norm;
+        x = x/norm;
+        y = y/norm;
+        z = z/norm;
+        t++;
+
+        biotzData[address] = t + ":" + w + ":" + x + ":" + y + ":" + z;
+        biotzCal[address] = "-360:-350:-728:394:461:56";
+        var nodeValue = biotzData[address];
+        nodeStatus[address] = 'active';
+        nodes.push({
+            "a" : address,
+            "v" : nodeValue
+        });
+        c++;
+        messagesFromRouter++;
     }
 
     var value = {

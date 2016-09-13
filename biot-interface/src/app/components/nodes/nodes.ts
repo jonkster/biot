@@ -211,7 +211,6 @@ export class Nodes {
 
     getMessageRate() {
         this.biotz.getSystemMessageRate().subscribe( res => {
-            console.log(res);
             this.systemMessageRate = 1000 * res;
         });
     }

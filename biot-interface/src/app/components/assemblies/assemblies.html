@@ -17,9 +17,9 @@
                 <td>&nbsp;</td>
                 <th>Biotz Address</th>
                 <th>Parent</th>
+                <th>Length</th>
                 <th>Timestamp</th>
                 <th>Status</th>
-                <th>Calibration control</th>
             </tr>
         </thead>
         <tbody>
@@ -29,13 +29,9 @@
                 <td>
                     <myDropdown [items]="getOtherAddresses(address)" (onValueSet)="setParent(address, $event)" [itemColours]="nodeColours" [emptyValue]="'select parent...'"> </myDropdown>
                 </td>
+                <td><input #len type="text" value="100" (keyup.enter)="setLimbLength(address, len.value)"/></td>
                 <td>{{ getBiotProperty(address,'time') }}</td>
                 <td>{{ getBiotProperty(address,'status') }}</td>
-                <td>
-                    <button (click)="resetCalibration(address)">Reset Calibration</button>
-                    <button (click)="saveCalibration(address, getBiotProperty(address,'calibration'))">node -&gt; saved cal</button>
-                    <button (click)="sendCalibration(address, savedCalibrations[address])">node &lt;- saved cal</button>
-                </td>
             </tr>
         </tbody>
     </table>
@@ -43,6 +39,8 @@
     <button (click)="synchronise()">Force Synchronise Nodes</button>
     <button (click)="saveCalibrations()">Save Current Calibrations</button>
     <button (click)="sendCalibrations()">Send Saved Calibrations to Nodes</button>
+    <hr/>
+    <button (click)="addDummyNode()">Add Dummy Node</button>
 
     <p>
     This application is currently not intended to be used other than as an

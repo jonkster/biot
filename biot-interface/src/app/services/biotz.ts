@@ -17,6 +17,13 @@ export class Biotz {
       return body || {};
   }
 
+  addDummyNode(addr) {
+      var path = 'biotz/addnode/' + addr;
+      var url = "http://localhost:8889/" + path;
+      return this.http.put(url, '')
+          .map((response) => response.json());
+  }
+
   getCalibration(addr) {
     var result = this.makeBrokerRequest('biotz/addresses/' + addr + '/calibration');
     return result;

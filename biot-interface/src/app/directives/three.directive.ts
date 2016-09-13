@@ -43,31 +43,37 @@ export class ThreeDirective {
 	node.position.y = y;
 	node.position.z = z;
 
+        var limbRadius = 10;
+        var limbLength = 100;
         if (showLimb) {
-            var limbRadius = 10;
-            var limbLength = 100;
             var limbGeometry = new THREE.CylinderGeometry( limbRadius, limbRadius, limbLength, 50 );
             var matrix = new THREE.Matrix4();
             // shift so hinge point is at end of limb not middle
-            matrix  = new THREE.Matrix4().makeTranslation(5, -limbLength/2, 0 );
+            matrix  = new THREE.Matrix4().makeTranslation(0, -limbLength/2, 0 );
             limbGeometry.applyMatrix( matrix );
 
-            var limbMaterial = new THREE.MeshLambertMaterial({color: 0xa0a0a0});
+
+            /* Make an ENVELOPE for the Limb */
+
+            var limbMaterial = new THREE.MeshPhongMaterial({
+                'transparent': true,
+                'opacity': 0.3,
+                'color': colour,
+                'specular': 0xffffff,
+                'shininess': 10
+            });
+
             var limb = new THREE.Mesh( limbGeometry, limbMaterial );
             limb.rotateZ(Math.PI/2);
-            limb.position.z = -(limbRadius+5);
+            limb.position.z = 0;
             limb.castShadow = true;
             limb.receiveShadow = true;
+            limb.name = 'limb-envelope-' + name;
             node.add(limb);
         }
 
-	var worldAxis = this.addWorldAxis(x, y, z, 100, 1, 0.35);
-	worldAxis.name = 'world-axis-' + name;
-	worldAxis.translateX(x);
-	worldAxis.castShadow = true;
-	this.scene.add(worldAxis);
 
-	var localAxis = this.addWorldAxis(x, y, z, 40, 5, 0);
+	var localAxis = this.addWorldAxis(0, 0, 0, 40, 2, 0.35);
 	localAxis.castShadow = true;
 	node.add(localAxis);
 
@@ -77,7 +83,8 @@ export class ThreeDirective {
         node.userData = {
             'parent': null,
             'address': name,
-            'limbLength': 100,
+            'limbLength': limbLength,
+            'limbRadius': limbRadius,
             'defaultX' : x
         };
         if (parentNodeName == null) {
@@ -102,7 +109,8 @@ export class ThreeDirective {
             if (this.noLoops(node, pNode)) {
                 this.removeNode(node);
                 node.userData['parent'] = parentAddress;
-                node.position.x = pNode.userData['limbLength'];
+                console.log('x=', pNode.userData['limbLength']);
+                node.position.x = 1.1 * pNode.userData['limbLength'];
                 pNode.add(node);
             } else {
                 console.log('cannot set parent due to loop');
@@ -152,6 +160,8 @@ export class ThreeDirective {
 	line.castShadow = true;
 	line.receiveShadow = true;
 
+        group.position.x = x;
+
 	return group;
     }
 
@@ -195,8 +205,10 @@ export class ThreeDirective {
 	this.camera.position.x = 0;
 	this.camera.lookAt( this.scene.position );
 
-	/*var axisHelper = new THREE.AxisHelper( 125 );
-	 this.scene.add( axisHelper );*/
+	var worldAxis = this.addWorldAxis(-500, 0, 0, 100, 1, 0.35);
+	worldAxis.name = 'world-axis-' + name;
+	worldAxis.castShadow = true;
+	this.scene.add(worldAxis);
 
 	 this.setupLighting();
 	 this.makeFloor();
@@ -275,8 +287,8 @@ export class ThreeDirective {
     removeNode(name) {
 	var node = this.scene.getObjectByName('biot-node-' + name);
 	this.scene.remove(node);
-	node = this.scene.getObjectByName('world-axis-' + name);
-	this.scene.remove(node);
+	//node = this.scene.getObjectByName('world-axis-' + name);
+	//this.scene.remove(node);
     }
 
     setupLighting() {
@@ -307,6 +319,18 @@ export class ThreeDirective {
     setFloorVisibility(show) {
         var floor = this.scene.getObjectByName('scene-floor');
         floor.visible = show;
+    }
+
+    setLimbLength(addr, len) {
+        var node = this.scene.getObjectByName('biot-node-' + addr);
+        if (node) {
+            node.userData['limbLength'] = len;
+            node.traverse(function(limbEnvelope){
+                if (limbEnvelope.name == 'limb-envelope-' + addr) {
+                    limbEnvelope.scale.y = len/100;
+                }
+            });
+        }
     }
 
     unFocusNode() {
