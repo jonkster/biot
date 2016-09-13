@@ -44,6 +44,7 @@ export class Nodes {
 
     ngAfterViewInit() {
         this.threeD = this.threeDirective.first;
+        this.threeD.setFloorVisibility(true);
     }
 
     canShow(addr) {
@@ -179,7 +180,7 @@ export class Nodes {
                             if (this.nodes[addr] === undefined)
                                 {
                                     this.nodes[addr] = {};
-                                    this.threeD.addNode(addr, i*200, 0, 0, parseInt(colourSt, 16));
+                                    this.threeD.addNode(null, addr, i*200, 0, 0, parseInt(colourSt, 16));
                                     console.log("sending calibrations for", addr);
                                     var cal = this.savedCalibrations[addr];
                                     this.biotz.putCalibrationToNode(addr, cal)

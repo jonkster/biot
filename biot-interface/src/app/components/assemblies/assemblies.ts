@@ -2,13 +2,14 @@ import {Component, ViewChildren} from '@angular/core';
 import {Observable} from 'rxjs/Observable';
 
 import {ThreeDirective} from '../../directives/three.directive';
+import {DropDownComponent} from '../dropdown/dropdown.component';
 import {Biotz} from '../../services/biotz';
 
 @Component({
   selector: 'assemblies',
   pipes: [],
   providers: [ Biotz ],
-  directives: [ ThreeDirective ],
+  directives: [ ThreeDirective, DropDownComponent ],
   styleUrls: ['./assemblies.css' ],
   templateUrl: './assemblies.html'
 })
@@ -32,6 +33,8 @@ export class Assemblies {
     private accel:boolean = true;
     private compass:boolean = true;
 
+    private parents:Array<string> = [];
+
     constructor(public biotz:Biotz) {}
 
     ngOnInit() {
@@ -43,6 +46,7 @@ export class Assemblies {
 
     ngAfterViewInit() {
         this.threeD = this.threeDirective.first;
+        this.threeD.setFloorVisibility(false);
     }
 
     canShow(addr) {
@@ -102,18 +106,13 @@ export class Assemblies {
     }
 
     getOtherAddresses(thisAddr) {
-        var others = [{
-            'id': thisAddr,
-            'text': 'no parent'
-        }];
+
+        var others = ['no parent'];
         var addresses = this.getDetectedAddresses();
         for (var i = 0; i < addresses.length; i++) {
             var addr = addresses[i];
             if (addr != thisAddr) {
-                others.push({
-                    'id': addr,
-                    'text': addr
-                });
+                others.push(addr);
             }
         }
         return others;
@@ -201,7 +200,7 @@ export class Assemblies {
                             if (this.nodes[addr] === undefined)
                                 {
                                     this.nodes[addr] = {};
-                                    this.threeD.addNode(addr, i*200, 0, 0, parseInt(colourSt, 16));
+                                    this.threeD.addNode(null, addr, i*200, 0, 0, parseInt(colourSt, 16));
                                     console.log("sending calibrations for", addr);
                                     var cal = this.savedCalibrations[addr];
                                     this.biotz.putCalibrationToNode(addr, cal)
@@ -232,7 +231,6 @@ export class Assemblies {
 
     getMessageRate() {
         this.biotz.getSystemMessageRate().subscribe( res => {
-            console.log(res);
             this.systemMessageRate = 1000 * res;
         });
     }
@@ -343,6 +341,15 @@ export class Assemblies {
                      });
              })(address, this)
          }
+
+    }
+
+    setParent(child, mother) {
+        this.threeD.addParent(child, mother);
+        this.parents[child] = mother;
+        /*this.threeD.removeNode(child);
+        var colourSt = this.getNodeColour(child);
+        this.threeD.addNode(mother, child, 200, 0, 0, parseInt(colourSt, 16));*/
 
     }
 

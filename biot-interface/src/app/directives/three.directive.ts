@@ -33,7 +33,7 @@ export class ThreeDirective {
     }
 
 
-    addNode(name, x, y, z, colour) {
+    addNode(parentNodeName, name, x, y, z, colour) {
 
 	// make box
 	var geometry = new THREE.BoxGeometry(20, 25, 10);
@@ -67,13 +67,40 @@ export class ThreeDirective {
 	node.name = 'biot-node-' + name;
 	node.castShadow = true;
 	node.receiveShadow = true;
-	this.scene.add(node);
+        node.userData = {
+            'parent': null,
+            'address': name
+        };
+        if (parentNodeName == null) {
+	    this.scene.add(node);
+        }
+        else {
+	    var pnode = this.scene.getObjectByName('biot-node-' + parentNodeName);
+	    pnode.add(node);
+        }
 
 	 var midx = this.getCentreOfNodes();
 	 this.camera.position.x = midx;
 	 this.pointLight.position.set(midx, 0, 400);
 	 this.lightTarget.position.set(midx, 0, 0);
 
+    }
+
+    addParent(address, parentAddress) {
+        var node = this.scene.getObjectByName('biot-node-' + address);
+        var pNode = this.scene.getObjectByName('biot-node-' + parentAddress);
+        if (node && pNode) {
+            this.removeNode(node);
+            node.userData['parent'] = parentAddress;
+            pNode.add(node);
+        } else if (node) {
+            this.removeNode(node);
+            node.userData['parent'] = null;
+            this.scene.add(node);
+        }
+        else {
+            console.log("cannot add parent to node: parent=" + parentAddress + ", node=" + address);
+        }
     }
 
     addWorldAxis(x, y, z, length, width, brightness) {
@@ -186,14 +213,34 @@ export class ThreeDirective {
 	floor.position.x = 300;
 	floor.position.z = -50;
 	floor.receiveShadow = true;
+        floor.name = 'scene-floor';
+        floor.visible = false;
 	this.scene.add(floor);
     }
 
 
     moveNode(addr, q) {
 	var node = this.scene.getObjectByName('biot-node-' + addr);
-	node.setRotationFromQuaternion(new THREE.Quaternion(q.x, q.y, q.z, q.w).normalize());
-	node.updateMatrix();
+        node.updateMatrix();
+        var tq = new THREE.Quaternion(q.x, q.y, q.z, q.w).normalize();
+        var pAddr = node.userData['parent'];
+
+        if (pAddr != null) {
+            // undo parent rotation
+	    var pNode = this.scene.getObjectByName('biot-node-' + pAddr);
+            if (! pNode) {
+                console.log("Cannot find parent!");
+            } else {
+	        pNode.updateMatrix();
+                var newQ = pNode.quaternion.clone();
+                newQ.inverse().normalize();
+                newQ.multiply(tq).normalize();
+                node.setRotationFromQuaternion(newQ);
+            }
+        } else {
+            node.setRotationFromQuaternion(tq);
+        }
+        node.updateMatrix();
     }
 
     removeNode(name) {
@@ -226,6 +273,11 @@ export class ThreeDirective {
 	this.pointLight.shadow.camera.far = 1000;
 	this.scene.add(this.pointLight);
 	this.pointLight.target = this.lightTarget;
+    }
+
+    setFloorVisibility(show) {
+        var floor = this.scene.getObjectByName('scene-floor');
+        floor.visible = show;
     }
 
     unFocusNode() {

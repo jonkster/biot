@@ -1,7 +1,6 @@
 <h3>Assemblies of Biot Nodes</h3>
 
 <div assemblies>
-
     <hr/>
     <div>Biotz Nodes detected: {{ getDetectedAddresses().length }} <button [disabled]="wantAll" (click)="showAll(true);">Show All</button></div> 
     <div>Message rate: {{ systemMessageRate | number:'1.1-2' }} req/sec</div>
@@ -28,16 +27,7 @@
                 <td><button (click)="identify(address)">Identify</button></td>
                 <td (click)="toggleShowAll(address)"><span [style.background]="'#' + getNodeColour(address)">&nbsp;&nbsp;</span>{{ address }}</td>
                 <td>
-                    <!--<ng-select
-                        [allowClear]="true"
-                        [items]="getOtherAddresses(address)"
-                        (data)="connectNodes(address, $event)"
-                        (selected)="console.log($event)"
-                        (removed)="console.log($event)"
-                        (typed)="console.log($event)"
-                        placeholder="No parent"
-                        >
-                        </ng-select>-->
+                    <myDropdown [items]="getOtherAddresses(address)" (onValueSet)="setParent(address, $event)" [itemColours]="nodeColours" [emptyValue]="'select parent...'"> </myDropdown>
                 </td>
                 <td>{{ getBiotProperty(address,'time') }}</td>
                 <td>{{ getBiotProperty(address,'status') }}</td>
