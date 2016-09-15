@@ -2,9 +2,9 @@
 
 <div assemblies>
     <hr/>
-    <div>Biotz Nodes detected: {{ getDetectedAddresses().length }} <button [disabled]="wantAll" (click)="showAll(true);">Show All</button></div> 
+    <div>Biotz Nodes detected: {{ getDetectedAddresses().length }}</div> 
     <div>Message rate: {{ systemMessageRate | number:'1.1-2' }} req/sec</div>
-    <div myThreeD>
+    <div myThreeD [sizeY]="400" [sizeX]="1600"  (onLimbClicked)="dialog.openDialog($event)">
     </div>
     <hr/>
 
@@ -24,12 +24,15 @@
         </thead>
         <tbody>
             <tr *ngFor="let address of getVisibleAddresses()">
-                <td><button (click)="identify(address)">Identify</button></td>
-                <td (click)="toggleShowAll(address)"><span [style.background]="'#' + getNodeColour(address)">&nbsp;&nbsp;</span>{{ address }}</td>
+                <td><button (click)="selectLimb(address)">Select</button></td>
+                <td><span [style.background]="'#' + getNodeColour(address)">&nbsp;&nbsp;</span>{{ address }}</td>
                 <td>
-                    <myDropdown [items]="getOtherAddresses(address)" (onValueSet)="setParent(address, $event)" [itemColours]="nodeColours" [emptyValue]="'select parent...'"> </myDropdown>
+                    <span [style.background-color]="'#' + getNodeColour(getParentAddress(address))">&nbsp;&nbsp;</span>
+                    {{ getParentAddress(address) }}
                 </td>
-                <td><input #len type="text" value="100" (keyup.enter)="setLimbLength(address, len.value)"/></td>
+                <td>
+                    {{ getLimbLength(address) }}
+                </td>
                 <td>{{ getBiotProperty(address,'time') }}</td>
                 <td>{{ getBiotProperty(address,'status') }}</td>
             </tr>
@@ -46,4 +49,43 @@
     This application is currently not intended to be used other than as an
     experimental platform. See: <a href="./#/about">About </a>
     </p>
+
+    <div myDialog class="dialog-holder">
+        <div class="dialog-content">
+            <h2>Adjust Limb Properties</h2>
+            <div class="form-item">
+                <label for="biot-name">Node:</label>
+                <span class="form-value" id="biot-name">
+                    <span [style.background-color]="'#' + getNodeColour(getCurrentLimbAddress())">&nbsp;&nbsp;</span>
+                    {{ getCurrentLimbAddress() }}
+                </span>
+            </div>
+            <div class="form-item">
+                <label for="biot-name">Identify Node:</label>
+                <button class="form-value" id="biot-name" (click)="identify(getCurrentLimbAddress())"> {{ getCurrentLimbAddress() }} </button>
+            </div>
+
+            <div class="form-item">
+                <label for="limb-length">Limb Length:</label>
+                <span class="form-value" id="limb-length">
+                    <input #llen type="text" [ngModel]="getCurrentLimbLength()" />
+                    <button (click)="setLimbLength(getCurrentLimbAddress(), llen.value)">Set</button>
+                </span>
+            </div>
+            <div class="form-item">
+                <label for="limb-parent">Limb Parent:</label>
+                <span class="form-value">
+                    <myDropdown [items]="getOtherAddresses(getCurrentLimbAddress())"
+                       (onValueSet)="setParent(getCurrentLimbAddress(), $event)"
+                       [itemColours]="nodeColours"
+                       [emptyValue]="'select parent...'">
+                    </myDropdown>
+                </span>
+            </div>
+
+            <div class="dialog-buttons" >
+                <button (click)="dialog.closeDialog()">Done</button>
+            </div>
+        </div>
+    </div>
 </div>

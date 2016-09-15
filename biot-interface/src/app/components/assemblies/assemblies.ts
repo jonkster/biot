@@ -1,7 +1,8 @@
-import {Component, ViewChildren} from '@angular/core';
+import {Component, ViewChild, ViewChildren} from '@angular/core';
 import {Observable} from 'rxjs/Observable';
 
 import {ThreeDirective} from '../../directives/three.directive';
+import {DialogComponent} from '../dialog/dialog.component';
 import {DropDownComponent} from '../dropdown/dropdown.component';
 import {Biotz} from '../../services/biotz';
 
@@ -9,15 +10,17 @@ import {Biotz} from '../../services/biotz';
   selector: 'assemblies',
   pipes: [],
   providers: [ Biotz ],
-  directives: [ ThreeDirective, DropDownComponent ],
-  styleUrls: ['./assemblies.css' ],
+  directives: [ ThreeDirective, DropDownComponent, DialogComponent ],
+  styleUrls: ['./assemblies.css', '../dialog/dialog.component.css' ],
   templateUrl: './assemblies.html'
 })
 export class Assemblies {
     @ViewChildren(ThreeDirective) threeDirective;
+    @ViewChildren(DialogComponent) dialogDirective;
     private dummyNodeCount = 0;
     private biotzData:any = {};
     private biotzCalibration:any = {};
+    private dialog;
     private detectedAddresses:any = {};
     private biotzStatus:any = {};
     private nodeColours:any = {};
@@ -48,6 +51,7 @@ export class Assemblies {
     ngAfterViewInit() {
         this.threeD = this.threeDirective.first;
         this.threeD.setFloorVisibility(false);
+        this.dialog = this.dialogDirective.first;
     }
 
     addDummyNode() {
@@ -60,11 +64,6 @@ export class Assemblies {
         else
             return this.showOnlyAddress[addr];
     }
-
-    /*connectNodes(node, parentNode) {
-        if (parentNode.length != 0)
-            alert("join " + node + " to " + parentNode.text);
-    }*/
 
     dropNode(addr) {
         var nodes = this.biotzData.nodes;
@@ -121,6 +120,13 @@ export class Assemblies {
             }
         }
         return others;
+    }
+
+    getCurrentLimbAddress() {
+        if (this.threeD.currentLimb)
+            return this.threeD.currentLimb.userData['address'];
+        else
+            return '';
     }
 
     getVisibleAddresses() {
@@ -245,7 +251,6 @@ export class Assemblies {
     }
 
     setLimbLength(addr, len) {
-        console.log("set", addr, "to length", len); 
         this.threeD.setLimbLength(addr, len);
     }
 
@@ -286,6 +291,8 @@ export class Assemblies {
         var colours = [
             0xff0000, 0x00ff00, 0x0000ff, 0xff00ff, 0x00ffff, 0xffff00
         ];
+        if (! addr || addr == 'none') 
+            return '7f7f7f';
         if (this.nodeColours[addr] === undefined) {
             var idx = Object.keys(this.nodeColours).length;
             var colour = colours[idx % colours.length];
@@ -296,6 +303,28 @@ export class Assemblies {
             this.nodeColours[addr] = colourSt;
         }
         return this.nodeColours[addr];
+    }
+
+    getParentAddress(addr) {
+        var pAddr = this.threeD.getParentAddress(addr);
+        if (pAddr)
+            return pAddr;
+        else
+            return 'none'
+    }
+
+    getCurrentLimbLength() {
+        return this.getLimbLength(this.getCurrentLimbAddress());
+    }
+
+
+    getLimbLength(addr) {
+        if (addr) {
+            return this.threeD.getLimbLength(addr);
+        } else {
+            return '??';
+        }
+
     }
 
     resetCalibration(addr) {
@@ -372,6 +401,11 @@ export class Assemblies {
             this.wantAll = true;
             this.threeD.unFocusNode();
         }
+    }
+
+    selectLimb(addr) {
+        this.threeD.setCurrentLimb(addr);
+        this.dialog.openDialog(addr);
     }
 
     showOne(addr, value) {

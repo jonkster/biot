@@ -6,7 +6,7 @@
     <hr/>
     <div>Biotz Nodes detected: {{ getDetectedAddresses().length }} <button [disabled]="wantAll" (click)="showAll(true);">Show All</button></div> 
     <div>Message rate: {{ systemMessageRate | number:'1.1-2' }} req/sec</div>
-    <div myThreeD>
+    <div myThreeD [sizeY]="400" [sizeX]="1024" >
     </div>
     <hr/>
 

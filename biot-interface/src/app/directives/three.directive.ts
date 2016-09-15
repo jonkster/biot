@@ -1,9 +1,9 @@
-import { Directive, ElementRef } from '@angular/core';
+import { Directive, ElementRef, EventEmitter, HostListener, Input, Output } from '@angular/core';
 
 import * as THREE from 'three';
 
 @Directive({
-    selector: '[myThreeD]'
+    selector: '[myThreeD]',
 })
 export class ThreeDirective {
 
@@ -16,32 +16,57 @@ export class ThreeDirective {
     camera = undefined;
     renderer = undefined;
     grid = undefined;
+    mouse = undefined;
     pointLight = undefined;
     hemiLight = undefined;
-    clearColour = 'white';
+    raycaster = undefined;
+    clearColour = '#d0d0d0';
+    currentLimb = undefined;
     oldMidx = 0;
-    sizeX = 1900;
-    sizeY = 256;
+    selectedLimb = undefined;
     zoomFactor = 3;
     lightTarget = undefined;
+    element = undefined;
+    zoom = 1;
+
+    @Input() sizeY: number = 300;
+    @Input() sizeX: number = 1024;
+
+    @Output() onLimbClicked = new EventEmitter<string>();
+
+    @HostListener('mousemove', ['$event'])
+      onMousemove(event) { this.mouseMoveHandler(event); };
+
+    @HostListener('mousedown', ['$event'])
+      onMousedown(event) { this.mouseDownHandler(event); };
+
+    @HostListener('mouseup', ['$event'])
+      onMouseup(event) { this.mouseUpHandler(event); };
+
+    @HostListener('mousewheel', ['$event'])
+      onMousewheel(event) { this.mouseWheelHandler(event); };
+
 
 
     constructor(private el: ElementRef) {
-	el.nativeElement.style.backgroundColor = this.clearColour;
-	this.init(el);
+        this.element = el;
+    }
+
+    ngOnInit() {
+	this.init();
 	this.anim();
     }
 
     addNode(parentNodeName, name, x, y, z, colour, showLimb) {
 
-	// make box
-	var geometry = new THREE.BoxGeometry(20, 25, 10);
-	var material = new THREE.MeshLambertMaterial( { color: colour} );
+        // make box
+        var geometry = new THREE.BoxGeometry(20, 25, 10);
+        var material = new THREE.MeshLambertMaterial( { color: colour} );
 
-	var node = new THREE.Mesh(geometry, material);
-	node.position.x = x;
-	node.position.y = y;
-	node.position.z = z;
+        var node = new THREE.Mesh(geometry, material);
+        node.position.x = x;
+        node.position.y = y;
+        node.position.z = z;
 
         var limbRadius = 10;
         var limbLength = 100;
@@ -73,32 +98,34 @@ export class ThreeDirective {
         }
 
 
-	var localAxis = this.addWorldAxis(0, 0, 0, 40, 2, 0.35);
-	localAxis.castShadow = true;
-	node.add(localAxis);
+        var localAxis = this.addWorldAxis(0, 0, 0, 40, 2, 0.35);
+        localAxis.castShadow = true;
+        node.add(localAxis);
 
-	node.name = 'biot-node-' + name;
-	node.castShadow = true;
-	node.receiveShadow = true;
+        node.name = 'biot-node-' + name;
+        node.castShadow = true;
+        node.receiveShadow = true;
         node.userData = {
             'parent': null,
             'address': name,
             'limbLength': limbLength,
             'limbRadius': limbRadius,
-            'defaultX' : x
+            'defaultX' : x,
+            'defaultY' : y,
+            'defaultZ' : z
         };
         if (parentNodeName == null) {
-	    this.scene.add(node);
+            this.scene.add(node);
         }
         else {
-	    var pnode = this.scene.getObjectByName('biot-node-' + parentNodeName);
-	    pnode.add(node);
+            var pnode = this.scene.getObjectByName('biot-node-' + parentNodeName);
+            pnode.add(node);
         }
 
-	 var midx = this.getCentreOfNodes();
-	 this.camera.position.x = midx;
-	 this.pointLight.position.set(midx, 0, 400);
-	 this.lightTarget.position.set(midx, 0, 0);
+        var midx = this.getCentreOfNodes();
+        this.camera.position.x = midx;
+        this.pointLight.position.set(midx, 0, 400);
+        this.lightTarget.position.set(midx, 0, 0);
 
     }
 
@@ -109,8 +136,14 @@ export class ThreeDirective {
             if (this.noLoops(node, pNode)) {
                 this.removeNode(node);
                 node.userData['parent'] = parentAddress;
-                console.log('x=', pNode.userData['limbLength']);
                 node.position.x = 1.1 * pNode.userData['limbLength'];
+                node.position.y = 0;
+                node.position.z = 0;
+                /*node.position.y = pNode.position.y;
+                node.position.z = pNode.position.z;*/
+                node.userData['defaultX'] = node.position.x;
+                node.userData['defaultY'] = node.position.y;
+                node.userData['defaultZ'] = node.position.z;
                 pNode.add(node);
             } else {
                 console.log('cannot set parent due to loop');
@@ -119,6 +152,8 @@ export class ThreeDirective {
             this.removeNode(node);
             node.userData['parent'] = null;
 	    node.position.x = node.userData['defaultX'];
+	    node.position.y = node.userData['defaultY'];
+	    node.position.z = node.userData['defaultZ'];
             this.scene.add(node);
         }
         else {
@@ -169,7 +204,6 @@ export class ThreeDirective {
 	requestAnimationFrame(()=> {
 	    this.anim()
 	});
-
 	this.renderer.render( this.scene, this.camera );
     }
 
@@ -192,35 +226,40 @@ export class ThreeDirective {
     }
 
 
-    init(el) {
+    init() {
 
-	this.scene = new THREE.Scene();
+        this.scene = new THREE.Scene();
 
-	this.camera = new THREE.OrthographicCamera( -800, 800, 200, -200, 0.1, 1000);
-	//this.camera = new THREE.PerspectiveCamera( 45, this.sizeX/this.sizeY, 0.1, 10000 );
-	this.scene.add(this.camera);
-	this.camera.up.set( 0, 0, 1 )
-	this.camera.position.z = 200;
-	this.camera.position.y = -250;
-	this.camera.position.x = 0;
-	this.camera.lookAt( this.scene.position );
+        this.camera = new THREE.OrthographicCamera( -800, 800, 200, -200, 0.1, 1000);
+        //this.camera = new THREE.PerspectiveCamera( 45, this.sizeX/this.sizeY, 0.1, 10000 );
+        this.scene.add(this.camera);
+        this.camera.up.set( 0, 0, 1 )
+        this.camera.position.z = 200;
+        this.camera.position.y = -250;
+        this.camera.position.x = 0;
+        this.camera.lookAt( this.scene.position );
 
-	var worldAxis = this.addWorldAxis(-500, 0, 0, 100, 1, 0.35);
-	worldAxis.name = 'world-axis-' + name;
-	worldAxis.castShadow = true;
-	this.scene.add(worldAxis);
 
-	 this.setupLighting();
-	 this.makeFloor();
+        var worldAxis = this.addWorldAxis(-500, 0, 0, 100, 1, 0.35);
+        worldAxis.name = 'world-axis-' + name;
+        worldAxis.castShadow = true;
+        this.scene.add(worldAxis);
 
-	 this.renderer = new THREE.WebGLRenderer();
-	 this.renderer.preserveDrawingBuffer = true ;
-	 this.renderer.setClearColor(this.clearColour, 1);
-	 this.renderer.setSize( this.sizeX, this.sizeY );
-	 this.renderer.shadowMap.enabled = true;
-	 el.nativeElement.appendChild( this.renderer.domElement );
+        this.setupLighting();
+        this.makeFloor();
+
+        this.renderer = new THREE.WebGLRenderer();
+        this.renderer.preserveDrawingBuffer = true ;
+        this.renderer.setClearColor(this.clearColour, 1);
+        this.renderer.setSize( this.sizeX, this.sizeY );
+        this.renderer.shadowMap.enabled = true;
+        this.element.nativeElement.appendChild( this.renderer.domElement );
+
+        this.raycaster = new THREE.Raycaster();
+        this.mouse = new THREE.Vector2();
 
     }
+
 
     focusNode(addr) {
 	this.oldMidx = this.camera.position.x;
@@ -229,6 +268,33 @@ export class ThreeDirective {
 	var node = this.scene.getObjectByName('biot-node-' + addr);
 	this.camera.lookAt( node.position );
 	this.camera.updateProjectionMatrix();
+    }
+
+    getLimbLength(addr) {
+	var node = this.scene.getObjectByName('biot-node-' + addr);
+        if (node) {
+            return node.userData['limbLength'];
+        }
+        return '';
+    }
+
+    getParentAddress(addr) {
+	var node = this.scene.getObjectByName('biot-node-' + addr);
+        if (node) {
+            return node.userData['parent'];
+        }
+        return '';
+    }
+
+    getRootLimb(limb) {
+        var parentAddr = limb.userData['parent'];
+        if (! parentAddr)
+            return limb;
+	var parentNode = this.scene.getObjectByName('biot-node-' + parentAddr);
+        if (! parentNode)
+            return limb;
+        else
+            return this.getRootLimb(parentNode);
     }
 
     makeFloor() {
@@ -270,6 +336,77 @@ export class ThreeDirective {
         node.updateMatrix();
     }
 
+    mouseDownHandler(event) {
+        this.mouse.x = -1 + 2 * (event.offsetX / event.srcElement.width);
+        this.mouse.y = 1 - 2 * (event.offsetY / event.srcElement.height);
+
+        this.raycaster.setFromCamera(this.mouse, this.camera);
+        var limbs = [];
+        this.scene.traverse(function(ob) {
+            if (ob.name.match(/biot-node/))
+            limbs.push(ob);
+        });
+        var intersects = this.raycaster.intersectObjects(limbs);
+
+        if (intersects.length > 0) {
+            for (var i = 0; i < intersects.length; i++) {
+                var limb = intersects[i].object;
+                if (limb.userData.address) {
+                    this.selectedLimb = limb;            
+                    this.currentLimb = limb;            
+                    this.selectedLimb.userData['currentX'] = this.selectedLimb.position.x;
+                    this.selectedLimb.userData['currentY'] = this.selectedLimb.position.y;
+                    this.selectedLimb.userData['currentZ'] = this.selectedLimb.position.z;
+                    break;
+                }
+            }
+        }
+    }
+
+    mouseMoveHandler(event) {
+
+        if (this.selectedLimb) {
+            this.mouse.x = -1 + 2 * (event.offsetX / event.srcElement.width);
+            this.mouse.y = 1 - 2 * (event.offsetY / event.srcElement.height);
+
+            if (this.selectedLimb) {
+                this.raycaster.setFromCamera(this.mouse, this.camera);
+                var plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), this.selectedLimb.position.y);
+                var hitPoint = this.raycaster.ray.intersectPlane(plane);
+                if (hitPoint) {
+                    this.selectedLimb.position.x = hitPoint.x;
+                    this.selectedLimb.position.y = hitPoint.y;
+                    this.selectedLimb.position.z = hitPoint.z;
+                } else {
+                    this.selectedLimb = undefined;
+                }
+
+            }
+        }
+    }
+
+    mouseUpHandler(event) {
+        if (this.selectedLimb) {
+            if ((this.selectedLimb.position.x == this.selectedLimb.userData['currentX']) && (this.selectedLimb.position.y == this.selectedLimb.userData['currentY']) && (this.selectedLimb.position.z == this.selectedLimb.userData['currentZ'])) {
+                this.openNodeDialog(this.selectedLimb);
+            } else if (this.selectedLimb.userData['parent']) {
+                this.selectedLimb.position.x = this.selectedLimb.userData['currentX'];
+                this.selectedLimb.position.y = this.selectedLimb.userData['currentY'];
+                this.selectedLimb.position.z = this.selectedLimb.userData['currentZ'];
+            }
+            this.selectedLimb = undefined;
+        }
+    }
+
+    mouseWheelHandler(event) {
+        var amount = event.wheelDelta;
+        var delta = 0.1;
+        if (amount < 0)
+            delta = -0.1;
+        this.camera.zoom += delta;
+        this.camera.updateProjectionMatrix();
+    }
+
     noLoops(node, pNode): boolean {
         if (node.userData['address'] == pNode.userData['address'])
             return false;
@@ -284,11 +421,13 @@ export class ThreeDirective {
         return true;
     }
 
+    openNodeDialog(limb) {
+        this.onLimbClicked.emit(limb.userData['address']);
+    }
+
     removeNode(name) {
 	var node = this.scene.getObjectByName('biot-node-' + name);
 	this.scene.remove(node);
-	//node = this.scene.getObjectByName('world-axis-' + name);
-	//this.scene.remove(node);
     }
 
     setupLighting() {
@@ -316,6 +455,11 @@ export class ThreeDirective {
 	this.pointLight.target = this.lightTarget;
     }
 
+    setCurrentLimb(addr) {
+	var node = this.scene.getObjectByName('biot-node-' + addr);
+        this.currentLimb = node;            
+    }
+
     setFloorVisibility(show) {
         var floor = this.scene.getObjectByName('scene-floor');
         floor.visible = show;
@@ -325,9 +469,17 @@ export class ThreeDirective {
         var node = this.scene.getObjectByName('biot-node-' + addr);
         if (node) {
             node.userData['limbLength'] = len;
-            node.traverse(function(limbEnvelope){
-                if (limbEnvelope.name == 'limb-envelope-' + addr) {
-                    limbEnvelope.scale.y = len/100;
+            var adjusted = false;
+            node.traverse(function(nodeChild){
+                if (nodeChild.name == 'limb-envelope-' + addr) {
+                    nodeChild.scale.y = len/100;
+                } else if (nodeChild.userData['parent'] && ! adjusted) {
+                    if (nodeChild.name != node.name) {
+                        nodeChild.position.x = 1.1 * len;
+                        nodeChild.position.y = 0;
+                        nodeChild.position.z = 0;
+                        adjusted = true;
+                    }
                 }
             });
         }
