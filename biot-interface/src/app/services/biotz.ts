@@ -24,9 +24,28 @@ export class Biotz {
           .map((response) => response.json());
   }
 
+  dropDummyNodes() {
+      var path = 'biotz/dropnodes';
+      var url = "http://localhost:8889/" + path;
+      return this.http.put(url, '')
+          .map((response) => response.json());
+  }
+
   getCalibration(addr) {
     var result = this.makeBrokerRequest('biotz/addresses/' + addr + '/calibration');
     return result;
+  }
+
+  getCachedAssemblies() {
+      var path = 'data/assembly';
+      var result = this.makeBrokerRequest(path);
+      return result;
+  }
+
+  getCachedAssembly(name) {
+      var path = 'data/assembly/' + name;
+      var result = this.makeBrokerRequest(path);
+      return result;
   }
 
   getCachedCalibrationAddresses() {
@@ -75,6 +94,13 @@ export class Biotz {
       //.map((response) => response.json())
       .map(this.extractWSData)
       .catch(this.handleError);
+  }
+
+  postAssemblyToCache(name, data: string) {
+      var path = 'data/assembly/' + name;
+      var url = "http://localhost:8889/" + path ;
+      return this.http.post(url, data)
+          .map((response) => response.json());
   }
 
   putCalibrationsToCache(addr, data: string) {

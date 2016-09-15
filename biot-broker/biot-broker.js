@@ -53,6 +53,7 @@ brokerUdpListener.on('message', function (message, remote) {
 // Listen for and act on Broker HTTP Requests
 var restify = require('restify');
 var brokerListener = restify.createServer();
+brokerListener.use(restify.bodyParser());
 brokerListener.get('/', getRoot);
 
 brokerListener.get('/biotz', getAllBiotData);
@@ -61,6 +62,7 @@ brokerListener.get('/biotz/status', getBiotzStatus);
 brokerListener.get('/biotz/synchronise', biotSync);
 brokerListener.get('/biotz/addresses', getBiotz);
 brokerListener.put('/biotz/addnode/:address', addDummyNode);
+brokerListener.put('/biotz/dropnodes', dropDummyNodes);
 
 brokerListener.get('/biotz/addresses/:address', getBiotFull);
 brokerListener.get('/biotz/addresses/:address', getBiotFull);
@@ -73,6 +75,10 @@ brokerListener.get('/biotz/addresses/:address/:quality', getBiotQuality);
 
 brokerListener.put('/biotz/addresses/:address/calibration/:data', putBiotCalibration);
 brokerListener.put('/biotz/addresses/:address/sensors/:data', putBiotSensors);
+
+brokerListener.get('/data/assembly', getCachedAssemblies);
+brokerListener.get('/data/assembly/:name', getCachedAssembly);
+brokerListener.post('/data/assembly/:name', postCachedAssembly);
 
 brokerListener.get('/data/addresses', getCachedAddresses);
 brokerListener.get('/data/addresses/:address/calibration', getCachedCalibration);
@@ -155,6 +161,17 @@ function biotSync(req, res, next) {
     next();
 }
 
+function dropDummyNodes(req, res, next) {
+    for (var i = 0; i < dummyNodes.length; i++) {
+        var address = dummyNodes[i];
+        delete biotzData[address];
+        delete biotzCal[address];
+        delete nodeStatus[address];
+    }
+    dummyNodes = [];
+}
+
+
 function getRoot(req, res, next) {
     res.setHeader('Content-Type', 'text/plain');
     res.send("Biotz Broker v0.0\n" + 
@@ -202,6 +219,7 @@ function getAllBiotData(req, res, next) {
             var y = 0.167431;
             var z = 0.223644;
             biotzData[address] = 0 + ":" + w + ":" + x + ":" + y + ":" + z;
+            nodeStatus[address] = 'dummy';
         }
         var q = biotzData[address].split(':');
         var t = parseInt(q[0]);
@@ -220,7 +238,6 @@ function getAllBiotData(req, res, next) {
         biotzData[address] = t + ":" + w + ":" + x + ":" + y + ":" + z;
         biotzCal[address] = "-360:-350:-728:394:461:56";
         var nodeValue = biotzData[address];
-        nodeStatus[address] = 'active';
         nodes.push({
             "a" : address,
             "v" : nodeValue
@@ -436,6 +453,44 @@ function getCachedAddresses(req, res, next) {
     });
 }
 
+function getCachedAssemblies(req, res, next) {
+
+    res.header("Access-Control-Allow-Origin", "*"); 
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+    res.setHeader('Content-Type', 'application/json');
+    var path = dataPath + '/assembly/';
+
+    var fs = require('fs');
+    fs.readdir(path, function(err, files) {
+        if (err) {
+            res.send(500, 'fail');
+        } else {
+            res.send(200, files);
+        }
+        next();
+    });
+}
+
+function getCachedAssembly(req, res, next) {
+    var name = req.params['name'];
+    var path = dataPath + '/assembly/' + name;
+
+    var fs = require('fs');
+    fs.readFile(path, function(err, data) {
+        data = JSON.parse(data);
+        res.header("Access-Control-Allow-Origin", "*"); 
+        res.header("Access-Control-Allow-Headers", "X-Requested-With");
+        res.setHeader('Content-Type', 'application/json');
+        if (err) {
+            console.log(err, 'reading file:', path);
+            res.send(404, data);
+        } else {
+            res.send(200, data);
+        }
+        next();
+    });
+}
+
 function getCachedCalibration(req, res, next) {
     var address = req.params['address'];
     var path = dataPath + '/addresses/' + address + '/calibration.json';
@@ -511,6 +566,39 @@ function putBiotSensors(req, res, next) {
         client.close();
         next();
     });
+}
+
+function postCachedAssembly(req, res, next) {
+    var name = req.params['name'];
+    var data = req.body;
+    var path = dataPath + '/assembly/';
+
+    res.header("Access-Control-Allow-Origin", "*"); 
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+    res.setHeader('Content-Type', 'application/json');
+
+    var fs = require('fs');
+
+    if (! fs.existsSync(path)) {
+        var mkdirp = require('mkdirp');
+        var dir = mkdirp.sync(path);
+        if (! dir) {
+            res.send(500, 'failed to create resource');
+            next();
+            return;
+        }
+    }
+    path += '/' + name;
+    fs.writeFile(path, JSON.stringify(data), function(err) {
+        if (err) {
+            res.send(500, 'OK');
+            console.log(fErr, 'writing file:', path);
+        } else {
+            res.send('OK');
+        }
+        next();
+    });
+
 }
 
 function putCachedCalibration(req, res, next) {

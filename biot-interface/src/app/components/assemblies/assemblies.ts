@@ -16,26 +16,32 @@ import {Biotz} from '../../services/biotz';
 })
 export class Assemblies {
     @ViewChildren(ThreeDirective) threeDirective;
-    @ViewChildren(DialogComponent) dialogDirective;
-    private dummyNodeCount = 0;
-    private biotzData:any = {};
+    @ViewChildren(DialogComponent) dialogDirectives;
+
+    private accel:boolean = true;
+    private assemblyNames:any = [];
     private biotzCalibration:any = {};
-    private dialog;
-    private detectedAddresses:any = {};
+    private biotzData:any = {};
     private biotzStatus:any = {};
-    private nodeColours:any = {};
-    private savedCalibrations:any = {};
-    private monitoring:boolean = true;
+    private compass:boolean = true;
     private counter:number = 0;
+    private currentAssembly:any = {};
+    private detectedAddresses:any = {};
+    private limbDialog;
+    private assemblyDialog;
+    private assemblyLoadDialog;
+    private dummyNodeCount = 0;
+    private gyro:boolean = true;
+    private monitoring:boolean = true;
+    private nodeColours:any = {};
     private nodes: any = {};
-    private threeD: any = {};
+    private savedCalibrations:any = {};
     private showOnlyAddress: any = {};
     private systemMessageRate: number = 0;
+    private threeD: any = {};
+    private throttle:boolean = false;
     private wantAll: boolean = true;
-
-    private gyro:boolean = true;
-    private accel:boolean = true;
-    private compass:boolean = true;
+    private wantedAssembly: string = '';
 
     //private parents:Array<string> = [];
 
@@ -51,11 +57,22 @@ export class Assemblies {
     ngAfterViewInit() {
         this.threeD = this.threeDirective.first;
         this.threeD.setFloorVisibility(false);
-        this.dialog = this.dialogDirective.first;
+        var dialogs = {};
+        this.dialogDirectives.forEach(function(dialog) {
+            dialogs[dialog.name] = dialog;
+        });
+        this.limbDialog = dialogs['limb-dialog'];
+        this.assemblyDialog = dialogs['assembly-dialog'];
+        this.assemblyLoadDialog = dialogs['assembly-load-dialog'];
     }
 
-    addDummyNode() {
-        this.biotz.addDummyNode('affe::1234:' + this.dummyNodeCount++).subscribe();
+    addDummyNode(addr) {
+        console.log('add dummy node', addr);
+        if (! addr)
+            addr = 'affe::1234:' + this.dummyNodeCount++;
+        this.biotz.addDummyNode(addr).subscribe(
+            response => console.log('r', response)
+        );
     }
 
     canShow(addr) {
@@ -78,10 +95,23 @@ export class Assemblies {
             'count' : activeNodes.length,
             'nodes': activeNodes
         }
-        this.biotzStatus[addr] = undefined;
-        this.detectedAddresses[addr] = undefined;
-        this.nodes[addr] = undefined;
+        delete this.biotzStatus[addr];
+        delete this.detectedAddresses[addr];
+        delete this.nodes[addr];
         this.threeD.removeNode(addr);
+    }
+
+    dropDummyNodes() {
+        var monitoringStatus = this.monitoring;
+        this.monitoring = false;
+        this.biotz.dropDummyNodes().subscribe();
+        var nodes = this.biotzData.nodes;
+        for (var i = 0; i < nodes.length; i++) {
+            var node = nodes[i];
+            this.dropNode(node.address);
+        }
+        this.dummyNodeCount = 0;
+        this.monitoring = monitoringStatus;
     }
 
     getNodeCalibration(addr) {
@@ -162,6 +192,10 @@ export class Assemblies {
     }
 
     getData() {
+        if (this.throttle) {
+            return;
+        }
+        this.throttle = true;
         this.biotz.getData()
             .subscribe(rawData => {
                 this.biotzData = {
@@ -190,7 +224,8 @@ export class Assemblies {
                             if (nStat === undefined) {
                                 nStat = 'unknown';
                             } else {
-                                nStat = nStat.status;
+                                if (nStat.status)
+                                    nStat = nStat.status;
                             }
 
                             var colourSt = this.getNodeColour(addr);
@@ -230,12 +265,15 @@ export class Assemblies {
                     var name = addressesKnown[i];
                     if (! nodesUpdated[name]) 
                     {
+                        delete this.detectedAddresses[name];
+                        delete this.nodes[name];
                         this.threeD.removeNode(name);
-                        this.nodes[name] = undefined;
                     }
                 }
+                this.throttle = false;
             },
             error => {
+                alert('woah!');
                 console.error("Error updating data!", error);
             });
     }
@@ -250,9 +288,72 @@ export class Assemblies {
         this.biotz.identify(addr).subscribe();
     }
 
+    loadAssembly(name) {
+        this.biotz.getCachedAssembly(name)
+            .subscribe(res => {
+                this.currentAssembly = {};
+                this.currentAssembly = JSON.parse(res);
+                var savedAddresses = Object.keys(this.currentAssembly);
+                var colourSt = this.getNodeColour(addr);
+                for (var i = 0; i < savedAddresses.length; i++) {
+                    var addr = savedAddresses[i];
+                    var node = this.currentAssembly[addr];
+                    if (! this.detectedAddresses[addr]) {
+                        this.addDummyNode(addr);
+                        this.detectedAddresses[addr] = true;
+                    }
+                    this.setLimbLength(addr, node['limbLength']);
+                    if ((node['parent'] != 'none') && ! this.detectedAddresses[node['parent']]) {
+                        this.addDummyNode(node['parent']);
+                        this.detectedAddresses[node['parent']] = true;
+                    }
+                }
+
+                for (var i = 0; i < savedAddresses.length; i++) {
+                    var addr = savedAddresses[i];
+                    var node = this.currentAssembly[addr];
+                    if (node['parent'] != 'none') {
+                        this.setParent(addr, node['parent']);
+                    }
+                }
+
+            });
+    };
+
+    loadSavedAssembly() {
+        this.biotz.getCachedAssemblies()
+            .subscribe(res => {
+                this.assemblyNames = res;
+                this.assemblyLoadDialog.openDialog('load');
+            });
+    };
+
+
     setLimbLength(addr, len) {
         this.threeD.setLimbLength(addr, len);
     }
+
+    saveAssembly(name) {
+        this.currentAssembly = {};
+        var addresses = this.getDetectedAddresses();
+        for (var i = 0; i < addresses.length; i++) {
+            var addr = addresses[i];
+            var parentAddr = this.getParentAddress(addr);
+            this.currentAssembly[addr] = {
+                'parent': parentAddr,
+                'limbLength': this.getLimbLength(addr)
+            }
+        }
+        console.log(this.currentAssembly);
+        this.biotz.postAssemblyToCache(name, JSON.stringify(this.currentAssembly))
+            .subscribe(res => {
+                console.log(addr, "assembly data should now be saved to cache");
+            });
+    }
+
+    saveCurrentAssembly() {
+        this.assemblyDialog.openDialog('save');
+    };
 
     setSensors(g, a, c) {
         this.gyro = g;
@@ -403,9 +504,13 @@ export class Assemblies {
         }
     }
 
+    setWantedAssembly(name) {
+        this.wantedAssembly = name;
+    }
+
     selectLimb(addr) {
         this.threeD.setCurrentLimb(addr);
-        this.dialog.openDialog(addr);
+        this.limbDialog.openDialog(addr);
     }
 
     showOne(addr, value) {

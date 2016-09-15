@@ -31,14 +31,13 @@ export class DropDownComponent {
         if (colour != undefined)
             return '#' + colour;
         else
-            return '#eee';
+            return '#030303';
     }
 
     selectItem(val) {
         this.selected = val;
         this.isDropped = false;
         this.onValueSet.emit(val);
-        console.log(val);
     }
 
     toggleDropped() {

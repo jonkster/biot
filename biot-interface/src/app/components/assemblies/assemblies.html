@@ -4,13 +4,13 @@
     <hr/>
     <div>Biotz Nodes detected: {{ getDetectedAddresses().length }}</div> 
     <div>Message rate: {{ systemMessageRate | number:'1.1-2' }} req/sec</div>
-    <div myThreeD [sizeY]="400" [sizeX]="1600"  (onLimbClicked)="dialog.openDialog($event)">
+    <div myThreeD [sizeY]="400" [sizeX]="1600"  (onLimbClicked)="limbDialog.openDialog($event)">
     </div>
     <hr/>
 
-    <h3>Node Position Data</h3>
+    <h3>Limb Assembly Details</h3>
     <div>Currently Monitoring Biotz Nodes: <b>{{ monitoring }}</b></div>
-    <button [ngClass]="{'active': monitoring}" (click)="toggleMonitoring()">Toggle Monitor</button>
+    <button [ngClass]="{'active': monitoring}" (click)="toggleMonitoring()">Toggle Movement</button>
     <table>
         <thead>
             <tr>
@@ -39,18 +39,20 @@
         </tbody>
     </table>
 
-    <button (click)="synchronise()">Force Synchronise Nodes</button>
-    <button (click)="saveCalibrations()">Save Current Calibrations</button>
     <button (click)="sendCalibrations()">Send Saved Calibrations to Nodes</button>
     <hr/>
-    <button (click)="addDummyNode()">Add Dummy Node</button>
+    <button (click)="saveCurrentAssembly()">Save Current Assembly</button>
+    <button (click)="loadSavedAssembly()">Load Saved Assembly</button>
+    <button (click)="addDummyNode(null)">Add Dummy Node</button>
+    <button (click)="dropDummyNodes()">Remove Dummy Nodes</button>
 
     <p>
     This application is currently not intended to be used other than as an
     experimental platform. See: <a href="./#/about">About </a>
     </p>
 
-    <div myDialog class="dialog-holder">
+
+    <div myDialog [name]="'limb-dialog'" class="dialog-holder">
         <div class="dialog-content">
             <h2>Adjust Limb Properties</h2>
             <div class="form-item">
@@ -84,8 +86,38 @@
             </div>
 
             <div class="dialog-buttons" >
-                <button (click)="dialog.closeDialog()">Done</button>
+                <button (click)="limbDialog.closeDialog()">Done</button>
             </div>
         </div>
     </div>
+
+    <div myDialog [name]="'assembly-dialog'" class="dialog-holder">
+            <h2>Save Limb Assembly</h2>
+            <div class="form-item">
+                <label for="assembly-name">Name:</label>
+                <span class="form-value" id="assembly-name">
+                    <input #nme type="text" />
+                    <button (click)="saveAssembly(nme.value); assemblyDialog.closeDialog()">Save</button>
+                    <button (click)="assemblyDialog.closeDialog()">Cancel</button>
+                </span>
+            </div>
+    </div>
+
+    <div myDialog [name]="'assembly-load-dialog'" class="dialog-holder">
+            <h2>Load Limb Assembly</h2>
+            <div class="form-item">
+                <label for="assembly-names">Name:</label>
+                    <myDropdown id="assembly-names"
+                                [items]="assemblyNames"
+                                (onValueSet)="setWantedAssembly($event)"
+                                [itemColours]="nodeColours"
+                                [emptyValue]="'select assembly...'">
+                    </myDropdown>
+            </div>
+            <div class="dialog-buttons">
+                <button (click)="loadAssembly(wantedAssembly); assemblyLoadDialog.closeDialog()">Load</button>
+                <button (click)="assemblyLoadDialog.closeDialog()">Cancel</button>
+            </div>
+    </div>
+
 </div>
