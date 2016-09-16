@@ -57,7 +57,7 @@ export class ThreeDirective {
 	this.anim();
     }
 
-    addNode(parentNodeName, name, x, y, z, colour, showLimb) {
+    addNode(parentNodeName, name, x, y, z, colour, limbName, limbLength, showLimb) {
 
         // make box
         var geometry = new THREE.BoxGeometry(20, 25, 10);
@@ -68,8 +68,7 @@ export class ThreeDirective {
         node.position.y = y;
         node.position.z = z;
 
-        var limbRadius = 10;
-        var limbLength = 100;
+        var limbRadius = limbLength/10;
         if (showLimb) {
             var limbGeometry = new THREE.CylinderGeometry( limbRadius, limbRadius, limbLength, 50 );
             var matrix = new THREE.Matrix4();
@@ -108,6 +107,7 @@ export class ThreeDirective {
         node.userData = {
             'parent': null,
             'address': name,
+            'limbName': limbName,
             'limbLength': limbLength,
             'limbRadius': limbRadius,
             'defaultX' : x,
@@ -145,8 +145,10 @@ export class ThreeDirective {
                 node.userData['defaultY'] = node.position.y;
                 node.userData['defaultZ'] = node.position.z;
                 pNode.add(node);
+                return true;
             } else {
                 console.log('cannot set parent due to loop');
+                return false;
             }
         } else if (node) {
             this.removeNode(node);
@@ -155,9 +157,11 @@ export class ThreeDirective {
 	    node.position.y = node.userData['defaultY'];
 	    node.position.z = node.userData['defaultZ'];
             this.scene.add(node);
+            return true;
         }
         else {
             console.log("cannot add parent to node: parent=" + parentAddress + ", node=" + address);
+            return false;
         }
     }
 
@@ -274,6 +278,14 @@ export class ThreeDirective {
 	var node = this.scene.getObjectByName('biot-node-' + addr);
         if (node) {
             return node.userData['limbLength'];
+        }
+        return '';
+    }
+
+    getLimbName(addr) {
+	var node = this.scene.getObjectByName('biot-node-' + addr);
+        if (node) {
+            return node.userData['limbName'];
         }
         return '';
     }
@@ -482,6 +494,13 @@ export class ThreeDirective {
                     }
                 }
             });
+        }
+    }
+
+    setLimbName(addr, name) {
+        var node = this.scene.getObjectByName('biot-node-' + addr);
+        if (node) {
+            node.userData['limbName'] = name;
         }
     }
 

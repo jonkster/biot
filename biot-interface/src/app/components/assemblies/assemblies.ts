@@ -28,6 +28,7 @@ export class Assemblies {
     private currentAssembly:any = {};
     private detectedAddresses:any = {};
     private limbDialog;
+    private parentsNeedUpdating: boolean = false;
     private assemblyDialog;
     private assemblyLoadDialog;
     private dummyNodeCount = 0;
@@ -67,12 +68,9 @@ export class Assemblies {
     }
 
     addDummyNode(addr) {
-        console.log('add dummy node', addr);
         if (! addr)
             addr = 'affe::1234:' + this.dummyNodeCount++;
-        this.biotz.addDummyNode(addr).subscribe(
-            response => console.log('r', response)
-        );
+        this.biotz.addDummyNode(addr).subscribe();
     }
 
     canShow(addr) {
@@ -120,7 +118,7 @@ export class Assemblies {
                 this.biotzCalibration[addr] = rawData;
             },
             error => {
-                console.error("ERROR getting calibration!", error);
+                console.error("ERROR getting calibration. Has broker died?", error);
             });
     }
 
@@ -246,8 +244,7 @@ export class Assemblies {
                             if (this.nodes[addr] === undefined)
                                 {
                                     this.nodes[addr] = {};
-                                    this.threeD.addNode(null, addr, i*200, 0, 0, parseInt(colourSt, 16), true);
-                                    console.log("sending calibrations for", addr);
+                                    this.threeD.addNode(null, addr, i*200, 0, 0, parseInt(colourSt, 16), 'limb-' + addr, 100, true);
                                     var cal = this.savedCalibrations[addr];
                                     this.biotz.putCalibrationToNode(addr, cal)
                                 }
@@ -271,10 +268,12 @@ export class Assemblies {
                     }
                 }
                 this.throttle = false;
+                if (this.parentsNeedUpdating) {
+                    this.setParentsOfCurrentAssembly();
+                }
             },
             error => {
-                alert('woah!');
-                console.error("Error updating data!", error);
+                console.error("Error updating data, has broker died?", error);
             });
     }
 
@@ -303,22 +302,51 @@ export class Assemblies {
                         this.detectedAddresses[addr] = true;
                     }
                     this.setLimbLength(addr, node['limbLength']);
-                    if ((node['parent'] != 'none') && ! this.detectedAddresses[node['parent']]) {
-                        this.addDummyNode(node['parent']);
-                        this.detectedAddresses[node['parent']] = true;
-                    }
+                    this.setLimbName(addr, node['limbName']);
                 }
 
-                for (var i = 0; i < savedAddresses.length; i++) {
-                    var addr = savedAddresses[i];
-                    var node = this.currentAssembly[addr];
-                    if (node['parent'] != 'none') {
-                        this.setParent(addr, node['parent']);
-                    }
-                }
-
+                // dummy nodes will be registered at this point by broker but
+                // the drawing stuff won't know about them until it next reads
+                // data from broker in the getData method so you can't assemble
+                // the nodes yet.
+              
+                this.parentsNeedUpdating = true;
             });
     };
+
+    getCurrentLimbName() {
+        if (this.threeD.getLimbName)
+            return this.threeD.getLimbName(this.getCurrentLimbAddress());
+        return '';
+    }
+
+    setLimbName(addr, name) {
+        this.threeD.setLimbName(addr, name);
+    }
+
+    getLimbName(addr) {
+        if (this.threeD.getLimbName)
+            return this.threeD.getLimbName(addr);
+        return '';
+    }
+
+    setParentsOfCurrentAssembly() {
+        var ok = true;
+        var addresses = Object.keys(this.currentAssembly);
+        for (var i = 0; i < addresses.length; i++) {
+            var addr = addresses[i];
+            var node = this.currentAssembly[addr];
+            this.setLimbLength(addr, node['limbLength']);
+            this.setLimbName(addr, node['limbName']);
+            if (node['parent'] != 'none') {
+                if (! this.setParent(addr, node['parent'])) {
+                    ok = false;
+                }
+            }
+        }
+        this.parentsNeedUpdating = ! ok;
+        return ok;
+    }
 
     loadSavedAssembly() {
         this.biotz.getCachedAssemblies()
@@ -341,10 +369,10 @@ export class Assemblies {
             var parentAddr = this.getParentAddress(addr);
             this.currentAssembly[addr] = {
                 'parent': parentAddr,
-                'limbLength': this.getLimbLength(addr)
+                'limbLength': this.getLimbLength(addr),
+                'limbName': this.getLimbName(addr)
             }
         }
-        console.log(this.currentAssembly);
         this.biotz.postAssemblyToCache(name, JSON.stringify(this.currentAssembly))
             .subscribe(res => {
                 console.log(addr, "assembly data should now be saved to cache");
@@ -485,7 +513,7 @@ export class Assemblies {
     }
 
     setParent(child, mother) {
-        this.threeD.addParent(child, mother);
+        return this.threeD.addParent(child, mother);
     }
 
     synchronise() {

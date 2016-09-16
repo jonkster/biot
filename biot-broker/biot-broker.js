@@ -31,7 +31,8 @@ var biotzData = {};
 var biotzCal = {};
 var nodeStatus = {};
 
-var dummyNodes = [];
+var realNodes = {};
+var dummyNodes = {};
 var dummyTime = 0;
 
 // received an update message - store info
@@ -54,6 +55,14 @@ brokerUdpListener.on('message', function (message, remote) {
 var restify = require('restify');
 var brokerListener = restify.createServer();
 brokerListener.use(restify.bodyParser());
+
+brokerListener.pre(function(req, res, next) {
+    //console.log("REQ:", req.url);
+    res.header("Access-Control-Allow-Origin", "*"); 
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+    res.setHeader('Content-Type', 'application/json');
+    next();
+});
 brokerListener.get('/', getRoot);
 
 brokerListener.get('/biotz', getAllBiotData);
@@ -96,8 +105,14 @@ brokerListener.listen(BROKER_HTTP_PORT, BROKER_HOST, function() {
 
 function addDummyNode(req, res, next) {
     var address = req.params['address'];
-    dummyNodes.push(address);
+    nodeStatus[address] = {
+        'status': 'dummy',
+        'ts': 0
+    }
+    dummyNodes[address] = true;
     console.log("adding dummy node:", address);
+    res.send('OK');
+    next();
 }
 
 
@@ -116,6 +131,7 @@ function addNodeData(jResponse) {
 
     if (jResponse['t'] == 'dat') {
         biotzData[address] = jResponse.v;
+        realNodes[address] = true;
     }
     else if (jResponse['t'] == 'cal'){
         biotzCal[address] = jResponse.v;
@@ -162,13 +178,16 @@ function biotSync(req, res, next) {
 }
 
 function dropDummyNodes(req, res, next) {
-    for (var i = 0; i < dummyNodes.length; i++) {
-        var address = dummyNodes[i];
+    var dAddresses = Object.keys(dummyNodes);
+    for (var i = 0; i < dAddresses.length; i++) {
+        var address = dAddresses[i];
         delete biotzData[address];
         delete biotzCal[address];
         delete nodeStatus[address];
+        delete dummyNodes[address];
     }
-    dummyNodes = [];
+    res.send('OK');
+    next();
 }
 
 
@@ -194,9 +213,6 @@ function getRoot(req, res, next) {
 
 function getAllBiotData(req, res, next) {
     sendBiotzRouterMessage();
-    res.header("Access-Control-Allow-Origin", "*"); 
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-    res.setHeader('Content-Type', 'application/json');
 
     var addresses = Object.keys(biotzData);
     var c =addresses.length;
@@ -211,15 +227,21 @@ function getAllBiotData(req, res, next) {
         });
     }
 
-    for (var i = 0; i < dummyNodes.length; i++) {
-        var address = dummyNodes[i];
+    var dAddresses = Object.keys(dummyNodes);
+    for (var i = 0; i < dAddresses.length; i++) {
+        var address = dAddresses[i];
+        if (realNodes[address]) {
+            // a real node with this address exists - drop dummy node in that
+            // case and use the real one.
+            delete dummyNodes[address];
+            break;
+        }
         if (biotzData[address] == undefined) {
             var w = 0.793339;
             var x = 0.540891;
             var y = 0.167431;
             var z = 0.223644;
             biotzData[address] = 0 + ":" + w + ":" + x + ":" + y + ":" + z;
-            nodeStatus[address] = 'dummy';
         }
         var q = biotzData[address].split(':');
         var t = parseInt(q[0]);
@@ -234,6 +256,11 @@ function getAllBiotData(req, res, next) {
         y = y/norm;
         z = z/norm;
         t++;
+
+        nodeStatus[address] = {
+            'status' : 'dummy',
+            'ts': t
+        }
 
         biotzData[address] = t + ":" + w + ":" + x + ":" + y + ":" + z;
         biotzCal[address] = "-360:-350:-728:394:461:56";
@@ -250,7 +277,6 @@ function getAllBiotData(req, res, next) {
         "c": c,
         "n" : nodes
     }
-
     res.send(value);
     next();
 }
@@ -262,9 +288,6 @@ function getBiotData(req, res, next) {
 
     // trigger update request for next time
     sendBiotzRouterMessage();
-    res.header("Access-Control-Allow-Origin", "*"); 
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-    res.setHeader('Content-Type', 'application/json');
     res.send(value);
     next();
 }
@@ -274,9 +297,6 @@ function getBiotCalibration(req, res, next) {
     var address = req.params['address'];
 
     sendBiotzRouterMessage();
-    res.header("Access-Control-Allow-Origin", "*"); 
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-    res.setHeader('Content-Type', 'application/json');
     var value = biotzCal[address];
     if (value === undefined) {
         res.send(404, value);
@@ -289,9 +309,6 @@ function getBiotCalibration(req, res, next) {
 function getBiotCount(req, res, next) {
 
     sendBiotzRouterMessage();
-    res.header("Access-Control-Allow-Origin", "*"); 
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-    res.setHeader('Content-Type', 'application/json');
     var addresses = Object.keys(biotzData);
     res.send(addresses.length);
     next();
@@ -316,9 +333,6 @@ function getBiotFull(req, res, next) {
 
     // trigger update request for next time
     sendBiotzRouterMessage();
-    res.header("Access-Control-Allow-Origin", "*"); 
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-    res.setHeader('Content-Type', 'application/json');
     res.send(value);
     next();
 }
@@ -350,9 +364,6 @@ function getBiotQuality(req, res, next) {
             break;
     }
     sendBiotzRouterMessage();
-    res.header("Access-Control-Allow-Origin", "*"); 
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-    res.setHeader('Content-Type', 'application/json');
     res.send(value);
     next();
 }
@@ -361,9 +372,6 @@ function getBiotSensors(req, res, next) {
 
     var address = req.params['address'];
 
-    res.header("Access-Control-Allow-Origin", "*"); 
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-    res.setHeader('Content-Type', 'application/json');
     res.send(501, 'not implemented yet');
     next();
 }
@@ -372,9 +380,6 @@ function getBiotSensors(req, res, next) {
 function getBiotz(req, res, next) {
 
     sendBiotzRouterMessage();
-    res.header("Access-Control-Allow-Origin", "*"); 
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-    res.setHeader('Content-Type', 'application/json');
     res.send(Object.keys(biotzData));
     next();
 }
@@ -382,26 +387,26 @@ function getBiotz(req, res, next) {
 function getBiotStatus(req, res, next) {
     var address = req.params['address'];
     var now = new Date();
-    if (nodeStatus[address] !== undefined) {
-        var timeDiff = (now - nodeStatus[address].ts) / 1000; // as seconds
+    if (nodeStatus[address].status !== 'dummy') {
+        if (nodeStatus[address] !== undefined) {
 
-            if (timeDiff > 20) {
-                nodeStatus[address] = undefined;
-            } else if (timeDiff > 10) {
-                nodeStatus[address].status = 'lost';
-            } else if (timeDiff > 5) {
-                nodeStatus[address].status = 'inactive';
-            } else {
-                nodeStatus[address].status = 'active';
-            }
+            var timeDiff = (now - nodeStatus[address].ts) / 1000; // as seconds
+
+                if (timeDiff > 20) {
+                    nodeStatus[address] = undefined;
+                } else if (timeDiff > 10) {
+                    nodeStatus[address].status = 'lost';
+                } else if (timeDiff > 5) {
+                    nodeStatus[address].status = 'inactive';
+                } else {
+                    nodeStatus[address].status = 'active';
+                }
+        }
     }
     if (nodeStatus[address] === undefined) {
         biotzData[address] = undefined;
     }
 
-    res.header("Access-Control-Allow-Origin", "*"); 
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-    res.setHeader('Content-Type', 'application/json');
     if (nodeStatus[address] === undefined) {
         res.send(404, 'does not exist');
     }
@@ -428,18 +433,12 @@ function getBiotzStatus(req, res, next) {
             nodeStatus[address].status = 'active';
         }
     }
-    res.header("Access-Control-Allow-Origin", "*"); 
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-    res.setHeader('Content-Type', 'application/json');
     res.send(nodeStatus);
     next();
 }
 
 function getCachedAddresses(req, res, next) {
 
-    res.header("Access-Control-Allow-Origin", "*"); 
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-    res.setHeader('Content-Type', 'application/json');
     var path = dataPath + '/addresses/';
 
     var fs = require('fs');
@@ -455,9 +454,6 @@ function getCachedAddresses(req, res, next) {
 
 function getCachedAssemblies(req, res, next) {
 
-    res.header("Access-Control-Allow-Origin", "*"); 
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-    res.setHeader('Content-Type', 'application/json');
     var path = dataPath + '/assembly/';
 
     var fs = require('fs');
@@ -478,9 +474,6 @@ function getCachedAssembly(req, res, next) {
     var fs = require('fs');
     fs.readFile(path, function(err, data) {
         data = JSON.parse(data);
-        res.header("Access-Control-Allow-Origin", "*"); 
-        res.header("Access-Control-Allow-Headers", "X-Requested-With");
-        res.setHeader('Content-Type', 'application/json');
         if (err) {
             console.log(err, 'reading file:', path);
             res.send(404, data);
@@ -498,9 +491,6 @@ function getCachedCalibration(req, res, next) {
     var fs = require('fs');
     fs.readFile(path, function(err, data) {
         data = JSON.parse(data);
-        res.header("Access-Control-Allow-Origin", "*"); 
-        res.header("Access-Control-Allow-Headers", "X-Requested-With");
-        res.setHeader('Content-Type', 'application/json');
         if (err) {
             console.log(err, 'reading file:', path);
             res.send(404, data);
@@ -512,9 +502,6 @@ function getCachedCalibration(req, res, next) {
 }
 
 function getSystemMessageRate(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*"); 
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-    res.setHeader('Content-Type', 'application/json');
     var now = new Date();
     var messageRate = messagesFromRouter/(now - startTime);
     res.send(200, messageRate);
@@ -522,9 +509,6 @@ function getSystemMessageRate(req, res, next) {
 }
 
 function putBiotCalibration(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*"); 
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-    res.setHeader('Content-Type', 'application/json');
 
     var address = req.params['address'];
     var data = req.params['data'];
@@ -546,9 +530,6 @@ function putBiotCalibration(req, res, next) {
 }
 
 function putBiotSensors(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*"); 
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-    res.setHeader('Content-Type', 'application/json');
 
     var address = req.params['address'];
     var data = req.params['data'];
@@ -573,9 +554,6 @@ function postCachedAssembly(req, res, next) {
     var data = req.body;
     var path = dataPath + '/assembly/';
 
-    res.header("Access-Control-Allow-Origin", "*"); 
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-    res.setHeader('Content-Type', 'application/json');
 
     var fs = require('fs');
 
@@ -606,9 +584,6 @@ function putCachedCalibration(req, res, next) {
     var data = req.params['data'];
     var path = dataPath + '/addresses/' + address;
 
-    res.header("Access-Control-Allow-Origin", "*"); 
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-    res.setHeader('Content-Type', 'application/json');
 
     var fs = require('fs');
 

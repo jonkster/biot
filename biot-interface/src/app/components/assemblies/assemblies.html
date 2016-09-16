@@ -15,6 +15,7 @@
         <thead>
             <tr>
                 <td>&nbsp;</td>
+                <th>Limb Name</th>
                 <th>Biotz Address</th>
                 <th>Parent</th>
                 <th>Length</th>
@@ -25,6 +26,7 @@
         <tbody>
             <tr *ngFor="let address of getVisibleAddresses()">
                 <td><button (click)="selectLimb(address)">Select</button></td>
+                <td><span [style.background]="'#' + getNodeColour(address)">&nbsp;&nbsp;</span>{{ getLimbName(address) }}</td>
                 <td><span [style.background]="'#' + getNodeColour(address)">&nbsp;&nbsp;</span>{{ address }}</td>
                 <td>
                     <span [style.background-color]="'#' + getNodeColour(getParentAddress(address))">&nbsp;&nbsp;</span>
@@ -65,6 +67,14 @@
             <div class="form-item">
                 <label for="biot-name">Identify Node:</label>
                 <button class="form-value" id="biot-name" (click)="identify(getCurrentLimbAddress())"> {{ getCurrentLimbAddress() }} </button>
+            </div>
+
+            <div class="form-item">
+                <label for="limb-name">Limb Name:</label>
+                <span class="form-value" id="limb-name">
+                    <input #lname type="text" [ngModel]="getCurrentLimbName()" />
+                    <button (click)="setLimbName(getCurrentLimbAddress(), lname.value)">Set</button>
+                </span>
             </div>
 
             <div class="form-item">
