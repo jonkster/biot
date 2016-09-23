@@ -74,7 +74,6 @@ brokerListener.put('/biotz/addnode/:address', addDummyNode);
 brokerListener.put('/biotz/dropnodes', dropDummyNodes);
 
 brokerListener.get('/biotz/addresses/:address', getBiotFull);
-brokerListener.get('/biotz/addresses/:address', getBiotFull);
 brokerListener.get('/biotz/addresses/:address/data', getBiotData);
 brokerListener.get('/biotz/addresses/:address/identify', biotIdentify);
 brokerListener.get('/biotz/addresses/:address/calibration', getBiotCalibration);
