@@ -22,6 +22,8 @@ int16_t magHardCorrection[3] = { 0, 0, 0 };
 double magSoftCorrection[3] = { 1, 1, 1 };
 uint16_t failureCount = 0;
 uint16_t magValid = 0;
+bool autoCalibrate = true;
+uint32_t dupInterval = 200;
 
 
 bool useAccelerometers = true;
@@ -154,28 +156,31 @@ int16_t *getMagCalibration(void)
 
 void imuCalibrate(imuData_t *data)
 {
-    // find minimums
-    if (data->mag.x_axis < magMinMax[X_AXIS])
-        magMinMax[X_AXIS] = data->mag.x_axis;
+    if (autoCalibrate)
+    {
+        // find minimums
+        if (data->mag.x_axis < magMinMax[X_AXIS])
+            magMinMax[X_AXIS] = data->mag.x_axis;
 
-    if (data->mag.y_axis < magMinMax[Y_AXIS])
-        magMinMax[Y_AXIS] = data->mag.y_axis;
+        if (data->mag.y_axis < magMinMax[Y_AXIS])
+            magMinMax[Y_AXIS] = data->mag.y_axis;
 
-    if (data->mag.z_axis < magMinMax[Z_AXIS])
-        magMinMax[Z_AXIS] = data->mag.z_axis;
+        if (data->mag.z_axis < magMinMax[Z_AXIS])
+            magMinMax[Z_AXIS] = data->mag.z_axis;
 
-    // find maximums
-    if (data->mag.x_axis > magMinMax[3])
-        magMinMax[3] = data->mag.x_axis;
+        // find maximums
+        if (data->mag.x_axis > magMinMax[3])
+            magMinMax[3] = data->mag.x_axis;
 
-    if (data->mag.y_axis > magMinMax[4])
-        magMinMax[4] = data->mag.y_axis;
+        if (data->mag.y_axis > magMinMax[4])
+            magMinMax[4] = data->mag.y_axis;
 
-    if (data->mag.z_axis > magMinMax[5])
-        magMinMax[5] = data->mag.z_axis;
+        if (data->mag.z_axis > magMinMax[5])
+            magMinMax[5] = data->mag.z_axis;
 
 
-    setMagCalibration(magMinMax);
+        setMagCalibration(magMinMax);
+    }
 }
 
 bool oppositeSign(double a, double b)
@@ -455,6 +460,7 @@ bool initialiseIMU(mpu9250_t *dev)
 {
     int result;
 
+
     printf("+------------Initializing------------+\n");
     result = mpu9250_init(dev, I2C_0, MPU9250_HW_ADDR_HEX_68, MPU9250_COMP_ADDR_HEX_0C);
 
@@ -497,6 +503,9 @@ bool initialiseIMU(mpu9250_t *dev)
     printf("Initialization successful\n\n");
 
     t0 = xtimer_now64();
+
+    autoCalibrate = true;
+    dupInterval = 200;
 
     initialisePosition();
     return true;

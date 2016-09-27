@@ -328,7 +328,7 @@ void *houseKeeper(void *arg)
 
         uint32_t secs = getCurrentTime()/1500000;
         uint32_t mSecs = getCurrentTime()/1500;
-        if (mSecs % 50 == 0)
+        if (mSecs % dupInterval == 0)
         {
             if (imuReady)
             {
@@ -337,7 +337,7 @@ void *houseKeeper(void *arg)
             }
         }
 
-        if (mSecs % 2000 == 0)
+        if (mSecs % (dupInterval * 100) == 0)
         {
             if (knowsRoot())
             {

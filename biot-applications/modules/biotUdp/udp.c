@@ -13,6 +13,7 @@
 #include <unistd.h>
 #include "msg.h"
 #include "board.h"
+#include "reboot.h"
 #include "../identify/biotIdentify.h"
 #include "../imu/imu.h"
 
@@ -86,7 +87,206 @@ bool setupUdpServer(void)
     return true;
 }
 
+void actOnLedCommandMessage(char *data)
+{
+    if (strcmp(data, "0"))
+    {
+        LED0_OFF;
+    }
+    else if (strcmp(data, "1"))
+    {
+        LED0_ON;
+    }
+    else if (strcmp(data, "2"))
+    {
+        LED0_ON;
+    }
+    else if (strcmp(data, "3"))
+    {
+        identifyYourself(selfAdd);
+    }
+}
+
+void actOnTimCommandMessage(char *data)
+{
+    uint32_t t = atoi(data);
+    setCurrentTime(t);
+}
+
+void actOnDofCommandMessage(char *data)
+{
+    if (data[0] == '0')
+        setGyroUse(false);
+    else
+        setGyroUse(true);
+
+    if (data[1] == '0')
+        setAccelUse(false);
+    else
+        setAccelUse(true);
+
+    if (data[2] == '0')
+        setCompassUse(false);
+    else
+        setCompassUse(true);
+}
+
+void actOnCavCommandMessage(char *data)
+{
+    int16_t cal[6];
+    sscanf(data, "%"SCNd16":%"SCNd16":%"SCNd16":%"SCNd16":%"SCNd16":%"SCNd16, &cal[0], &cal[1], &cal[2], &cal[3], &cal[4], &cal[5]);
+    setMagCalibration(cal);
+    forceReorientation();
+}
+
+void actOnMcmCommandMessage(char *data)
+{
+    if (strcmp(data, "0"))
+    {
+        autoCalibrate = false;
+    }
+    else if (strcmp(data, "1"))
+    {
+        autoCalibrate = true;
+    }
+    else
+    {
+        int16_t cal[] = {0, 0, 0, 0, 0, 0};
+        if (strcmp(data, "2"))
+        {
+            autoCalibrate = true;
+            setMagCalibration(cal);
+            forceReorientation();
+        }
+        else if (strcmp(data, "3"))
+        {
+            autoCalibrate = false;
+            setMagCalibration(cal);
+            forceReorientation();
+        }
+        else
+        {
+            printf("Error: unable to parse calibration mode: %s\n", data);
+        }
+    }
+}
+
+void actOnDupCommandMessage(char *data)
+{
+    uint32_t t = atoi(data);
+    dupInterval = t;
+}
+
+void actOnRebCommandMessage(char *data)
+{
+    reboot();
+}
+
+void actOnSynCommandMessage(char *data)
+{
+    syncKnown();
+}
+
+void actOnOrientDataMessage(char *data)
+{
+    relayMessage("do", data, dataDestAdd);
+}
+void actOnCalibrDataMessage(char *data)
+{
+    relayMessage("dc", data, dataDestAdd);
+}
+void actOnStatusDataMessage(char *data)
+{
+    relayMessage("ds", data, dataDestAdd);
+}
+
+void relayMessage(char *cmd, char *data, char *address)
+{
+    char msg[30];
+    sprintf(msg, "%s#%s", cmd, data);
+    udpSend(address, msg);
+}
+
 void actOnUdpRequests(int res, char *srcAdd, char* selfAdd)
+{
+    printf("%s: %d: %s\n", srcAdd, strlen(serverBuffer), serverBuffer);
+
+    // extract components of command
+    char *cmd = NULL;
+    char *data = NULL;
+    char *address = NULL;
+    char *p = strtok(serverBuffer, "#");
+    if (p)
+    {
+        cmd = strdup(p);
+        p = strtok(serverBuffer, "#");
+        if (p)
+        {
+            data = strdup(p);
+            p = strtok(serverBuffer, "#");
+            if (p)
+            {
+                address = strdup(p);
+                relayMessage(cmd, data, address);
+                return;
+            }
+        }
+    }
+    if (cmd == NULL)
+        return;
+
+    if (strcmp(cmd, "cled") == 0)
+    {
+        actOnLedCommandMessage(data);
+    }
+    else if (strcmp(cmd, "ctim") == 0)
+    {
+        actOnTimCommandMessage(data);
+    }
+    else if (strcmp(cmd, "cdof") == 0)
+    {
+        actOnDofCommandMessage(data);
+    }
+    else if (strcmp(cmd, "ccav") == 0)
+    {
+        actOnCavCommandMessage(data);
+    }
+    else if (strcmp(cmd, "cmcm") == 0)
+    {
+        actOnMcmCommandMessage(data);
+    }
+    else if (strcmp(cmd, "cdup") == 0)
+    {
+        actOnDupCommandMessage(data);
+    }
+    else if (strcmp(cmd, "creb") == 0)
+    {
+        actOnRebCommandMessage(data);
+    }
+    else if (strcmp(cmd, "csyn") == 0)
+    {
+        actOnSynCommandMessage(data);
+    }
+    else if (strcmp(cmd, "do") == 0)
+    {
+        actOnOrientDataMessage(data);
+    }
+    else if (strcmp(cmd, "dc") == 0)
+    {
+        actOnCalibrDataMessage(data);
+    }
+    else if (strcmp(cmd, "ds") == 0)
+    {
+        actOnStatusDataMessage(data);
+    }
+    else
+    {
+        printf("rx unknown udp msg from %s : %s\n", srcAdd, serverBuffer);
+    }
+}
+
+/*
+void actOnUdpRequestsOLD(int res, char *srcAdd, char* selfAdd)
 {
     //printf("%s: %d: %s\n", srcAdd, strlen(serverBuffer), serverBuffer);
 
@@ -247,6 +447,7 @@ void actOnUdpRequests(int res, char *srcAdd, char* selfAdd)
         printf("rx unknown udp msg from %s : %s\n", srcAdd, serverBuffer);
     }
 }
+*/
 
 double getMessageRate(void)
 {
@@ -366,7 +567,9 @@ bool relayDataToBroker(char * destAdd, char *srcAdd, char *type, char *val)
 void syncKnown(void)
 {
 #ifdef MAX_NODES
-    sprintf(gpTextBuf, "ts:%lu", getCurrentTime());
+    sprintf(gpTextBuf, "ctim#%lu", getCurrentTime());
+    // this dodgy - rather than use unicast address should send specifically to
+    // known nodes
     udpSend("ff02::1", gpTextBuf);
     return;
 #endif

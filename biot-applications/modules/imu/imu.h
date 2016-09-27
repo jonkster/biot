@@ -23,10 +23,13 @@ typedef struct {
 } imuData_t;
 
 
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+    extern bool autoCalibrate;
+    extern uint32_t dupInterval;
 
     uint16_t aFsrRange2Int(mpu9250_accel_ranges_t fsr);
 

@@ -10,6 +10,20 @@ extern "C" {
 
 //void *udp_server(void *);
 
+// message Handling routines
+void actOnLedCommandMessage(char *data);
+void actOnTimCommandMessage(char *data);
+void actOnDofCommandMessage(char *data);
+void actOnCavCommandMessage(char *data);
+void actOnMcmCommandMessage(char *data);
+void actOnDupCommandMessage(char *data);
+void actOnRebCommandMessage(char *data);
+void actOnSynCommandMessage(char *data);
+void actOnOrientDataMessage(char *data);
+void actOnCalibrDataMessage(char *data);
+void actOnStatusDataMessage(char *data);
+void relayMessage(char *cmd, char *data, char *address);
+
 int udp_cmd(int argc, char **argv);
 
 int udpSend(char *addr_str, char *data);
