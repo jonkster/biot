@@ -24,16 +24,16 @@
 
 
 #define PRIO    (THREAD_PRIORITY_MAIN + 1)
-static char housekeeping_stack[THREAD_STACKSIZE_DEFAULT];
+static char housekeeping_stack[THREAD_STACKSIZE_DEFAULT+512];
 static char udp_stack[THREAD_STACKSIZE_DEFAULT+512];
 
 char dodagRoot[] = "affe::2";
 bool udpOK = false;
 
 extern void batch(const shell_command_t *command_list, char *line);
-extern int udpSend(char *addr_str, char *data);
 extern uint32_t getCurrentTime(void);
 extern bool isTimeSet(void);
+extern bool biotMsgSilent;
 bool hasTimeChanged(void);
 extern void timeInit(void);
 extern void setCurrentTime(uint32_t t);
@@ -89,7 +89,7 @@ void btnCallback(void* arg)
 
 static const shell_command_t shell_commands[] = {
     /* Add a new shell commands here */
-    { "identify", "visually identify board", identify_cmd },
+    /*{ "identify", "visually identify board", identify_cmd },
 
     { "sync", "synchronise time across nodes", sync_cmd },
 
@@ -99,7 +99,7 @@ static const shell_command_t shell_commands[] = {
 
     { "udpinit", "restart UDP system", udpinit_cmd },
 
-    { "udp", "send a message: udp <IPv6-address> <message>", udp_cmd },
+    { "udp", "send a message: udp <IPv6-address> <message>", udp_cmd },*/
 
     { NULL, NULL, NULL }
 };
@@ -166,6 +166,7 @@ int main(void)
 
     thread_create(housekeeping_stack, sizeof(housekeeping_stack), PRIO, THREAD_CREATE_STACKTEST, housekeeping_handler, NULL, "housekeeping");
 
+    biotMsgSilent = false;
     thread_create(udp_stack, sizeof(udp_stack), PRIO, THREAD_CREATE_STACKTEST, udpServer, NULL, "biotudp");
 
 
@@ -173,14 +174,16 @@ int main(void)
     setRoot();
     gpio_init_int(BUTTON_GPIO, GPIO_IN_PU, GPIO_RISING, (gpio_cb_t)btnCallback, NULL);
 
-    identifyYourself("");
+    //identifyYourself("");
 
     timeInit();
     syncKnown();
 
 
-    char line_buf[SHELL_DEFAULT_BUFSIZE];
-    shell_run(shell_commands, line_buf, SHELL_DEFAULT_BUFSIZE);
+    puts("starting shell");
+    char lineBuf[100];
+    memset(lineBuf, 0, 100);
+    shell_run(shell_commands, lineBuf, 100);
 
     /* never reached */
     return 0;

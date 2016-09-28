@@ -4,6 +4,7 @@ APPLICATION = BIOT-Router
 # If no BOARD is found in the environment, use this default:
 BOARD ?= samr21-zllk
 
+# if a single node then define MAX_NODES to 0
 CFLAGS += -DMAX_NODES=20
 
 # This has to be the absolute path to the RIOT base directory:
@@ -12,6 +13,8 @@ RIOTBASE ?= $(CURDIR)/../../../RIOT
 ## add current directory to the include path. Putting it in CFLAGS will make
 ## it go to the beginning, before the standard includes.
 CFLAGS += -I$(CURDIR)
+
+USEMODULE += printf_float
 
 # adding biot specific modules
 DIRS += ../modules/biotUdp/

@@ -37,13 +37,13 @@ struct sockaddr_in6 serverSocketAddr;
 static char serverBuffer[SERVER_BUFFER_SIZE];
 static char gpTextBuf[30];
 static msg_t msg_q[MUDP_Q_SZ];
-static char json[MAX_MESSAGE_LENGTH];
+//static char json[MAX_MESSAGE_LENGTH];
 static char srcAdd[IPV6_ADDR_MAX_STR_LEN];
 static char selfAdd[IPV6_ADDR_MAX_STR_LEN];
 struct in6_addr srcSocketAddr; 
 
-uint32_t messagesRelayed = 0;
 uint32_t startTime = 0;
+bool biotMsgSilent = false;
 
 #ifdef MAX_NODES
     char nodeData[MAX_NODES][IPV6_ADDR_MAX_STR_LEN];
@@ -51,7 +51,7 @@ uint32_t startTime = 0;
 
 char dataDestAdd[IPV6_ADDR_MAX_STR_LEN];
 
-bool relayDataToBroker(char * destAdd, char *srcAdd, char *type, char *val);
+//bool relayDataToBroker(char * destAdd, char *srcAdd, char *type, char *val);
 
 bool setupUdpServer(void)
 {
@@ -189,26 +189,32 @@ void actOnSynCommandMessage(char *data)
 
 void actOnOrientDataMessage(char *data)
 {
-    relayMessage("do", data, dataDestAdd);
+    relayMessage("do", data, "affe::1");
 }
 void actOnCalibrDataMessage(char *data)
 {
-    relayMessage("dc", data, dataDestAdd);
+    relayMessage("dc", data, "affe::1");
 }
 void actOnStatusDataMessage(char *data)
 {
-    relayMessage("ds", data, dataDestAdd);
+    relayMessage("ds", data, "affe::1");
 }
 
 void relayMessage(char *cmd, char *data, char *address)
 {
     char msg[30];
+    printf("relaying cmd:%s with data:%s to:%s\n", cmd, data, address);
     sprintf(msg, "%s#%s", cmd, data);
     udpSend(address, msg);
 }
 
 void actOnUdpRequests(int res, char *srcAdd, char* selfAdd)
 {
+    if (biotMsgSilent)
+    {
+        puts("dropping...");
+        return;
+    }
     printf("%s: %d: %s\n", srcAdd, strlen(serverBuffer), serverBuffer);
 
     // extract components of command
@@ -219,14 +225,17 @@ void actOnUdpRequests(int res, char *srcAdd, char* selfAdd)
     if (p)
     {
         cmd = strdup(p);
-        p = strtok(serverBuffer, "#");
+printf("got cmd:%s\n", cmd);
+        p = strtok(NULL, "#");
         if (p)
         {
             data = strdup(p);
-            p = strtok(serverBuffer, "#");
+printf("got data:%s\n", data);
+            p = strtok(NULL, "#");
             if (p)
             {
                 address = strdup(p);
+printf("got add:%s\n", address);
                 relayMessage(cmd, data, address);
                 return;
             }
@@ -234,6 +243,7 @@ void actOnUdpRequests(int res, char *srcAdd, char* selfAdd)
     }
     if (cmd == NULL)
         return;
+
 
     if (strcmp(cmd, "cled") == 0)
     {
@@ -285,178 +295,9 @@ void actOnUdpRequests(int res, char *srcAdd, char* selfAdd)
     }
 }
 
-/*
-void actOnUdpRequestsOLD(int res, char *srcAdd, char* selfAdd)
-{
-    //printf("%s: %d: %s\n", srcAdd, strlen(serverBuffer), serverBuffer);
-
-    if (strcmp(serverBuffer, "on") == 0)
-    {
-        LED0_ON;
-    }
-    else if (strcmp(serverBuffer, "off") == 0)
-    {
-        LED0_OFF;
-    }
-    else if (strcmp(serverBuffer, "identify") == 0)
-    {
-        identifyYourself(selfAdd);
-    }
-    else if (strncmp(serverBuffer, "nudge:", 6) == 0)
-    {
-        udpSend(serverBuffer+6, "identify");
-    }
-    else if (strcmp(serverBuffer, "sync") == 0)
-    {
-#ifdef MAX_NODES
-        syncKnown();
-#endif
-    }
-    else if (strncmp(serverBuffer, "set-sens:", 9) == 0)
-    {
-        // Message will be in form:
-        //  set-sens:GAC#ADDRESS (bounce message)
-        // or:
-        //  set-sens:GAC (direct message)
-        // where G = gyroscope on/off [1|0]
-        // where A = accelerometer on/off [1|0]
-        // where C = magnetometer on/off [1|0]
-        // eg:
-        //  set-sens:010#affe::584b:3763:a0ca:19b6
-        // or
-        //  set-sens:111
-        // if no '#ADDRESS' (ie a 'direct message') then set this nodes sensors,
-        // if '#ADDRESS' (ie a 'bounce message') then send a 'direct message' to the given address
-        char *msg = serverBuffer+9;
-        const char *delim = "#";
-        char *addr;
-        char *data;
-
-        data = strsep(&msg, delim);
-        if (msg == NULL)
-        {
-            if (strlen(data) != 3)
-            {
-                printf("malformed GAC: '%s'\n", data);
-                return;
-            }
-
-            if (data[0] == '0')
-                setGyroUse(false);
-            else
-                setGyroUse(true);
-
-            if (data[1] == '0')
-                setAccelUse(false);
-            else
-                setAccelUse(true);
-
-            if (data[2] == '0')
-                setCompassUse(false);
-            else
-                setCompassUse(true);
-
-            return;
-        }
-        addr = strsep(&msg, delim);
-        if (msg != NULL)
-        {
-            printf("malformed message: %s\n", serverBuffer);
-            return;
-        }
-        sprintf(gpTextBuf, "set-sens:%s", data);
-        udpSend(addr, gpTextBuf);
-    }
-    else if (strcmp(serverBuffer, "get-data") == 0)
-    {
-        // record the sender as a destination for imu data
-        strcpy(dataDestAdd, srcAdd);
-    }
-    else if (strncmp(serverBuffer, "data:", 5) == 0)
-    {
-        // pass node's data to the current data destination
-        relayDataToBroker(dataDestAdd, srcAdd, "dat", serverBuffer+5);
-    }
-    else if (strncmp(serverBuffer, "calib:", 6) == 0)
-    {
-        // pass node's calibration to the current data destination
-        relayDataToBroker(dataDestAdd, srcAdd, "cal", serverBuffer+6);
-    }
-    else if (strcmp(serverBuffer, "get-cal") == 0)
-    {
-        // record the sender as a destination for calibration data
-        strcpy(dataDestAdd, srcAdd);
-    }
-    else if (strncmp(serverBuffer, "set-cal:", 8) == 0)
-    {
-        // relay calibration data to addressed node.
-        // Message will be in form: set-cal:DATA#ADDRESS eg:
-        //  set-cal:-89:-86:-82:88:3:54#affe::584b:3763:a0ca:19b6
-        char *msg = serverBuffer+8;
-        const char *delim = "#";
-        char *addr;
-        char *data;
-
-        data = strsep(&msg, delim);
-        if (msg == NULL)
-        {
-            printf("malformed message: %s\n", serverBuffer);
-            return;
-        }
-        addr = strsep(&msg, delim);
-        if (msg != NULL)
-        {
-            printf("malformed message: %s\n", serverBuffer);
-            return;
-        }
-        sprintf(gpTextBuf, "up-cal:%s", data);
-        udpSend(addr, gpTextBuf);
-    }
-    else if (strncmp(serverBuffer, "up-cal:", 7) == 0)
-    {
-        // update the nodes calibration.  Format is like:
-        //  up-cal:-89:-86:-82:88:3:54
-        char *data = serverBuffer + 7;
-        int16_t cal[6];
-        sscanf(data, "%"SCNd16":%"SCNd16":%"SCNd16":%"SCNd16":%"SCNd16":%"SCNd16, &cal[0], &cal[1], &cal[2], &cal[3], &cal[4], &cal[5]);
-        setMagCalibration(cal);
-        forceReorientation();
-    }
-    else if (strcmp(serverBuffer, "cal-please") == 0)
-    {
-#ifdef MAX_NODES
-        sprintf(gpTextBuf, "{\"t\":\"getc\",\"s\":\"%s\"}", srcAdd);
-        udpSend("affe::1", gpTextBuf);
-#endif
-    }
-    else if (strcmp(serverBuffer, "time-please") == 0)
-    {
-        sprintf(gpTextBuf, "ts:%lu", getCurrentTime());
-        udpSend(srcAdd, gpTextBuf);
-    }
-    else if (strncmp(serverBuffer, "ts:", 3) == 0)
-    {
-        if (srcAdd != selfAdd)
-        {
-            uint32_t t = atoi(serverBuffer+3);
-            setCurrentTime(t);
-        }
-    }
-    else
-    {
-        printf("rx unknown udp msg from %s : %s\n", srcAdd, serverBuffer);
-    }
-}
-*/
-
-double getMessageRate(void)
-{
-    uint32_t dt = xtimer_now() - startTime;
-    return (1000000 * messagesRelayed)/dt;
-}
-
 int udpSend(char *addrStr, char *data)
 {
+    printf("sending udp:%s\n", data);
     size_t dataLen = strlen(data);
     if (dataLen > 0)
     {
@@ -464,7 +305,7 @@ int udpSend(char *addrStr, char *data)
         dst.sin6_family = AF_INET6;
         if (inet_pton(AF_INET6, addrStr, &dst.sin6_addr) != 1) {
             puts("Error: unable to parse destination address");
-            printf("sending: %s msg: %s\n", addrStr, data);
+            printf("sending to add: %s   msg: %s\n", addrStr, data);
             return 1;
         }
         dst.sin6_port = htons(UDP_PORT);
@@ -481,12 +322,8 @@ int udpSend(char *addrStr, char *data)
             close(s);
             return 1;
         }
-        //printf("Success: send %u byte(s) to %s:%u\n", (unsigned)dataLen, addrStr, UDP_PORT);
+        printf("Success: send %u byte(s) to %s:%u\n", (unsigned)dataLen, addrStr, UDP_PORT);
         close(s);
-        /*if (! streq(dataDestAdd, addr))
-        {
-            messagesRelayed++;
-        }*/
     }
     else
     {
@@ -551,17 +388,6 @@ void *udpServer(void *arg)
     {
         return NULL;
     }
-}
-
-bool relayDataToBroker(char * destAdd, char *srcAdd, char *type, char *val)
-{
-    if (strlen(destAdd) > 0)
-    {
-        sprintf(json, "{\"t\":\"%s\",\"s\":\"%s\",\"v\":\"%s\"}", type, srcAdd, val);
-        udpSend(destAdd, json);
-        return true;
-    }
-    return false;
 }
 
 void syncKnown(void)

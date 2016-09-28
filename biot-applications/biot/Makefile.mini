@@ -4,6 +4,8 @@ APPLICATION = biotz-router
 # If no BOARD is found in the environment, use this default:
 BOARD ?= samr21b18-mz210pa
 
+# if a single node then define MAX_NODES to 0
+CFLAGS += -DMAX_NODES=0
 CFLAGS += -DNOOLED=true
 
 # This has to be the absolute path to the RIOT base directory:
@@ -16,8 +18,6 @@ CFLAGS += -I$(CURDIR)
 # gl matrix library is sloppy...
 CFLAGS += -Wno-error=maybe-uninitialized
 
-# if a single node then define MAX_NODES to 0
-CFLAGS += -DMAX_NODES=0
 
 USEMODULE += printf_float
 
@@ -86,5 +86,7 @@ LINKFLAGS += -Wl,--no-wchar-size-warning
 
 # Change this to 0 show compiler invocation lines by default:
 QUIET ?= 1
+
+#CFLAGS += -DDEVELHELP -DNDEBUG # uncomment to allow detailed ps info
 
 include $(RIOTBASE)/Makefile.include

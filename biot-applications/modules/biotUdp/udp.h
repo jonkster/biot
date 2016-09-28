@@ -8,6 +8,8 @@
 extern "C" {
 #endif
 
+extern bool biotMsgSilent;
+
 //void *udp_server(void *);
 
 // message Handling routines

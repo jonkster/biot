@@ -33,6 +33,8 @@ static shell_command_handler_t find_handler(const shell_command_t *command_list,
 /* simplified arg processor - NB will not interpret quotes */
 void batch(const shell_command_t *command_list, char *line)
 {
+    printf("BATCH %s\n", line);
+    return;
     char* argString = strdup(line);
 
     enum { kMaxArgs = 5 };
