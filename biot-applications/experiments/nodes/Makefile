@@ -53,7 +53,7 @@ USEMODULE += ps
 # which is not needed in a production environment but helps in the
 # development process:
 CFLAGS += -DDEVELHELP
-LINKFLAGS += -Wl,--no-wchar-size-warning
+LINKFLAGS += -Wl,--no-wchar-size-warning -u _scanf_float
 
 # Change this to 0 show compiler invocation lines by default:
 QUIET ?= 1

@@ -46,12 +46,11 @@ void *housekeeping_handler(void *arg)
    int i = 0;
     while(1)
     {
-        uint32_t last_wakeup = xtimer_now();
         thread_yield();
-        xtimer_usleep_until(&last_wakeup, INTERVAL/(2*factor));
+        xtimer_usleep(INTERVAL/(2*factor));
         LED0_OFF;
         thread_yield();
-        xtimer_usleep_until(&last_wakeup, INTERVAL/factor);
+        xtimer_usleep(INTERVAL/factor);
         LED0_ON;
 
         char st[10];
