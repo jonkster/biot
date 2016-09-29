@@ -24,6 +24,8 @@
 
 
 #define PRIO    (THREAD_PRIORITY_MAIN + 1)
+#define MAIN_QUEUE_SIZE     (8)
+static msg_t _main_msg_queue[MAIN_QUEUE_SIZE];
 static char housekeeping_stack[THREAD_STACKSIZE_DEFAULT];
 static char udp_stack[THREAD_STACKSIZE_DEFAULT+512];
 
@@ -163,6 +165,8 @@ int main(void)
 {
     puts("Biotz Root Node\n");
     LED0_OFF;
+
+    msg_init_queue(_main_msg_queue, MAIN_QUEUE_SIZE);
 
     thread_create(housekeeping_stack, sizeof(housekeeping_stack), PRIO, THREAD_CREATE_STACKTEST, housekeeping_handler, NULL, "housekeeping");
 

@@ -38,6 +38,11 @@ ifeq (,$(SLIP_BAUDRATE))
 endif
 CFLAGS += -DSLIP_UART=$(SLIP_UART)
 CFLAGS += -DSLIP_BAUDRATE=$(SLIP_BAUDRATE)
+
+# kludge to get both samr21b18-mz210pa board and samr21-zllk board working with
+# same RIOT/cpu/samd21/periph/uart.c file
+CFLAGS += -DZLLK
+
 # Include SLIP package for IP over Serial communication
 USEMODULE += gnrc_slip
 
