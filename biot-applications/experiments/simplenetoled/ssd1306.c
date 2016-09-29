@@ -13,9 +13,8 @@ static mutex_t mutex = MUTEX_INIT;
 
 void delayUsec(uint16_t us)
 {
-    uint32_t last_wakeup = xtimer_now();
     thread_yield();
-    xtimer_usleep_until(&last_wakeup, us);
+    xtimer_usleep(us);
 }
 
 static int setupPins(void)

@@ -131,10 +131,10 @@ void *housekeeping_handler(void *arg)
             setRoot();
             factor = 5;
         }
-        uint32_t last_wakeup = xtimer_now();
-        xtimer_usleep_until(&last_wakeup, INTERVAL/(2*factor));
+        //uint32_t last_wakeup = xtimer_now();
+        xtimer_usleep(INTERVAL/(2*factor));
         LED0_OFF;
-        xtimer_usleep_until(&last_wakeup, INTERVAL/factor);
+        xtimer_usleep(INTERVAL/factor);
         LED0_ON;
     }
 }
