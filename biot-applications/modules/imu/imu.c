@@ -128,15 +128,22 @@ bool getIMUData(mpu9250_t dev, imuData_t *data)
     data->ts = xtimer_now64() - t0;
     if (mpu9250_read_accel(&dev, &data->accel))
     {
+        puts("acc fail");
         return false;
     }
     if (mpu9250_read_gyro(&dev, &data->gyro))
     {
+        puts("gyro fail");
         return false;
     }
     if (mpu9250_read_compass(&dev, &data->mag))
     {
+        puts("compass fail");
         return false;
+    }
+    else
+    {
+        puts("compass OK");
     }
 
     imuCalibrate(data);

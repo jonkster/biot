@@ -64,7 +64,7 @@ int findParent(void)
 
 int findRoot(void)
 {
-    puts("where is root?");
+    //puts("where is root?");
     if (gnrc_rpl_instances[0].state == 0) {
         return 1;
     }
@@ -319,6 +319,9 @@ void *houseKeeper(void *arg)
 {
     uint32_t lastSecs = 0;
 
+    imuReady = initIMU();
+    identifyYourself("");
+
     while(1)
     {
         if (! imuReady)
@@ -328,9 +331,9 @@ void *houseKeeper(void *arg)
 
         uint32_t secs = getCurrentTime()/1500000;
         uint32_t mSecs = getCurrentTime()/1500;
-        if (mSecs % dupInterval == 0)
+        if (mSecs % (5*dupInterval) == 0)
         {
-            if (imuReady)
+            if (false && imuReady)
             {
                 updatePosition();
                 sendNodeData(mSecs);
@@ -385,11 +388,8 @@ int main(void)
 
     batch(shell_commands, "rpl init 6");
 
-    identifyYourself("");
-
     timeInit();
     sendTimeRequest();
-
 
     puts("starting shell");
     char line_buf[SHELL_DEFAULT_BUFSIZE];

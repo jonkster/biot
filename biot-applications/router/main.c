@@ -25,7 +25,7 @@
 
 #define PRIO    (THREAD_PRIORITY_MAIN + 1)
 #define MAIN_QUEUE_SIZE     (8)
-static msg_t _main_msg_queue[MAIN_QUEUE_SIZE];
+//static msg_t _main_msg_queue[MAIN_QUEUE_SIZE];
 static char housekeeping_stack[THREAD_STACKSIZE_DEFAULT];
 static char udp_stack[THREAD_STACKSIZE_DEFAULT+512];
 
@@ -91,7 +91,7 @@ void btnCallback(void* arg)
 
 static const shell_command_t shell_commands[] = {
     /* Add a new shell commands here */
-    /*{ "identify", "visually identify board", identify_cmd },
+    { "identify", "visually identify board", identify_cmd },
 
     { "sync", "synchronise time across nodes", sync_cmd },
 
@@ -101,7 +101,7 @@ static const shell_command_t shell_commands[] = {
 
     { "udpinit", "restart UDP system", udpinit_cmd },
 
-    { "udp", "send a message: udp <IPv6-address> <message>", udp_cmd },*/
+    { "udp", "send a message: udp <IPv6-address> <message>", udp_cmd },
 
     { NULL, NULL, NULL }
 };
@@ -132,6 +132,8 @@ void *housekeeping_handler(void *arg)
     uint32_t lastSecs = 0;
     uint32_t ct;
     uint32_t secs;
+
+    identifyYourself("");
     while(1)
     {
         ct = getCurrentTime();
@@ -166,11 +168,13 @@ int main(void)
     puts("Biotz Root Node\n");
     LED0_OFF;
 
-    msg_init_queue(_main_msg_queue, MAIN_QUEUE_SIZE);
+    //msg_init_queue(_main_msg_queue, MAIN_QUEUE_SIZE);
 
     thread_create(housekeeping_stack, sizeof(housekeeping_stack), PRIO, THREAD_CREATE_STACKTEST, housekeeping_handler, NULL, "housekeeping");
 
     biotMsgSilent = false;
+    if (biotMsgSilent)
+        puts("NB biot messaging off!!");
     thread_create(udp_stack, sizeof(udp_stack), PRIO, THREAD_CREATE_STACKTEST, udpServer, NULL, "biotudp");
 
 
@@ -178,16 +182,14 @@ int main(void)
     setRoot();
     gpio_init_int(BUTTON_GPIO, GPIO_IN_PU, GPIO_RISING, (gpio_cb_t)btnCallback, NULL);
 
-    //identifyYourself("");
 
     timeInit();
     syncKnown();
 
 
     puts("starting shell");
-    char lineBuf[100];
-    memset(lineBuf, 0, 100);
-    shell_run(shell_commands, lineBuf, 100);
+    char lineBuf[SHELL_DEFAULT_BUFSIZE];
+    shell_run(shell_commands, lineBuf, SHELL_DEFAULT_BUFSIZE);
 
     /* never reached */
     return 0;
