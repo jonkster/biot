@@ -13,6 +13,7 @@
 #define GFSR                MPU9250_GYRO_FSR_250DPS
 #define AFSR                MPU9250_ACCEL_FSR_2G
 
+#define UPDATE_INTERVAL_MS 25
 
 typedef struct {
     uint32_t ts;
@@ -21,6 +22,14 @@ typedef struct {
     mpu9250_results_t mag;
     double temperature;
 } imuData_t;
+
+typedef struct {
+    bool useGyroscopes;
+    bool useAccelerometers;
+    bool useMagnetometers;
+    uint32_t dupInterval;
+    bool calibrateMode;
+} imuStatus_t;
 
 
 
@@ -44,6 +53,8 @@ extern "C" {
     uint16_t gFsrRange2Int(mpu9250_gyro_ranges_t fsr);
 
     bool getIMUData(mpu9250_t dev, imuData_t *data);
+
+    bool getIMUStatus(mpu9250_t dev, imuStatus_t *status);
 
     void imuCalibrate(imuData_t *data);
 

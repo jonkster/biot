@@ -23,7 +23,7 @@ double magSoftCorrection[3] = { 1, 1, 1 };
 uint16_t failureCount = 0;
 uint16_t magValid = 0;
 bool autoCalibrate = true;
-uint32_t dupInterval = 200;
+uint32_t dupInterval;
 
 
 bool useAccelerometers = true;
@@ -128,22 +128,15 @@ bool getIMUData(mpu9250_t dev, imuData_t *data)
     data->ts = xtimer_now64() - t0;
     if (mpu9250_read_accel(&dev, &data->accel))
     {
-        puts("acc fail");
         return false;
     }
     if (mpu9250_read_gyro(&dev, &data->gyro))
     {
-        puts("gyro fail");
         return false;
     }
     if (mpu9250_read_compass(&dev, &data->mag))
     {
-        puts("compass fail");
         return false;
-    }
-    else
-    {
-        puts("compass OK");
     }
 
     imuCalibrate(data);
@@ -151,6 +144,16 @@ bool getIMUData(mpu9250_t dev, imuData_t *data)
     mpu9250_read_temperature(&dev, &rawTemp);
     data->temperature = rawTemp/1000; // approx temperature in degrees C
 
+    return true;
+}
+
+bool getIMUStatus(mpu9250_t dev, imuStatus_t *status)
+{
+    status->useGyroscopes = useGyroscopes;
+    status->useAccelerometers = useAccelerometers;
+    status->useMagnetometers = useMagnetometers;
+    status->dupInterval = dupInterval;
+    status->calibrateMode = autoCalibrate;
     return true;
 }
 
@@ -444,7 +447,6 @@ myQuat_t getPosition(mpu9250_t dev)
             currentQ = measuredQ;
         }
 
-
         if (! isQuatValid(currentQ))
         {
             puts("error in quaternion, reseting orientation...");
@@ -512,7 +514,7 @@ bool initialiseIMU(mpu9250_t *dev)
     t0 = xtimer_now64();
 
     autoCalibrate = true;
-    dupInterval = 200;
+    dupInterval = UPDATE_INTERVAL_MS;
 
     initialisePosition();
     return true;

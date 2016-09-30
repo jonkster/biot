@@ -45,6 +45,8 @@ CFLAGS += -DSLIP_BAUDRATE=$(SLIP_BAUDRATE)
 # kludge to get both samr21b18-mz210pa board and samr21-zllk board working with
 # same RIOT/cpu/samd21/periph/uart.c file
 CFLAGS += -DZLLK
+# may be useful when debugging to allow compiling with unused variables
+#CFLAGS += -Wno-unused-variable
 
 # Include SLIP package for IP over Serial communication
 USEMODULE += gnrc_slip

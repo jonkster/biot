@@ -77,11 +77,6 @@ int findRoot(void)
     return 0;
 }
 
-void updatePosition(void)
-{
-    currentPosition = getPosition(imuDev);
-}
-
 void sendNodeCalibration(void)
 {
     int16_t *data = getMagCalibration();
@@ -104,7 +99,6 @@ void sendNodeData(uint32_t ts)
     data.x = currentPosition.x;
     data.y = currentPosition.y;
     data.z = currentPosition.z;
-    thread_yield();
     if (knowsRoot())
     {
         sendData(dodagRoot, data);
@@ -115,37 +109,25 @@ void sendNodeData(uint32_t ts)
     }
 }
 
-
-int sendTimeRequest(void)
+void sendNodeStatus(void)
 {
-    if (knowsRoot())
+    imuStatus_t imuStatus;
+    if (getIMUStatus(imuDev, &imuStatus))
     {
-        udpSend(dodagRoot, "time-please");
-        return 0;
+        sendStatus("affe::2", &imuStatus);
     }
-    return 1;
+    else
+    {
+        puts("could not read IMU device");
+    }
 }
 
-
-int callTime_cmd(int argc, char **argv)
-{
-    if (sendTimeRequest() == 0)
-    {
-        return 0;
-    }
-    puts("I have no DODAG");
-    return 1;
-}
 
 bool initIMU(void)
 {
     if (initialiseIMU(&imuDev))
     {
         displayConfiguration(imuDev);
-        if (knowsRoot())
-            udpSend(dodagRoot, "cal-please");
-        else
-            udpSend("affe::2", "cal-please");
         return true;
     }
     else
@@ -174,6 +156,20 @@ int imuinit_cmd(int argc, char **argv)
 {
     imuReady = false;
     return 0;
+}
+
+int imustatus_cmd(int argc, char **argv)
+{
+    imuStatus_t imuStatus;
+    if (getIMUStatus(imuDev, &imuStatus))
+    {
+        char buffer[42];
+        translateStatus(&imuStatus, buffer);
+        printf("status msg: %s\n", buffer);
+        return 0;
+    }
+    puts("could not read IMU device");
+    return 1;
 }
 
 int mag_cmd(int argc, char **argv)
@@ -298,10 +294,9 @@ static const shell_command_t shell_commands[] = {
     { "identify", "visually identify board", identify_cmd },
     { "imu", "get IMU position data", imu_cmd },
     { "imuinit", "reset IMU", imuinit_cmd },
+    { "imustatus", "get status", imustatus_cmd },
     { "repos", "reset node orientation", repos_cmd },
     { "quat", "get IMU orientation", quat_cmd },
-    //{ "callRoot", "contact root node", callRoot_cmd },
-    { "timeAsk", "ask for current net time", callTime_cmd },
     { "gyro", "use gyro on/off", gyro_cmd },
     { "accel", "use accelerometer on/off", accel_cmd },
     { "compass", "use compass on/off", compass_cmd },
@@ -313,8 +308,6 @@ static const shell_command_t shell_commands[] = {
 
 
 
-/* set interval to 1 second */
-#define INTERVAL (1000000U)
 void *houseKeeper(void *arg)
 {
     uint32_t lastSecs = 0;
@@ -328,14 +321,17 @@ void *houseKeeper(void *arg)
         {
             imuReady = initIMU();
         }
-
-        uint32_t secs = getCurrentTime()/1500000;
-        uint32_t mSecs = getCurrentTime()/1500;
-        if (mSecs % (5*dupInterval) == 0)
+        else
         {
-            if (false && imuReady)
+            currentPosition = getPosition(imuDev);
+        }
+
+        uint32_t mSecs = getCurrentTime()/1500;
+        uint32_t secs = mSecs/1000;
+        if (mSecs % dupInterval == 0)
+        {
+            if (imuReady)
             {
-                updatePosition();
                 sendNodeData(mSecs);
             }
         }
@@ -345,6 +341,14 @@ void *houseKeeper(void *arg)
             if (knowsRoot())
             {
                 sendNodeCalibration();
+            }
+        }
+
+        if (mSecs % (dupInterval * 100) == 100)
+        {
+            if (knowsRoot())
+            {
+                sendNodeStatus();
             }
         }
 
@@ -363,10 +367,6 @@ void *houseKeeper(void *arg)
             if (! knowsRoot())
             {
                 findRoot();
-                if (knowsRoot())
-                {
-                    sendTimeRequest();
-                }
             }
         }
         lastSecs = secs;
@@ -389,7 +389,6 @@ int main(void)
     batch(shell_commands, "rpl init 6");
 
     timeInit();
-    sendTimeRequest();
 
     puts("starting shell");
     char line_buf[SHELL_DEFAULT_BUFSIZE];

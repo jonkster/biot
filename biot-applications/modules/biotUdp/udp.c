@@ -35,7 +35,7 @@ struct sockaddr_in6 serverSocketAddr;
 
 // define some variables globally here to keep them off the stack
 static char serverBuffer[SERVER_BUFFER_SIZE];
-static char gpTextBuf[40];
+static char gpTextBuf[MAX_MESSAGE_LENGTH];
 static msg_t msg_q[MUDP_Q_SZ];
 static char srcAdd[IPV6_ADDR_MAX_STR_LEN];
 static char selfAdd[IPV6_ADDR_MAX_STR_LEN];
@@ -88,21 +88,25 @@ bool setupUdpServer(void)
 
 void actOnLedCommandMessage(char *data)
 {
-    if (strcmp(data, "0"))
+    if (strcmp(data, "0") == 0)
     {
         LED0_OFF;
     }
-    else if (strcmp(data, "1"))
+    else if (strcmp(data, "1") == 0)
     {
         LED0_ON;
     }
-    else if (strcmp(data, "2"))
+    else if (strcmp(data, "2") == 0)
     {
         LED0_ON;
     }
-    else if (strcmp(data, "3"))
+    else if (strcmp(data, "3") == 0)
     {
         identifyYourself(selfAdd);
+    }
+    else
+    {
+        printf("unknown?%s\n", data);
     }
 }
 
@@ -140,24 +144,24 @@ void actOnCavCommandMessage(char *data)
 
 void actOnMcmCommandMessage(char *data)
 {
-    if (strcmp(data, "0"))
+    if (strcmp(data, "0") == 0)
     {
         autoCalibrate = false;
     }
-    else if (strcmp(data, "1"))
+    else if (strcmp(data, "1") == 0)
     {
         autoCalibrate = true;
     }
     else
     {
         int16_t cal[] = {0, 0, 0, 0, 0, 0};
-        if (strcmp(data, "2"))
+        if (strcmp(data, "2") == 0)
         {
             autoCalibrate = true;
             setMagCalibration(cal);
             forceReorientation();
         }
-        else if (strcmp(data, "3"))
+        else if (strcmp(data, "3") == 0)
         {
             autoCalibrate = false;
             setMagCalibration(cal);
@@ -186,25 +190,32 @@ void actOnSynCommandMessage(char *data)
     syncKnown();
 }
 
-void actOnOrientDataMessage(char *data)
+void actOnOrientDataMessage(char *data, char *srcAdd)
 {
-    relayMessage("do", data, "affe::1");
+    memset(gpTextBuf, 0, MAX_MESSAGE_LENGTH);
+    sprintf(gpTextBuf, "%s#%s", data, srcAdd);
+    relayMessage("do", gpTextBuf, "affe::1");
 }
-void actOnCalibrDataMessage(char *data)
+void actOnCalibrDataMessage(char *data, char *srcAdd)
 {
-    relayMessage("dc", data, "affe::1");
+    memset(gpTextBuf, 0, MAX_MESSAGE_LENGTH);
+    sprintf(gpTextBuf, "%s#%s", data, srcAdd);
+    relayMessage("dc", gpTextBuf, "affe::1");
 }
-void actOnStatusDataMessage(char *data)
+void actOnStatusDataMessage(char *data, char *srcAdd)
 {
-    relayMessage("ds", data, "affe::1");
+    memset(gpTextBuf, 0, MAX_MESSAGE_LENGTH);
+    sprintf(gpTextBuf, "%s#%s", data, srcAdd);
+    relayMessage("ds", gpTextBuf, "affe::1");
 }
 
 void relayMessage(char *cmd, char *data, char *address)
 {
-    char msg[MAX_MESSAGE_LENGTH];
-    //printf("relaying cmd:%s with data:%s to:%s\n", cmd, data, address);
-    sprintf(msg, "%s#%s", cmd, data);
-    udpSend(address, msg);
+    char gpTextBuf[MAX_MESSAGE_LENGTH];
+    memset(gpTextBuf, 0, MAX_MESSAGE_LENGTH);
+//    printf("relaying cmd:%s with data:%s to:%s\n", cmd, data, address);
+    sprintf(gpTextBuf, "%s#%s", cmd, data);
+    udpSend(address, gpTextBuf);
     return;
 }
 
@@ -235,11 +246,14 @@ void actOnUdpRequests(int res, char *srcAdd, char* selfAdd)
             {
                 address = strdup(p);
 //printf("got add:%s\n", address);
-                relayMessage(cmd, data, address);
-                free(cmd);
-                free(data);
-                free(address);
-                return;
+                if (cmd[0] != 'd')
+                {
+                    relayMessage(cmd, data, address);
+                    free(cmd);
+                    free(data);
+                    free(address);
+                    return;
+                }
             }
         }
     }
@@ -278,15 +292,15 @@ void actOnUdpRequests(int res, char *srcAdd, char* selfAdd)
     }
     else if (strcmp(cmd, "do") == 0)
     {
-        actOnOrientDataMessage(data);
+        actOnOrientDataMessage(data, srcAdd);
     }
     else if (strcmp(cmd, "dc") == 0)
     {
-        actOnCalibrDataMessage(data);
+        actOnCalibrDataMessage(data, srcAdd);
     }
     else if (strcmp(cmd, "ds") == 0)
     {
-        actOnStatusDataMessage(data);
+        actOnStatusDataMessage(data, srcAdd);
     }
     else
     {

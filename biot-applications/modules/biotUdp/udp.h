@@ -1,7 +1,7 @@
 #ifndef UDP_COMMON_H
 #define UDP_COMMON_H
 
-#define MAX_MESSAGE_LENGTH 60
+#define MAX_MESSAGE_LENGTH 80
 
 #ifdef __cplusplus
 extern "C" {
@@ -20,9 +20,9 @@ void actOnMcmCommandMessage(char *data);
 void actOnDupCommandMessage(char *data);
 void actOnRebCommandMessage(char *data);
 void actOnSynCommandMessage(char *data);
-void actOnOrientDataMessage(char *data);
-void actOnCalibrDataMessage(char *data);
-void actOnStatusDataMessage(char *data);
+void actOnOrientDataMessage(char *data, char *srcAdd);
+void actOnCalibrDataMessage(char *data, char *srcAdd);
+void actOnStatusDataMessage(char *data, char *srcAdd);
 void relayMessage(char *cmd, char *data, char *address);
 
 int udp_cmd(int argc, char **argv);
