@@ -45,6 +45,7 @@ export class Assemblies {
     private wantedAssembly: string = '';
 
     //private parents:Array<string> = [];
+    private getting:boolean = false;
 
     constructor(public biotz:Biotz) {}
 
@@ -196,17 +197,19 @@ export class Assemblies {
         this.throttle = true;
         this.biotz.getData()
             .subscribe(rawData => {
+                this.getting = true;
                 this.biotzData = {
                     'count': 0,
                     'nodes': []
                 };
                 var nodesUpdated = [];
-                for (var i = 0; i < rawData.n.length; i++) {
-                    var addr = rawData.n[i].a;
-                    if (rawData.n[i].v !== undefined) {
+                var addresses = Object.keys(rawData);
+                for (var i = 0; i < addresses.length; i++) {
+                    var addr = addresses[i];
+                    if (rawData[addr] !== undefined) {
                         this.detectedAddresses[addr] = true;
                         if (this.canShow(addr)) {
-                            var dataSt = rawData.n[i].v.split(/:/);
+                            var dataSt = rawData[addr].split(/:/);
                             var q = {
                                 'w': dataSt[1],
                                 'x': dataSt[2],
@@ -222,8 +225,7 @@ export class Assemblies {
                             if (nStat === undefined) {
                                 nStat = 'unknown';
                             } else {
-                                if (nStat.status)
-                                    nStat = nStat.status;
+                                nStat = nStat.status;
                             }
 
                             var colourSt = this.getNodeColour(addr);
@@ -267,6 +269,7 @@ export class Assemblies {
                         this.threeD.removeNode(name);
                     }
                 }
+                this.getting = false;
                 this.throttle = false;
                 if (this.parentsNeedUpdating) {
                     this.setParentsOfCurrentAssembly();
@@ -278,9 +281,8 @@ export class Assemblies {
     }
 
     getMessageRate() {
-        this.biotz.getSystemMessageRate().subscribe( res => {
-            this.systemMessageRate = 1000 * res;
-        });
+        this.systemMessageRate = 0;
+
     }
 
     identify(addr) {
@@ -568,8 +570,9 @@ export class Assemblies {
     }
 
     updateData() {
-        this.getData();
-        if (this.counter % 21 == 0) {
+        if (! this.getting)
+            this.getData();
+        if (this.counter % 1000 == 0) {
             this.getMessageRate();
             for (var i = 0; i < this.biotzData.count; i++) {
                 var addr = this.biotzData.nodes[i].address;

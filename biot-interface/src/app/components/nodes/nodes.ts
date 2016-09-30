@@ -1,7 +1,6 @@
 import {Component, ViewChildren} from '@angular/core';
 import {Observable} from 'rxjs/Observable';
 
-
 import {ThreeDirective} from '../../directives/three.directive';
 import {Biotz} from '../../services/biotz';
 
@@ -215,10 +214,7 @@ export class Nodes {
     }
 
     getMessageRate() {
-        /*this.biotz.getSystemMessageRate().subscribe( res => {
-            this.systemMessageRate = 1000 * res;
-        });*/
-            this.systemMessageRate = 0;
+        this.systemMessageRate = 0;
 
     }
 
