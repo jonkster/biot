@@ -13,7 +13,7 @@
 #define GFSR                MPU9250_GYRO_FSR_250DPS
 #define AFSR                MPU9250_ACCEL_FSR_2G
 
-#define UPDATE_INTERVAL_MS 25
+#define UPDATE_INTERVAL_MS 25 
 
 typedef struct {
     uint32_t ts;

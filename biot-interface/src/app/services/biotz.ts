@@ -54,18 +54,18 @@ export class Biotz {
   }
 
   getCachedCalibration(addr) {
-      var path = 'data/addresses/' + addr + '/calibration';
+      var path = 'data/addresses/' + addr;
       var result = this.makeBrokerRequest(path);
       return result;
   }
 
   getData() {
-    var result = this.makeBrokerRequest('biotz');
+    var result = this.makeBrokerRequest('biotz/all/data');
     return result;
   }
 
   getStatus(addr) {
-    var result = this.makeBrokerRequest('biotz/addresses/' + addr + '/status');
+    var result = this.makeBrokerRequest('biotz/addresses/' + addr + '/alive');
     return result;
   }
 
@@ -83,15 +83,16 @@ export class Biotz {
 
 
   identify(addr) {
-    var result = this.makeBrokerRequest('biotz/addresses/' + addr + '/identify');
-    return result;
+      var path = 'biotz/addresses/' + addr + '/led';
+      var url = "http://localhost:8889/" + path ;
+      return this.http.put(url, "3")
+          .map((response) => response.json());
   }
 
   private makeBrokerRequest(path: string) {
     var url = "http://localhost:8889/" + path ;
 
     return this.http.get(url)
-      //.map((response) => response.json())
       .map(this.extractWSData)
       .catch(this.handleError);
   }

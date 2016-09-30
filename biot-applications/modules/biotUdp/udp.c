@@ -35,7 +35,6 @@ struct sockaddr_in6 serverSocketAddr;
 
 // define some variables globally here to keep them off the stack
 static char serverBuffer[SERVER_BUFFER_SIZE];
-static char gpTextBuf[MAX_MESSAGE_LENGTH];
 static msg_t msg_q[MUDP_Q_SZ];
 static char srcAdd[IPV6_ADDR_MAX_STR_LEN];
 static char selfAdd[IPV6_ADDR_MAX_STR_LEN];
@@ -192,30 +191,34 @@ void actOnSynCommandMessage(char *data)
 
 void actOnOrientDataMessage(char *data, char *srcAdd)
 {
-    memset(gpTextBuf, 0, MAX_MESSAGE_LENGTH);
-    sprintf(gpTextBuf, "%s#%s", data, srcAdd);
-    relayMessage("do", gpTextBuf, "affe::1");
+    char buffer[MAX_MESSAGE_LENGTH];
+    memset(buffer, 0, MAX_MESSAGE_LENGTH);
+    sprintf(buffer, "%s#%s", data, srcAdd);
+    relayMessage("do", buffer, "affe::1");
 }
 void actOnCalibrDataMessage(char *data, char *srcAdd)
 {
-    memset(gpTextBuf, 0, MAX_MESSAGE_LENGTH);
-    sprintf(gpTextBuf, "%s#%s", data, srcAdd);
-    relayMessage("dc", gpTextBuf, "affe::1");
+    char buffer[MAX_MESSAGE_LENGTH];
+    memset(buffer, 0, MAX_MESSAGE_LENGTH);
+    sprintf(buffer, "%s#%s", data, srcAdd);
+    relayMessage("dc", buffer, "affe::1");
 }
 void actOnStatusDataMessage(char *data, char *srcAdd)
 {
-    memset(gpTextBuf, 0, MAX_MESSAGE_LENGTH);
-    sprintf(gpTextBuf, "%s#%s", data, srcAdd);
-    relayMessage("ds", gpTextBuf, "affe::1");
+    char buffer[MAX_MESSAGE_LENGTH];
+    memset(buffer, 0, MAX_MESSAGE_LENGTH);
+    sprintf(buffer, "%s#%s", data, srcAdd);
+    relayMessage("ds", buffer, "affe::1");
+    registerNode(srcAdd);
 }
 
 void relayMessage(char *cmd, char *data, char *address)
 {
-    char gpTextBuf[MAX_MESSAGE_LENGTH];
-    memset(gpTextBuf, 0, MAX_MESSAGE_LENGTH);
-//    printf("relaying cmd:%s with data:%s to:%s\n", cmd, data, address);
-    sprintf(gpTextBuf, "%s#%s", cmd, data);
-    udpSend(address, gpTextBuf);
+    char buffer[MAX_MESSAGE_LENGTH];
+    memset(buffer, 0, MAX_MESSAGE_LENGTH);
+    //printf("relaying cmd:%s with data:%s to:%s\n", cmd, data, address);
+    sprintf(buffer, "%s#%s", cmd, data);
+    udpSend(address, buffer);
     return;
 }
 
@@ -310,9 +313,24 @@ void actOnUdpRequests(int res, char *srcAdd, char* selfAdd)
     free(data);
 }
 
+void registerNode(char *addr)
+{
+    for (uint8_t i = 0; i < MAX_NODES; i++)
+    {
+        if (strlen(nodeData[i]) == 0)
+        {
+            strcpy(nodeData[i], addr);
+            return;
+        }
+        if (strcmp(nodeData[i], addr) == 0)
+            return;
+    }
+    printf("node overflow! %s\n", addr);
+}
+
 int udpSend(char *addrStr, char *data)
 {
-//    printf("sending udp:%s\n", data);
+    //printf("sending udp:%s to addr:%s\n", data, addrStr);
     size_t dataLen = strlen(data);
     if (dataLen > 0)
     {
@@ -411,10 +429,20 @@ void *udpServer(void *arg)
 void syncKnown(void)
 {
 #ifdef MAX_NODES
-    sprintf(gpTextBuf, "ctim#%lu", getCurrentTime());
-    // this dodgy - rather than use unicast address should send specifically to
-    // known nodes
-    udpSend("ff02::1", gpTextBuf);
+    char buffer[MAX_MESSAGE_LENGTH];
+    memset(buffer, 0, MAX_MESSAGE_LENGTH);
+    sprintf(buffer, "ctim#%lu", getCurrentTime());
+    for (uint8_t i = 0; i < MAX_NODES; i++)
+    {
+        if (strlen(nodeData[i]) > 0)
+        {
+            udpSend(nodeData[i], buffer);
+        }
+        else
+        {
+            return;
+        }
+    }
     return;
 #endif
 }
@@ -439,5 +467,46 @@ int udp_cmd(int argc, char **argv)
 
     printf("usage: %s <IPv6-address> <message>\n", argv[0]);
     return 1;
+}
+
+void sendData(char *address, nodeData_t data)
+{
+    char buffer[MAX_MESSAGE_LENGTH];
+    memset(buffer, 0, MAX_MESSAGE_LENGTH);
+    sprintf(buffer, "do#%lu:%f:%f:%f:%f", data.timeStamp, data.w, data.x, data.y, data.z);
+    udpSend(address, buffer);
+}
+
+void sendCalibration(char *address, int16_t *cal)
+{
+    char buffer[MAX_MESSAGE_LENGTH];
+    memset(buffer, 0, MAX_MESSAGE_LENGTH);
+    sprintf(buffer, "dc#%d:%d:%d:%d:%d:%d", cal[0], cal[1], cal[2], cal[3], cal[4], cal[5]);
+    udpSend(address, buffer);
+}
+
+void translateStatus(imuStatus_t *status, char* buffer)
+{
+    uint8_t dof = 0;
+    if (status->useGyroscopes)
+        dof += 100;
+    if (status->useAccelerometers)
+        dof += 10;
+    if (status->useMagnetometers)
+        dof += 1;
+
+    uint8_t mode = 0;
+    if (status->calibrateMode)
+        mode = 1;
+
+    sprintf(buffer, "ds#%d:%"SCNu32":%d", dof, status->dupInterval, mode);
+}
+
+void sendStatus(char *address, imuStatus_t *status)
+{
+    char buffer[MAX_MESSAGE_LENGTH];
+    memset(buffer, 0, MAX_MESSAGE_LENGTH);
+    translateStatus(status, buffer);
+    udpSend(address, buffer);
 }
 

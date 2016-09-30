@@ -12,7 +12,6 @@
 //#include "../modules/ssd1306/ssd1306.h"
 #include "../modules/biotUdp/udp.h"
 #include "../modules/identify/biotIdentify.h"
-#include "../modules/sendData/sendData.h"
 #include "../modules/position/position.h"
 #include "../modules/imu/imu.h"
 
@@ -24,10 +23,8 @@ char dodagRoot[IPV6_ADDR_MAX_STR_LEN];
 char dodagParent[IPV6_ADDR_MAX_STR_LEN];
 
 extern void batch(const shell_command_t *command_list, char *line);
-extern int udpSend(char *addr_str, char *data);
 extern uint32_t getCurrentTime(void);
 extern void timeInit(void);
-extern void sendData(char *address, nodeData_t data);
 bool imuReady = false;
 myQuat_t currentPosition;
 
@@ -99,14 +96,7 @@ void sendNodeData(uint32_t ts)
     data.x = currentPosition.x;
     data.y = currentPosition.y;
     data.z = currentPosition.z;
-    if (knowsRoot())
-    {
-        sendData(dodagRoot, data);
-    }
-    else
-    {
-        sendData("affe::2", data);
-    }
+    sendData("affe::2", data);
 }
 
 void sendNodeStatus(void)
@@ -321,10 +311,6 @@ void *houseKeeper(void *arg)
         {
             imuReady = initIMU();
         }
-        else
-        {
-            currentPosition = getPosition(imuDev);
-        }
 
         uint32_t mSecs = getCurrentTime()/1500;
         uint32_t secs = mSecs/1000;
@@ -332,6 +318,7 @@ void *houseKeeper(void *arg)
         {
             if (imuReady)
             {
+                currentPosition = getPosition(imuDev);
                 sendNodeData(mSecs);
             }
         }

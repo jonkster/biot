@@ -33,6 +33,8 @@ export class Nodes {
     private accel:boolean = true;
     private compass:boolean = true;
 
+    private getting:boolean = false;
+
     constructor(public biotz:Biotz) {}
 
     ngOnInit() {
@@ -133,17 +135,19 @@ export class Nodes {
     getData() {
         this.biotz.getData()
             .subscribe(rawData => {
+                this.getting = true;
                 this.biotzData = {
                     'count': 0,
                     'nodes': []
                 };
                 var nodesUpdated = [];
-                for (var i = 0; i < rawData.n.length; i++) {
-                    var addr = rawData.n[i].a;
-                    if (rawData.n[i].v !== undefined) {
+                var addresses = Object.keys(rawData);
+                for (var i = 0; i < addresses.length; i++) {
+                    var addr = addresses[i];
+                    if (rawData[addr] !== undefined) {
                         this.detectedAddresses[addr] = true;
                         if (this.canShow(addr)) {
-                            var dataSt = rawData.n[i].v.split(/:/);
+                            var dataSt = rawData[addr].split(/:/);
                             var q = {
                                 'w': dataSt[1],
                                 'x': dataSt[2],
@@ -203,6 +207,7 @@ export class Nodes {
                         this.nodes[name] = undefined;
                     }
                 }
+                this.getting = false;
             },
             error => {
                 console.error("Error updating data!", error);
@@ -210,9 +215,11 @@ export class Nodes {
     }
 
     getMessageRate() {
-        this.biotz.getSystemMessageRate().subscribe( res => {
+        /*this.biotz.getSystemMessageRate().subscribe( res => {
             this.systemMessageRate = 1000 * res;
-        });
+        });*/
+            this.systemMessageRate = 0;
+
     }
 
     identify(addr) {
@@ -367,8 +374,9 @@ export class Nodes {
     }
 
     updateData() {
-        this.getData();
-        if (this.counter % 21 == 0) {
+        if (! this.getting)
+            this.getData();
+        if (this.counter % 1000 == 0) {
             this.getMessageRate();
             for (var i = 0; i < this.biotzData.count; i++) {
                 var addr = this.biotzData.nodes[i].address;

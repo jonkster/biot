@@ -51,6 +51,7 @@ brokerUdpListener.on('message', function (message, remote) {
 var restify = require('restify');
 var brokerListener = restify.createServer();
 brokerListener.use(restify.bodyParser());
+brokerListener.server.setTimeout(10000)
 
 brokerListener.pre(function(req, res, next) {
     //console.log("REQ:", req.url);
@@ -66,6 +67,7 @@ brokerListener.get('/biotz/count', getBiotCount);
 brokerListener.get('/biotz/status', getBiotzStatus);
 brokerListener.get('/biotz/synchronise', biotSync);
 brokerListener.get('/biotz/addresses', getBiotz);
+brokerListener.get('/biotz/all/data', getAllBiotz);
 
 //brokerListener.put('/biotz/addnode/:address', addDummyNode);
 //brokerListener.put('/biotz/dropnodes', dropDummyNodes);
@@ -123,14 +125,24 @@ function addNodeData(message) {
     var bits = message.split('#');
     var address = bits[2];
 
-    nodeStatus[address] = {
-        'ts' : new Date(),
-        'status' : 'active'
-    }
+    /*if (bits[0][0] === 'd') {
+        nodeStatus[address] = {
+            'ts' : new Date(),
+            'status' : 'active'
+        }
+    }*/
 
     if (bits[0] == 'do') {
-        biotzData[address] = bits[1];
-        realNodes[address] = true;
+        if (bits[1].match(/[0-9]+:[\-0-9\.]+:[\-0-9\.]+:[\-0-9\.]+:[\-0-9\.]+/)) {
+            biotzData[address] = bits[1];
+            realNodes[address] = true;
+            nodeStatus[address] = {
+                'ts' : new Date(),
+                'status' : 'active'
+            }
+        } else {
+            console.log('scrambled do', message);
+        }
     }
     else if (bits[0] == 'dc'){
         biotzCal[address] = bits[1];
@@ -248,6 +260,17 @@ function getBiotCount(req, res, next) {
 
     var addresses = Object.keys(biotzData);
     res.send(200, addresses.length);
+    next();
+}
+
+function getAllBiotz(req, res, next) {
+    var addresses = Object.keys(biotzData);
+    var value = {};
+    for (var i = 0; i < addresses.length; i++) {
+        var address = addresses[i];
+        value[address] = biotzData[address];
+    }
+    res.send(200, value);
     next();
 }
 
@@ -539,16 +562,10 @@ function deleteDataValue(req, res, next) {
             console.log('deleted file:', path);
             res.send(200, "OK");
         }
+        next();
     });
 }
 
-
-function getSystemMessageRate(req, res, next) {
-    var now = new Date();
-    var messageRate = messagesFromRouter/(now - startTime);
-    res.send(200, messageRate);
-    next();
-}
 
 function putBiotAuto(req, res, next) {
 
@@ -640,7 +657,6 @@ function putBiotLed(req, res, next) {
     var data = req.body;
 
     var message = new Buffer('cled#' + data + '#' + address);
-    console.log("sending", message);
     var client = dgram.createSocket('udp6');
 
     client.send(message, 0, message.length, BIOTZ_UDP_PORT, BIOTZ_ROUTER_HOST, function(err, bytes) {
@@ -648,7 +664,6 @@ function putBiotLed(req, res, next) {
             console.log('Error:', err);
             res.send(500, err);
         } else {
-            console.log('put led', message);
             res.send(200, 'OK');
         }
         client.close();
