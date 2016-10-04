@@ -128,17 +128,14 @@ bool getIMUData(mpu9250_t dev, imuData_t *data)
     data->ts = xtimer_now64() - t0;
     if (mpu9250_read_accel(&dev, &data->accel))
     {
-        puts("accel fail");
         return false;
     }
     if (mpu9250_read_gyro(&dev, &data->gyro))
     {
-        puts("gyro fail");
         return false;
     }
     if (mpu9250_read_compass(&dev, &data->mag))
     {
-        puts("mag fail");
         return false;
     }
 
@@ -539,7 +536,7 @@ void setMagCalibration(int16_t *cal)
     for (uint8_t i = 0; i < 3; i++)
     {
         magHardCorrection[i] = (magMinMax[i] + magMinMax[i+3])/2;
-        if (isnan(magHardCorrection[i]))
+        if (isnan((float)magHardCorrection[i]))
             magHardCorrection[i] = 0;
     }
 
@@ -569,7 +566,7 @@ void setMagCalibration(int16_t *cal)
     for (uint8_t i = 0; i < 3; i++)
     {
         magSoftCorrection[i] = averageRadius/avg[i];
-        if (isnan(magSoftCorrection[i]))
+        if (isnan((float)magSoftCorrection[i]))
             magSoftCorrection[i] = 0;
     }
 }
