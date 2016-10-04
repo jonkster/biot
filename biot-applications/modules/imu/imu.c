@@ -539,7 +539,7 @@ void setMagCalibration(int16_t *cal)
     for (uint8_t i = 0; i < 3; i++)
     {
         magHardCorrection[i] = (magMinMax[i] + magMinMax[i+3])/2;
-        if (isnan(magHardCorrection[i]))
+        if (isnan((float)magHardCorrection[i]))
             magHardCorrection[i] = 0;
     }
 
