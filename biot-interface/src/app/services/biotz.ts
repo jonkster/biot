@@ -105,16 +105,16 @@ export class Biotz {
   }
 
   putCalibrationsToCache(addr, data: string) {
-      var path = 'data/addresses/' + addr + '/calibration/' + data;
+      var path = 'data/addresses/' + addr + '/calibration';
       var url = "http://localhost:8889/" + path ;
-      return this.http.put(url, 'where_is_this?')
+      return this.http.put(url, data)
           .map((response) => response.json());
   }
 
   putCalibrationToNode(addr, data: string) {
-      var path = 'biotz/addresses/' + addr + '/calibration/' + data;
+      var path = 'biotz/addresses/' + addr + '/calibration';
       var url = "http://localhost:8889/" + path ;
-      return this.http.put(url, 'where_is_this?')
+      return this.http.put(url, data)
           .map((response) => response.json());
   }
 
@@ -135,16 +135,16 @@ export class Biotz {
           data += '0';
       }
 
-      var path = 'biotz/addresses/' + addr + '/sensors/' + data;
+      var path = 'biotz/addresses/' + addr + '/dof';
       var url = "http://localhost:8889/" + path ;
-      return this.http.put(url, 'where_is_this?')
+      return this.http.put(url, data)
           .map((response) => response.json());
   }
 
   resetCalibrationOnNode(addr) {
-      var path = 'biotz/addresses/' + addr + '/calibration/0:0:0:0:0:0';
+      var path = 'biotz/addresses/' + addr + '/calibration';
       var url = "http://localhost:8889/" + path ;
-      return this.http.put(url, 'where_is_this?')
+      return this.http.put(url, '0:0:0:0:0:0')
           .map((response) => response.json());
   }
 
