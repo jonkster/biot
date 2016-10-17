@@ -42,6 +42,9 @@ struct in6_addr srcSocketAddr;
 
 uint32_t startTime = 0;
 bool biotMsgSilent = false;
+bool pokeRequested = false;
+
+
 
 #ifdef MAX_NODES
     char nodeData[MAX_NODES][IPV6_ADDR_MAX_STR_LEN];
@@ -184,6 +187,11 @@ void actOnRebCommandMessage(char *data)
     reboot();
 }
 
+void actOnPokeCommandMessage(char *data)
+{
+    pokeRequested = true;
+}
+
 void actOnSynCommandMessage(char *data)
 {
     syncKnown();
@@ -288,6 +296,10 @@ void actOnUdpRequests(int res, char *srcAdd, char* selfAdd)
     else if (strcmp(cmd, "creb") == 0)
     {
         actOnRebCommandMessage(data);
+    }
+    else if (strcmp(cmd, "cpok") == 0)
+    {
+        actOnPokeCommandMessage(data);
     }
     else if (strcmp(cmd, "csyn") == 0)
     {

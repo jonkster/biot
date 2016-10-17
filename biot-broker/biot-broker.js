@@ -388,7 +388,12 @@ function getBiotz(req, res, next) {
 }
 
 function getBiotAlive(req, res, next) {
+
     var address = req.params['address'];
+
+    // poke biot to force activity
+    sendPoke(address);
+
     var now = new Date();
     if (nodeStatus[address].status !== 'dummy') {
         if (nodeStatus[address] !== undefined) {
@@ -702,6 +707,19 @@ function putDataValue(req, res, next) {
 
 }
 
+
+function sendPoke(address) {
+
+    var message = new Buffer('cpok##' + address);
+    var client = dgram.createSocket('udp6');
+
+    client.send(message, 0, message.length, BIOTZ_UDP_PORT, BIOTZ_ROUTER_HOST, function(err, bytes) {
+        if (err) {
+            console.log('Error:', err);
+            client.close();
+        }
+    });
+}
 
 
 

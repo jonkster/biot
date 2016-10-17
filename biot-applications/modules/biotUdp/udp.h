@@ -13,11 +13,14 @@ typedef struct nodeDataStructure {
     double z;    
 } nodeData_t;
 
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 extern bool biotMsgSilent;
+extern bool pokeRequested;
+
 
 //void *udp_server(void *);
 

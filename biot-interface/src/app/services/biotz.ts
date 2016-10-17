@@ -105,7 +105,7 @@ export class Biotz {
   }
 
   putCalibrationsToCache(addr, data: string) {
-      var path = 'data/addresses/' + addr + '/calibration';
+      var path = 'data/addresses/' + addr;
       var url = "http://localhost:8889/" + path ;
       return this.http.put(url, data)
           .map((response) => response.json());

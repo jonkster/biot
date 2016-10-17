@@ -339,6 +339,13 @@ void *houseKeeper(void *arg)
             }
         }
 
+        if (pokeRequested)
+        {
+                sendNodeStatus();
+                sendNodeCalibration();
+                pokeRequested = false;
+        }
+
         if (secs != lastSecs)
         {
             if (secs % 2 == 0)
