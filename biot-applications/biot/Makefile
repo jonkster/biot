@@ -1,12 +1,12 @@
 # name of your application
-APPLICATION = biotz-router
+APPLICATION = biotz-node
 
 # If no BOARD is found in the environment, use this default:
-BOARD ?= samr21-xpro
+BOARD ?= samr21b18-mz210pa
 
-ifeq ($(BOARD),samr21-xpro)
-    CFLAGS += -DNOOLED=true
-endif
+# if a single node then define MAX_NODES to 0
+CFLAGS += -DMAX_NODES=0
+CFLAGS += -DNOOLED=true
 
 # This has to be the absolute path to the RIOT base directory:
 RIOTBASE ?= $(CURDIR)/../../../RIOT
@@ -18,30 +18,23 @@ CFLAGS += -I$(CURDIR)
 # gl matrix library is sloppy...
 CFLAGS += -Wno-error=maybe-uninitialized
 
-# if a single node then define MAX_NODES to 0
-CFLAGS += -DMAX_NODES=0
 
 USEMODULE += printf_float
 
 # adding biot specific modules
-ifeq ($(BOARD),samr21-zllk)
-	DIRS += ../modules/ssd1306/
-	USEMODULE += ssd1306
-endif
 DIRS += ../modules/biotUdp/
 USEMODULE += biotUdp
 DIRS += ../modules/identify/
 USEMODULE += biotIdentify
-DIRS += ../modules/sendData/
-USEMODULE += sendData
+#DIRS += ../modules/sendData/
+#USEMODULE += sendData
 DIRS += ../modules/dataCache/
 USEMODULE += dataCache
 DIRS += ../modules/position/
 USEMODULE += position
 DIRS += ../modules/imu/
 USEMODULE += imu
-USEMODULE += mpu9150
-#USEMODULE += mpu9250
+USEMODULE += mpu9250
 CFLAGS += -DPI=3.14159265
 
 # Include packages that pull up and auto-init the link layer.
@@ -93,5 +86,7 @@ LINKFLAGS += -Wl,--no-wchar-size-warning
 
 # Change this to 0 show compiler invocation lines by default:
 QUIET ?= 1
+
+#CFLAGS += -DDEVELHELP -DNDEBUG # uncomment to allow detailed ps info
 
 include $(RIOTBASE)/Makefile.include
