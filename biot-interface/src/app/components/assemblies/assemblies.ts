@@ -570,8 +570,10 @@ export class Assemblies {
     }
 
     updateData() {
-        if (! this.getting)
+        if (! this.getting) {
             this.getData();
+        }
+
         if (this.counter % 1000 == 0) {
             this.getMessageRate();
             for (var i = 0; i < this.biotzData.count; i++) {
