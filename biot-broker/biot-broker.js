@@ -395,28 +395,23 @@ function getBiotAlive(req, res, next) {
     sendPoke(address);
 
     var now = new Date();
-    if (nodeStatus[address].status !== 'dummy') {
-        if (nodeStatus[address] !== undefined) {
+    if (nodeStatus[address] !== undefined) {
 
-            var timeDiff = (now - nodeStatus[address].ts) / 1000; // as seconds
+        var timeDiff = (now - nodeStatus[address].ts) / 1000; // as seconds
 
-                if (timeDiff > 20) {
-                    nodeStatus[address] = undefined;
-                } else if (timeDiff > 10) {
-                    nodeStatus[address].status = 'lost';
-                } else if (timeDiff > 5) {
-                    nodeStatus[address].status = 'inactive';
-                } else {
-                    nodeStatus[address].status = 'active';
-                }
-        }
+            if (timeDiff > 20) {
+                nodeStatus[address] = undefined;
+            } else if (timeDiff > 10) {
+                nodeStatus[address].status = 'lost';
+            } else if (timeDiff > 5) {
+                nodeStatus[address].status = 'inactive';
+            } else {
+                nodeStatus[address].status = 'active';
+            }
     }
     if (nodeStatus[address] === undefined) {
         biotzData[address] = undefined;
-    }
-
-    if (nodeStatus[address] === undefined) {
-        res.send(404, 'does not exist');
+        res.send(404, 'node:' + address + ' does not exist');
     }
     else {
         res.send(200, nodeStatus[address]);
