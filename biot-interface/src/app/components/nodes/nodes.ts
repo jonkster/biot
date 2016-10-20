@@ -28,11 +28,12 @@ export class Nodes {
     private systemMessageRate: number = 0;
     private wantAll: boolean = true;
 
-    private gyro:boolean = true;
-    private accel:boolean = true;
-    private compass:boolean = true;
+    private gyro: boolean = true;
+    private accel: boolean = true;
+    private compass: boolean = true;
 
-    private getting:boolean = false;
+    private getting: boolean = false;
+    private initialCals: any = {};
 
     constructor(public biotz:Biotz) {}
 
@@ -76,12 +77,15 @@ export class Nodes {
 
     getNodeCalibration(addr) {
         this.biotz.getCalibration(addr)
-            .subscribe(rawData => {
-                this.biotzCalibration[addr] = rawData;
-            },
-            error => {
-                console.error("ERROR getting calibration!", error);
-            });
+            .subscribe(
+                rawData => {
+                    console.log(addr, this.initialCals);
+                    this.initialCals[addr] = true;
+                    this.biotzCalibration[addr] = rawData;
+                },
+                error => {
+                    console.error("ERROR getting calibration!", error);
+                });
     }
 
     getNodeStatus(addr) {
@@ -155,8 +159,9 @@ export class Nodes {
                             };
 
                             var cal = this.savedCalibrations[addr];
-                            if (cal === undefined) 
+                            if (cal === undefined)  {
                                 cal = '';
+                            }
 
                             var nStat = this.biotzStatus[addr];
                             if (nStat === undefined) {
@@ -378,6 +383,14 @@ export class Nodes {
                 var addr = this.biotzData.nodes[i].address;
                 this.getNodeCalibration(addr);
                 this.getNodeStatus(addr);
+            }
+        } else {
+            for (var i = 0; i < this.biotzData.count; i++) {
+                var addr = this.biotzData.nodes[i].address;
+                if (! this.initialCals[addr]) {
+                    this.getNodeCalibration(addr);
+                    this.getNodeStatus(addr);
+                }
             }
         }
 
