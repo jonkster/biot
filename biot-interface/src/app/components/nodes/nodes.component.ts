@@ -12,26 +12,25 @@ import {Biotz} from '../../services/biotz';
 })
 export class NodesComponent {
     @ViewChildren(ThreeDirective) threeDirective;
-    private biotzData:any = {};
+
+    private accel: boolean = true;
     private biotzCalibration:any = {};
-    private detectedAddresses:any = {};
+    private biotzData:any = {};
     private biotzStatus:any = {};
-    private nodeColours:any = {};
-    private savedCalibrations:any = {};
-    private monitoring:boolean = true;
+    private compass: boolean = true;
     private counter:number = 0;
+    private detectedAddresses:any = {};
+    private getting: boolean = false;
+    private gyro: boolean = true;
+    private initialCals: any = {};
+    private monitoring:boolean = true;
+    private nodeColours:any = {};
     private nodes: any = {};
-    private threeD: any = {};
+    private savedCalibrations:any = {};
     private showOnlyAddress: any = {};
     private systemMessageRate: number = 0;
+    private threeD: any = {};
     private wantAll: boolean = true;
-
-    private gyro: boolean = true;
-    private accel: boolean = true;
-    private compass: boolean = true;
-
-    private getting: boolean = false;
-    private initialCals: any = {};
 
     constructor(public biotz:Biotz) {}
 
@@ -45,6 +44,7 @@ export class NodesComponent {
     ngAfterViewInit() {
         this.threeD = this.threeDirective.first;
         this.threeD.setFloorVisibility(true);
+        this.setupDialogs();
     }
 
     canShow(addr) {
@@ -186,8 +186,7 @@ export class NodesComponent {
                             if (this.nodes[addr] === undefined)
                                 {
                                     this.nodes[addr] = {};
-                                    this.threeD.addNode(null, addr, i*200, 0, 0, parseInt(colourSt, 16), false);
-                                    console.log("sending calibrations for", addr);
+                                    this.threeD.addNode(null, addr, i*200, 0, 0, parseInt(colourSt, 16), 'limb-' + addr, 100, true);
                                     var cal = this.savedCalibrations[addr];
                                     this.biotz.putCalibrationToNode(addr, cal)
                                 }
@@ -205,14 +204,15 @@ export class NodesComponent {
                     var name = addressesKnown[i];
                     if (! nodesUpdated[name]) 
                     {
+                        delete this.detectedAddresses[name];
+                        delete this.nodes[name];
                         this.threeD.removeNode(name);
-                        this.nodes[name] = undefined;
                     }
                 }
                 this.getting = false;
             },
             error => {
-                console.error("Error updating data!", error);
+                console.error("Error updating data, has broker died?", error);
             });
     }
 
@@ -266,6 +266,8 @@ export class NodesComponent {
         var colours = [
             0xff0000, 0x00ff00, 0x0000ff, 0xff00ff, 0x00ffff, 0xffff00
         ];
+        if (! addr || addr == 'none') 
+            return '7f7f7f';
         if (this.nodeColours[addr] === undefined) {
             var idx = Object.keys(this.nodeColours).length;
             var colour = colours[idx % colours.length];
@@ -350,6 +352,8 @@ export class NodesComponent {
         }
     }
 
+    setupDialogs() {
+    }
     showOne(addr, value) {
         this.showOnlyAddress[addr] = value;
     }
@@ -377,8 +381,9 @@ export class NodesComponent {
     }
 
     updateData() {
-        if (! this.getting)
+        if (! this.getting) {
             this.getData();
+        }
         if (this.counter % 1000 == 0) {
             this.getMessageRate();
             for (var i = 0; i < this.biotzData.count; i++) {

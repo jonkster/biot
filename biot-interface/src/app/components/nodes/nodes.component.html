@@ -1,19 +1,14 @@
 <h3>Biot Nodes</h3>
-
 <div nodes>
-
-
     <hr/>
     <div>Biotz Nodes detected: {{ getDetectedAddresses().length }} <button [disabled]="wantAll" (click)="showAll(true);">Show All</button></div> 
-    <!--    <div>Message rate: {{ systemMessageRate | number:'1.1-2' }} req/sec</div> -->
-    <!-- <div myThreeD [sizeY]="400" [sizeX]="1024" > -->
     <div myThreeD >
     </div>
     <hr/>
 
     <h3>Node Position Data</h3>
     <div>Currently Monitoring Biotz Nodes: <b>{{ monitoring }}</b></div>
-    <button [ngClass]="{'active': monitoring}" (click)="toggleMonitoring()">Toggle Monitor</button>
+    <button [ngClass]="{'active': monitoring}" (click)="toggleMonitoring()">Toggle Movement</button>
     <table>
         <thead>
             <tr>

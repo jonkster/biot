@@ -16,7 +16,9 @@ export class AssembliesComponent {
     @ViewChildren(ThreeDirective) threeDirective;
     @ViewChildren(DialogComponent) dialogDirectives;
 
-    private accel:boolean = true;
+    private accel: boolean = true;
+    private assemblyDialog;
+    private assemblyLoadDialog;
     private assemblyNames:any = [];
     private biotzCalibration:any = {};
     private biotzData:any = {};
@@ -25,25 +27,22 @@ export class AssembliesComponent {
     private counter:number = 0;
     private currentAssembly:any = {};
     private detectedAddresses:any = {};
-    private limbDialog;
-    private parentsNeedUpdating: boolean = false;
-    private assemblyDialog;
-    private assemblyLoadDialog;
     private dummyNodeCount = 0;
+    private getting:boolean = false;
     private gyro:boolean = true;
+    private limbDialog;
     private monitoring:boolean = true;
     private nodeColours:any = {};
     private nodes: any = {};
+    private parentsNeedUpdating: boolean = false;
     private savedCalibrations:any = {};
+    private showEnvironment:boolean = true;
     private showOnlyAddress: any = {};
     private systemMessageRate: number = 0;
     private threeD: any = {};
     private throttle:boolean = false;
     private wantAll: boolean = true;
     private wantedAssembly: string = '';
-
-    //private parents:Array<string> = [];
-    private getting:boolean = false;
 
     constructor(public biotz:Biotz) {}
 
@@ -56,15 +55,10 @@ export class AssembliesComponent {
 
     ngAfterViewInit() {
         this.threeD = this.threeDirective.first;
-        this.threeD.setFloorVisibility(false);
-        var dialogs = {};
-        this.dialogDirectives.forEach(function(dialog) {
-            dialogs[dialog.name] = dialog;
-        });
-        this.limbDialog = dialogs['limb-dialog'];
-        this.assemblyDialog = dialogs['assembly-dialog'];
-        this.assemblyLoadDialog = dialogs['assembly-load-dialog'];
+        this.threeD.setFloorVisibility(this.showEnvironment);
+        this.setupDialogs();
     }
+
 
     addDummyNode(addr) {
         if (! addr)
@@ -536,6 +530,16 @@ export class AssembliesComponent {
         this.wantedAssembly = name;
     }
 
+    setupDialogs() {
+        var dialogs = {};
+        this.dialogDirectives.forEach(function(dialog) {
+            dialogs[dialog.name] = dialog;
+        });
+        this.limbDialog = dialogs['limb-dialog'];
+        this.assemblyDialog = dialogs['assembly-dialog'];
+        this.assemblyLoadDialog = dialogs['assembly-load-dialog'];
+    }
+
     selectLimb(addr) {
         this.threeD.setCurrentLimb(addr);
         this.limbDialog.openDialog(addr);
@@ -543,6 +547,11 @@ export class AssembliesComponent {
 
     showOne(addr, value) {
         this.showOnlyAddress[addr] = value;
+    }
+
+    toggleContext() {
+        this.showEnvironment = ! this.showEnvironment;
+        this.threeD.setFloorVisibility(this.showEnvironment);
     }
 
     toggleShowAll(addr) {

@@ -2,13 +2,6 @@ import { Directive, ElementRef, EventEmitter, HostListener, Input, Output } from
 
 
 import * as THREE from 'three';
-//import * as TrackballControls from 'three-trackballcontrols';
-//import TrackballControls from 'three-trackballcontrols';
-/*import * as THREET from 'three-trackballcontrols';
-console.log(THREET);*/
-
-
-
 
 @Directive({
     selector: '[myThreeD]',
@@ -26,7 +19,6 @@ export class ThreeDirective {
     renderer = undefined;
     grid = undefined;
     mouse = undefined;
-    dragging = false;
     lastMouseX = undefined;
     lastMouseY = undefined;
     pointLight = undefined;
@@ -248,7 +240,6 @@ export class ThreeDirective {
     init() {
 
         this.scene = new THREE.Scene();
-        console.log(THREE);
 
         //this.camera = new THREE.OrthographicCamera( -1000, 1000, 1000, -1000, -1000, 2000);
         this.camera = new THREE.PerspectiveCamera( 45, this.sizeX/this.sizeY, 0.1, 10000 );
@@ -277,9 +268,7 @@ export class ThreeDirective {
         this.raycaster = new THREE.Raycaster();
         this.mouse = new THREE.Vector2();
 
-// hack - trying to make trackball controls work
-var TrackballControls = require('three-trackballcontrols');
-
+        var TrackballControls = require('three-trackballcontrols');
         this.controls = new TrackballControls( this.camera, this.renderer.domElement  );
         this.controls.rotateSpeed = 1.0;
         this.controls.panSpeed = 0.8;
@@ -288,8 +277,7 @@ var TrackballControls = require('three-trackballcontrols');
         this.controls.staticMoving = true;
         this.controls.dynamicDampingFactor = 0.3;
         this.controls.keys = [ 65, 83, 68 ];
-
-
+        this.controls.enabled = false;
     }
 
 
@@ -340,7 +328,6 @@ var TrackballControls = require('three-trackballcontrols');
     makeFloor() {
 
 	var floorMaterial = new THREE.MeshStandardMaterial( { color: 0xddffdd, roughness: 0.8, metalness: 0.1, transparent: true, opacity: 0.5 } );
-	//var floorMaterial = new THREE.MeshLambertMaterial( { color: 0xddffdd, roughness: 0.8, metalness: 0.1, transparent: true, opacity: 0.5 } );
 	var floorGeometry = new THREE.PlaneGeometry(2000, 2000, 1, 1);
 	var floor = new THREE.Mesh(floorGeometry, floorMaterial);
 	floor.position.y = 0;
@@ -390,6 +377,7 @@ var TrackballControls = require('three-trackballcontrols');
         var intersects = this.raycaster.intersectObjects(limbs);
 
         if (intersects.length > 0) {
+            this.controls.enabled = false;
             for (var i = 0; i < intersects.length; i++) {
                 var limb = intersects[i].object;
                 if (limb.userData.address) {
@@ -401,10 +389,8 @@ var TrackballControls = require('three-trackballcontrols');
                     break;
                 }
             }
-        } else if (! this.dragging) {
-            this.lastMouseX = this.mouse.x;
-            this.lastMouseY = this.mouse.y;
-            this.dragging = true;
+        } else {
+            this.controls.enabled = true;
         }
     }
 
@@ -414,7 +400,6 @@ var TrackballControls = require('three-trackballcontrols');
         this.mouse.y = 1 - 2 * (event.offsetY / event.srcElement.height);
 
         if (this.selectedLimb) {
-
             if (this.selectedLimb) {
                 this.raycaster.setFromCamera(this.mouse, this.camera);
                 var plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), this.selectedLimb.position.y);
@@ -427,8 +412,6 @@ var TrackballControls = require('three-trackballcontrols');
                     this.selectedLimb = undefined;
                 }
             }
-        }
-        else if (this.dragging) {
         }
     }
 
@@ -444,13 +427,11 @@ var TrackballControls = require('three-trackballcontrols');
                 this.selectedLimb.position.z = this.selectedLimb.userData['currentZ'];
             }
             this.selectedLimb = undefined;
-        } else {
-            this.dragging = false;
         }
+        this.controls.enabled = false;
     }
 
     mouseWheelHandler(event) {
-        console.log("XX");
         var amount = event.wheelDelta;
         var delta = 0.1;
         if (amount < 0)

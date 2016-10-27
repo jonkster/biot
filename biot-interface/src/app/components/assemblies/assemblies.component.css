@@ -23,6 +23,15 @@ td button {
     color: red;
 }
 
+.flex {
+    display: flex;
+}
+
+.small-text {
+    font-size: small;
+}
+
+
 .table-small {
     width: 20%;
     margin: 1em;
