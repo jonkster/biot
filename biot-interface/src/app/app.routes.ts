@@ -1,26 +1,12 @@
-import { provideRouter, RouterConfig } from '@angular/router';
+import {Routes} from '@angular/router';
+import {AboutComponent} from './components/about/about.component';
+import {NodesComponent} from './components/nodes/nodes.component';
+import {AssembliesComponent} from './components/assemblies/assemblies.component';
 
-import {About} from './components/about/about';
-import {Nodes} from './components/nodes/nodes';
-import {Assemblies} from './components/assemblies/assemblies';
-import {RepoBrowser} from './components/repo-browser/repo-browser';
-import {RepoList} from './components/repo-list/repo-list';
-import {RepoDetail} from './components/repo-detail/repo-detail';
-
-const routes: RouterConfig = [
-  { path: '', redirectTo: 'nodes', terminal: true },
-  { path: 'nodes', component: Nodes },
-  { path: 'assemblies', component: Assemblies },
-  { path: 'about', component: About },
-  { path: 'github', component: RepoBrowser, children: [
-    { path: ':org', component: RepoList, children: [
-      { path: ':repo', component: RepoDetail },
-      { path: '', component: RepoDetail }
-    ]},
-    { path: '', component: RepoList}
-  ]}
+export const rootRouterConfig: Routes = [
+  {path: '', redirectTo: 'about', pathMatch: 'full'},
+  {path: 'about', component: AboutComponent},
+  {path: 'nodes', component: NodesComponent},
+  {path: 'assemblies', component: AssembliesComponent}
 ];
 
-export const APP_ROUTER_PROVIDERS = [
-  provideRouter(routes)
-];

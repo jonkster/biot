@@ -304,6 +304,8 @@ void *houseKeeper(void *arg)
 
     imuReady = initIMU();
     identifyYourself("");
+    random_init(getCurrentTime());
+    uint32_t scheduleOffset = random_uint32_range(0, dupInterval-1);
 
     while(1)
     {
@@ -312,9 +314,10 @@ void *houseKeeper(void *arg)
             imuReady = initIMU();
         }
 
+
         uint32_t mSecs = getCurrentTime()/1500;
         uint32_t secs = mSecs/1000;
-        if (mSecs % dupInterval == 0)
+        if (mSecs % dupInterval == scheduleOffset)
         {
             if (imuReady)
             {
@@ -323,7 +326,7 @@ void *houseKeeper(void *arg)
             }
         }
 
-        if (mSecs % (dupInterval * 100) == 0)
+        if (mSecs % (dupInterval * 100) == scheduleOffset)
         {
             if (knowsRoot())
             {
@@ -331,7 +334,7 @@ void *houseKeeper(void *arg)
             }
         }
 
-        if (mSecs % (dupInterval * 100) == 100)
+        if (mSecs % (dupInterval * 100) == scheduleOffset+100)
         {
             if (knowsRoot())
             {

@@ -17,6 +17,7 @@
 #include "net/gnrc/ipv6/netif.h"
 #include "net/gnrc/rpl/dodag.h"
 #include "periph/gpio.h"
+#include "random.h"
 #include "shell.h"
 #include "../modules/identify/biotIdentify.h"
 #include "../modules/imu/imu.h"
@@ -133,6 +134,9 @@ void *housekeeping_handler(void *arg)
     uint32_t ct;
     uint32_t secs;
 
+    random_init(getCurrentTime());
+    uint32_t scheduleOffset = random_uint32_range(0, 20);
+
     identifyYourself("");
     while(1)
     {
@@ -145,7 +149,7 @@ void *housekeeping_handler(void *arg)
                 setRoot();
             }
 
-            if (isRoot && secs % 20)
+            if (isRoot && secs % scheduleOffset)
             {
                 syncKnown();
             }

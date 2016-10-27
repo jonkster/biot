@@ -8,13 +8,11 @@ import {Biotz} from '../../services/biotz';
 
 @Component({
   selector: 'assemblies',
-  pipes: [],
   providers: [ Biotz ],
-  directives: [ ThreeDirective, DropDownComponent, DialogComponent ],
-  styleUrls: ['./assemblies.css', '../dialog/dialog.component.css' ],
-  templateUrl: './assemblies.html'
+  styleUrls: ['./assemblies.component.css', '../dialog/dialog.component.css' ],
+  templateUrl: './assemblies.component.html'
 })
-export class Assemblies {
+export class AssembliesComponent {
     @ViewChildren(ThreeDirective) threeDirective;
     @ViewChildren(DialogComponent) dialogDirectives;
 

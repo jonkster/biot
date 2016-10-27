@@ -5,8 +5,9 @@
 
     <hr/>
     <div>Biotz Nodes detected: {{ getDetectedAddresses().length }} <button [disabled]="wantAll" (click)="showAll(true);">Show All</button></div> 
-    <div>Message rate: {{ systemMessageRate | number:'1.1-2' }} req/sec</div>
-    <div myThreeD [sizeY]="400" [sizeX]="1024" >
+    <!--    <div>Message rate: {{ systemMessageRate | number:'1.1-2' }} req/sec</div> -->
+    <!-- <div myThreeD [sizeY]="400" [sizeX]="1024" > -->
+    <div myThreeD >
     </div>
     <hr/>
 
@@ -27,25 +28,32 @@
                 <th>Node calibration</th>
                 <th>Calibration control</th>
                 <th>Saved calibration</th>
+                <th>Calibration mode</th>
             </tr>
         </thead>
         <tbody>
             <tr *ngFor="let address of getVisibleAddresses()">
                 <td><button (click)="identify(address)">Identify</button></td>
                 <td (click)="toggleShowAll(address)"><span [style.background]="'#' + getNodeColour(address)">&nbsp;&nbsp;</span>{{ address }}</td>
-                <td>{{ getBiotProperty(address,'time') }}</td>
-                <td>{{ getBiotProperty(address,'w') }}</td>
-                <td>{{ getBiotProperty(address,'x') }}</td>
-                <td>{{ getBiotProperty(address,'y') }}</td>
-                <td>{{ getBiotProperty(address,'z') }}</td>
+                <td class="small-text">{{ getBiotProperty(address,'time') }}</td>
+                <td class="small-text">{{ getBiotProperty(address,'w') }}</td>
+                <td class="small-text">{{ getBiotProperty(address,'x') }}</td>
+                <td class="small-text">{{ getBiotProperty(address,'y') }}</td>
+                <td class="small-text">{{ getBiotProperty(address,'z') }}</td>
                 <td>{{ getBiotProperty(address,'status') }}</td>
-                <td>{{ getBiotProperty(address,'calibration') }}</td>
-                <td>
+                <td class="small-text">{{ getBiotProperty(address,'calibration') }}</td>
+                <td class="flex">
                     <button (click)="resetCalibration(address)">Reset Calibration</button>
-                    <button (click)="saveCalibration(address, getBiotProperty(address,'calibration'))">node -&gt; saved cal</button>
-                    <button (click)="sendCalibration(address, savedCalibrations[address])">node &lt;- saved cal</button>
+                    <button (click)="saveCalibration(address, getBiotProperty(address,'calibration'))">node → saved cal</button>
+                    <button (click)="sendCalibration(address, savedCalibrations[address])">node ← saved cal</button>
                 </td>
-                <td>{{ getBiotProperty(address,'savedCals') }}</td>
+                <td class="small-text">{{ getBiotProperty(address,'savedCals') }}</td>
+                <td class="flex">
+                    <button (click)="setAutoCal(address, 0)">Stop Calibration</button>
+                    <button (click)="setAutoCal(address, 1)">Start Calibration</button>
+                    <button (click)="setAutoCal(address, 2)">Clear and Start Calibration</button>
+                    <button (click)="setAutoCal(address, 3)">Clear and Stop Calibration</button>
+                </td>
             </tr>
         </tbody>
     </table>

@@ -104,6 +104,13 @@ export class Biotz {
           .map((response) => response.json());
   }
 
+  putAutoCal(addr, data: number) {
+      var path = 'biotz/addresses/' + addr + '/auto';
+      var url = "http://localhost:8889/" + path ;
+      return this.http.put(url, data)
+          .map((response) => response.json());
+  }
+
   putCalibrationsToCache(addr, data: string) {
       var path = 'data/addresses/' + addr;
       var url = "http://localhost:8889/" + path ;

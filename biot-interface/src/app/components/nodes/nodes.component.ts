@@ -5,14 +5,12 @@ import {ThreeDirective} from '../../directives/three.directive';
 import {Biotz} from '../../services/biotz';
 
 @Component({
-  selector: 'nodes',
-  pipes: [],
-  providers: [ Biotz ],
-  directives: [ ThreeDirective ],
-  styleUrls: ['./nodes.css'],
-  templateUrl: './nodes.html'
+    selector: 'nodes',
+    providers: [ Biotz ],
+    styleUrls: ['./nodes.component.css'],
+    templateUrl: './nodes.component.html',
 })
-export class Nodes {
+export class NodesComponent {
     @ViewChildren(ThreeDirective) threeDirective;
     private biotzData:any = {};
     private biotzCalibration:any = {};
@@ -79,7 +77,7 @@ export class Nodes {
         this.biotz.getCalibration(addr)
             .subscribe(
                 rawData => {
-                    console.log(addr, this.initialCals);
+                    //console.log(addr, this.initialCals);
                     this.initialCals[addr] = true;
                     this.biotzCalibration[addr] = rawData;
                 },
@@ -225,6 +223,10 @@ export class Nodes {
 
     identify(addr) {
         this.biotz.identify(addr).subscribe();
+    }
+
+    setAutoCal(addr, mode) {
+        this.biotz.putAutoCal(addr, mode).subscribe();
     }
 
     setSensors(g, a, c) {

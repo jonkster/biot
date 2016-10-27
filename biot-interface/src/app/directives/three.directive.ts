@@ -1,6 +1,14 @@
 import { Directive, ElementRef, EventEmitter, HostListener, Input, Output } from '@angular/core';
 
+
 import * as THREE from 'three';
+//import * as TrackballControls from 'three-trackballcontrols';
+//import TrackballControls from 'three-trackballcontrols';
+/*import * as THREET from 'three-trackballcontrols';
+console.log(THREET);*/
+
+
+
 
 @Directive({
     selector: '[myThreeD]',
@@ -14,9 +22,13 @@ export class ThreeDirective {
     cursor = undefined;
     scene = undefined;
     camera = undefined;
+    controls = undefined;
     renderer = undefined;
     grid = undefined;
     mouse = undefined;
+    dragging = false;
+    lastMouseX = undefined;
+    lastMouseY = undefined;
     pointLight = undefined;
     hemiLight = undefined;
     raycaster = undefined;
@@ -28,6 +40,8 @@ export class ThreeDirective {
     lightTarget = undefined;
     element = undefined;
     zoom = 1;
+
+    camPos = [ 0, 1000, 250 ];
 
     @Input() sizeY: number = 300;
     @Input() sizeX: number = 1024;
@@ -209,6 +223,7 @@ export class ThreeDirective {
 	    this.anim()
 	});
 	this.renderer.render( this.scene, this.camera );
+        this.controls.update();
     }
 
 
@@ -233,18 +248,18 @@ export class ThreeDirective {
     init() {
 
         this.scene = new THREE.Scene();
+        console.log(THREE);
 
-        this.camera = new THREE.OrthographicCamera( -800, 800, 200, -200, 0.1, 1000);
-        //this.camera = new THREE.PerspectiveCamera( 45, this.sizeX/this.sizeY, 0.1, 10000 );
+        //this.camera = new THREE.OrthographicCamera( -1000, 1000, 1000, -1000, -1000, 2000);
+        this.camera = new THREE.PerspectiveCamera( 45, this.sizeX/this.sizeY, 0.1, 10000 );
         this.scene.add(this.camera);
         this.camera.up.set( 0, 0, 1 )
-        this.camera.position.z = 200;
-        this.camera.position.y = -250;
-        this.camera.position.x = 0;
+        this.camera.position.x =  this.camPos[0];
+        this.camera.position.y = this.camPos[1];
+        this.camera.position.z = this.camPos[2];
         this.camera.lookAt( this.scene.position );
 
-
-        var worldAxis = this.addWorldAxis(-500, 0, 0, 100, 1, 0.35);
+        var worldAxis = this.addWorldAxis(0, 0, 0, 100, 1, 0.35);
         worldAxis.name = 'world-axis-' + name;
         worldAxis.castShadow = true;
         this.scene.add(worldAxis);
@@ -261,6 +276,19 @@ export class ThreeDirective {
 
         this.raycaster = new THREE.Raycaster();
         this.mouse = new THREE.Vector2();
+
+// hack - trying to make trackball controls work
+var TrackballControls = require('three-trackballcontrols');
+
+        this.controls = new TrackballControls( this.camera, this.renderer.domElement  );
+        this.controls.rotateSpeed = 1.0;
+        this.controls.panSpeed = 0.8;
+        this.controls.noZoom = false;
+        this.controls.noPan = false;
+        this.controls.staticMoving = true;
+        this.controls.dynamicDampingFactor = 0.3;
+        this.controls.keys = [ 65, 83, 68 ];
+
 
     }
 
@@ -311,11 +339,12 @@ export class ThreeDirective {
 
     makeFloor() {
 
-	var floorMaterial = new THREE.MeshStandardMaterial( { color: 0xddffdd, roughness: 0.8, metalness: 0.1 } );
-	var floorGeometry = new THREE.PlaneGeometry(2000, 500, 1, 1);
+	var floorMaterial = new THREE.MeshStandardMaterial( { color: 0xddffdd, roughness: 0.8, metalness: 0.1, transparent: true, opacity: 0.5 } );
+	//var floorMaterial = new THREE.MeshLambertMaterial( { color: 0xddffdd, roughness: 0.8, metalness: 0.1, transparent: true, opacity: 0.5 } );
+	var floorGeometry = new THREE.PlaneGeometry(2000, 2000, 1, 1);
 	var floor = new THREE.Mesh(floorGeometry, floorMaterial);
 	floor.position.y = 0;
-	floor.position.x = 300;
+	floor.position.x = 0;
 	floor.position.z = -50;
 	floor.receiveShadow = true;
         floor.name = 'scene-floor';
@@ -372,14 +401,19 @@ export class ThreeDirective {
                     break;
                 }
             }
+        } else if (! this.dragging) {
+            this.lastMouseX = this.mouse.x;
+            this.lastMouseY = this.mouse.y;
+            this.dragging = true;
         }
     }
 
     mouseMoveHandler(event) {
 
+        this.mouse.x = -1 + 2 * (event.offsetX / event.srcElement.width);
+        this.mouse.y = 1 - 2 * (event.offsetY / event.srcElement.height);
+
         if (this.selectedLimb) {
-            this.mouse.x = -1 + 2 * (event.offsetX / event.srcElement.width);
-            this.mouse.y = 1 - 2 * (event.offsetY / event.srcElement.height);
 
             if (this.selectedLimb) {
                 this.raycaster.setFromCamera(this.mouse, this.camera);
@@ -392,14 +426,17 @@ export class ThreeDirective {
                 } else {
                     this.selectedLimb = undefined;
                 }
-
             }
+        }
+        else if (this.dragging) {
         }
     }
 
     mouseUpHandler(event) {
         if (this.selectedLimb) {
-            if ((this.selectedLimb.position.x == this.selectedLimb.userData['currentX']) && (this.selectedLimb.position.y == this.selectedLimb.userData['currentY']) && (this.selectedLimb.position.z == this.selectedLimb.userData['currentZ'])) {
+            if ((this.selectedLimb.position.x == this.selectedLimb.userData['currentX']) &&
+                (this.selectedLimb.position.y == this.selectedLimb.userData['currentY']) &&
+                (this.selectedLimb.position.z == this.selectedLimb.userData['currentZ'])) {
                 this.openNodeDialog(this.selectedLimb);
             } else if (this.selectedLimb.userData['parent']) {
                 this.selectedLimb.position.x = this.selectedLimb.userData['currentX'];
@@ -407,10 +444,13 @@ export class ThreeDirective {
                 this.selectedLimb.position.z = this.selectedLimb.userData['currentZ'];
             }
             this.selectedLimb = undefined;
+        } else {
+            this.dragging = false;
         }
     }
 
     mouseWheelHandler(event) {
+        console.log("XX");
         var amount = event.wheelDelta;
         var delta = 0.1;
         if (amount < 0)

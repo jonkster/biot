@@ -1,0 +1,37 @@
+label {
+    float: left;
+}
+
+.form-item {
+    float: left;
+    clear: both;
+    border: 1px solid gray;
+    padding: 0.2em;
+}
+
+.form-value {
+    padding-left: 2em;
+    float: right;
+    clear: both;
+}
+
+.dialog-holder {
+    position: absolute;
+    border-radius: 25px;
+    border: 2px solid gray;
+    padding: 2%;
+    left: 30%;
+    top: 30%;
+    overflow: auto;
+    background-color: rgba(240, 240, 240, 0.9);
+}
+
+.dialog-content {
+    text-align: center;
+}
+
+.dialog-buttons {
+    position: relative;
+    float: right;
+    padding-top: 20%;
+}
