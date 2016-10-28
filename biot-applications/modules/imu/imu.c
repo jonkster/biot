@@ -280,6 +280,7 @@ myQuat_t getPosition(mpu9250_t dev)
         double gy1 = (double)(imuData.gyro.y_axis);
         double gz1 = (double)(imuData.gyro.z_axis);
         double omega[3] = { gx1, gy1, gz1 }; // this will be in degrees/sec
+        //double omegaMagnitude = fabs(vecLength(omega));
 
         uint32_t dt = imuData.ts - lastIMUData.ts; // dt in microseconds
         lastIMUData = imuData;
@@ -440,7 +441,7 @@ myQuat_t getPosition(mpu9250_t dev)
             // the new orientation is the gyro deduced position corrected
             // towards the accel/mag measured position using interpolation
             // between quaternions.
-            currentQ = slerp(gyroDeducedQ, measuredQ, 0.2);
+            currentQ = slerp(gyroDeducedQ, measuredQ, 0.02);
         }
         else
         {

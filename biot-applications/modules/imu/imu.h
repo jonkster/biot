@@ -10,8 +10,8 @@
 #define GA_SAMPLE_RATE_HZ   400 // must be between 4 and 1000.  200 works
 #define C_SAMPLE_RATE_HZ     80 // should be between 1 and 100Hz and an integral fraction of compass/gyro rate, 25 works
 
-#define GFSR                MPU9250_GYRO_FSR_250DPS
-#define AFSR                MPU9250_ACCEL_FSR_2G
+#define GFSR                MPU9250_GYRO_FSR_2000DPS
+#define AFSR                MPU9250_ACCEL_FSR_8G
 
 #define UPDATE_INTERVAL_MS 25 
 
