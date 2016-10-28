@@ -15,7 +15,7 @@ export class ThreeDirective {
     cursor = undefined;
     scene = undefined;
     camera = undefined;
-    controls = undefined;
+    cameraControls = undefined;
     renderer = undefined;
     grid = undefined;
     mouse = undefined;
@@ -215,7 +215,7 @@ export class ThreeDirective {
 	    this.anim()
 	});
 	this.renderer.render( this.scene, this.camera );
-        this.controls.update();
+        this.cameraControls.update();
     }
 
 
@@ -268,16 +268,17 @@ export class ThreeDirective {
         this.raycaster = new THREE.Raycaster();
         this.mouse = new THREE.Vector2();
 
-        var TrackballControls = require('three-trackballcontrols');
-        this.controls = new TrackballControls( this.camera, this.renderer.domElement  );
-        this.controls.rotateSpeed = 1.0;
-        this.controls.panSpeed = 0.8;
-        this.controls.noZoom = false;
-        this.controls.noPan = false;
-        this.controls.staticMoving = true;
-        this.controls.dynamicDampingFactor = 0.3;
-        this.controls.keys = [ 65, 83, 68 ];
-        this.controls.enabled = false;
+        //var ExtraControls = require('three-trackballcontrols');
+        var ExtraControls = require('three-orbitcontrols');
+        this.cameraControls = new ExtraControls( this.camera, this.renderer.domElement  );
+        this.cameraControls.rotateSpeed = 0.5;
+        this.cameraControls.panSpeed = 0.8;
+        this.cameraControls.enableZoom = false;
+        this.cameraControls.enablePan = true;
+        this.cameraControls.enableDamping = true;
+        this.cameraControls.dampingFactor = 0.3;
+        this.cameraControls.keys = [ 65, 83, 68 ];
+        this.cameraControls.enabled = false;
     }
 
 
@@ -326,16 +327,24 @@ export class ThreeDirective {
     }
 
     makeFloor() {
-
-	var floorMaterial = new THREE.MeshStandardMaterial( { color: 0xddffdd, roughness: 0.8, metalness: 0.1, transparent: true, opacity: 0.5 } );
-	var floorGeometry = new THREE.PlaneGeometry(2000, 2000, 1, 1);
-	var floor = new THREE.Mesh(floorGeometry, floorMaterial);
+        var segments = 8;
+        var geometry = new THREE.PlaneGeometry(2000, 2000, segments, segments)
+        var materialEven = new THREE.MeshStandardMaterial( { color: 0xccccfc, transparent: true, opacity: 0.5, side: THREE.DoubleSide } )
+        var materialOdd = new THREE.MeshStandardMaterial( { color: 0x444464, transparent: true, opacity: 0.5 , side: THREE.DoubleSide } )
+        var materials = [materialEven, materialOdd];
+        for (var x = 0; x < segments; x++) {
+            for (var y = 0; y < segments; y++) {
+                var i = x * segments + y;
+                var j = 2 * i;
+                geometry.faces[ j ].materialIndex = geometry.faces[ j + 1 ].materialIndex = (x + y) % 2;
+            }
+        }
+        var floor = new THREE.Mesh(geometry, new THREE.MeshFaceMaterial(materials))
 	floor.position.y = 0;
 	floor.position.x = 0;
 	floor.position.z = -50;
 	floor.receiveShadow = true;
         floor.name = 'scene-floor';
-        floor.visible = false;
 	this.scene.add(floor);
     }
 
@@ -365,6 +374,7 @@ export class ThreeDirective {
     }
 
     mouseDownHandler(event) {
+
         this.mouse.x = -1 + 2 * (event.offsetX / event.srcElement.width);
         this.mouse.y = 1 - 2 * (event.offsetY / event.srcElement.height);
 
@@ -377,7 +387,7 @@ export class ThreeDirective {
         var intersects = this.raycaster.intersectObjects(limbs);
 
         if (intersects.length > 0) {
-            this.controls.enabled = false;
+            this.cameraControls.enabled = false;
             for (var i = 0; i < intersects.length; i++) {
                 var limb = intersects[i].object;
                 if (limb.userData.address) {
@@ -390,7 +400,7 @@ export class ThreeDirective {
                 }
             }
         } else {
-            this.controls.enabled = true;
+            this.cameraControls.enabled = true;
         }
     }
 
@@ -427,8 +437,8 @@ export class ThreeDirective {
                 this.selectedLimb.position.z = this.selectedLimb.userData['currentZ'];
             }
             this.selectedLimb = undefined;
+            this.cameraControls.enabled = false;
         }
-        this.controls.enabled = false;
     }
 
     mouseWheelHandler(event) {
