@@ -250,7 +250,7 @@ export class ThreeDirective {
         this.camera.position.z = this.camPos[2];
         this.camera.lookAt( this.scene.position );
 
-        var worldAxis = this.addWorldAxis(0, 0, 0, 100, 1, 0.35);
+        var worldAxis = this.addWorldAxis(0, 0, 0, 1000, 1, 0.35);
         worldAxis.name = 'world-axis-' + name;
         worldAxis.castShadow = true;
         this.scene.add(worldAxis);
