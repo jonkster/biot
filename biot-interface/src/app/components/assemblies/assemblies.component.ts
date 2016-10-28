@@ -37,6 +37,7 @@ export class AssembliesComponent {
     private parentsNeedUpdating: boolean = false;
     private savedCalibrations:any = {};
     private showEnvironment:boolean = true;
+    private showLabels:boolean = true;
     private showOnlyAddress: any = {};
     private systemMessageRate: number = 0;
     private threeD: any = {};
@@ -545,6 +546,10 @@ export class AssembliesComponent {
         this.limbDialog.openDialog(addr);
     }
 
+    setCameraLook(dir) {
+        this.threeD.setCameraLook(dir);
+    }
+
     showOne(addr, value) {
         this.showOnlyAddress[addr] = value;
     }
@@ -552,6 +557,11 @@ export class AssembliesComponent {
     toggleContext() {
         this.showEnvironment = ! this.showEnvironment;
         this.threeD.setFloorVisibility(this.showEnvironment);
+    }
+
+    toggleLabels() {
+        this.showLabels = ! this.showLabels;
+        this.threeD.setLabelVisibility(this.showLabels);
     }
 
     toggleShowAll(addr) {

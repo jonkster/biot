@@ -37,3 +37,15 @@ td button {
     margin: 1em;
 }
 
+.left-button {
+    float: left;
+    clear: left;
+    width: 10%;
+}
+
+.right-button {
+    float: right;
+    clear: right;
+    width: 10%;
+}
+

@@ -279,6 +279,27 @@ export class ThreeDirective {
         this.cameraControls.dampingFactor = 0.3;
         this.cameraControls.keys = [ 65, 83, 68 ];
         this.cameraControls.enabled = false;
+            
+
+	var labelProperties = {
+		fontsize: 100,
+		borderColor: {r:255, g:255, b:255, a:0.8},
+		backgroundColor: {r:127, g:127, b:127, a:0.3},
+		textColor: {r:255, g:255, b:255, a:0.3} 
+	};
+	var label = this.makeTextSprite( "North", labelProperties, 400, 0, 0);
+	this.scene.add(label);
+	label = this.makeTextSprite( "East", labelProperties, 0, 400, 0);
+	this.scene.add(label);
+	label = this.makeTextSprite( "South", labelProperties, -400, 0, 0);
+	this.scene.add(label);
+	label = this.makeTextSprite( "West", labelProperties, 0, -400, 0);
+	this.scene.add(label);
+	label = this.makeTextSprite( "Up", labelProperties, 0, 0, 400);
+	this.scene.add(label);
+	label = this.makeTextSprite( "Down", labelProperties, 0, 0, -400);
+	this.scene.add(label);
+
     }
 
 
@@ -290,6 +311,10 @@ export class ThreeDirective {
 	this.camera.lookAt( node.position );
 	this.camera.updateProjectionMatrix();
     }
+
+    getCanvasColor ( color ) { 
+	return "rgba(" + color.r + "," + color.g + "," + color.b + "," + color.a + ")"; 
+    } 
 
     getLimbLength(addr) {
 	var node = this.scene.getObjectByName('biot-node-' + addr);
@@ -346,6 +371,57 @@ export class ThreeDirective {
 	floor.receiveShadow = true;
         floor.name = 'scene-floor';
 	this.scene.add(floor);
+    }
+
+    makeTextSprite( message, parameters, x, y, z ) {
+
+	if ( parameters === undefined ) parameters = {};
+
+	var fontface = parameters.hasOwnProperty("fontface") ? 
+	    parameters["fontface"] : "Arial";
+
+	var fontsize = parameters.hasOwnProperty("fontsize") ? 
+	    parameters["fontsize"] : 18;
+
+	var borderThickness = parameters.hasOwnProperty("borderThickness") ? 
+	    parameters["borderThickness"] : 4;
+
+	var borderColor = parameters.hasOwnProperty("borderColor") ?
+	    parameters["borderColor"] : { r:0, g:0, b:0, a:1.0 };
+
+	var backgroundColor = parameters.hasOwnProperty("backgroundColor") ?
+	    parameters["backgroundColor"] : { r:255, g:255, b:255, a:1.0 };
+
+	var textColor = parameters.hasOwnProperty("textColor") ?
+	    parameters["textColor"] : { r:33, g:33, b:33, a:1.0 };
+
+	var canvas = document.createElement('canvas');
+	var context = canvas.getContext('2d');
+	context.font = fontsize + "px " + fontface;
+
+	var metrics = context.measureText( message );
+	var textWidth = metrics.width;
+
+	context.fillStyle = this.getCanvasColor(backgroundColor);
+	context.strokeStyle = this.getCanvasColor(borderColor);
+
+	context.lineWidth = borderThickness;
+	this.roundRect(context, borderThickness/2, borderThickness/2, textWidth + borderThickness, fontsize * 1.4 + borderThickness, 20);
+	// 1.4 is extra height factor for text below baseline: g,j,p,q.
+
+	context.fillStyle = this.getCanvasColor(textColor);
+	context.fillText( message, borderThickness, fontsize + borderThickness);
+
+	// canvas contents will be used for a texture
+	var texture = new THREE.Texture(canvas);
+	texture.needsUpdate = true;
+
+	var spriteMaterial = new THREE.SpriteMaterial( { map: texture } );
+	var sprite = new THREE.Sprite( spriteMaterial );
+	sprite.scale.set(100,50,1.0);
+ 	sprite.position.set(x, y, z);
+ 	sprite.name = "label-" + message;
+	return sprite;	
     }
 
 
@@ -473,6 +549,15 @@ export class ThreeDirective {
 	this.scene.remove(node);
     }
 
+    roundRect(ctx, x, y, w, h, r) {
+	ctx.beginPath(); ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y);
+	ctx.quadraticCurveTo(x + w, y, x + w, y + r); ctx.lineTo(x + w, y + h - r);
+	ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h); ctx.lineTo(x + r, y + h);
+	ctx.quadraticCurveTo(x, y + h, x, y + h - r); ctx.lineTo(x, y + r);
+	ctx.quadraticCurveTo(x, y, x + r, y); ctx.closePath(); ctx.fill();
+	ctx.stroke();
+    }
+
     setupLighting() {
 	var ambientLight = new THREE.AmbientLight(0xddddff, 0.3);
 	this.scene.add(ambientLight);
@@ -498,6 +583,47 @@ export class ThreeDirective {
 	this.pointLight.target = this.lightTarget;
     }
 
+    setCameraLook(dir) {
+	switch(dir) {
+            case 'n' :
+                this.camera.position.x =  -1000;
+                this.camera.position.y = 0;
+                this.camera.position.z = 0;
+                break;
+            case 's' :
+                this.camera.position.x =  1000;
+                this.camera.position.y = 0;
+                this.camera.position.z = 0;
+                break;
+            case 'e' :
+                this.camera.position.x =  0;
+                this.camera.position.y = -1000;
+                this.camera.position.z = 0;
+                break;
+            case 'w' :
+                this.camera.position.x =  0;
+                this.camera.position.y = 1000;
+                this.camera.position.z = 0;
+                break;
+            case 't' :
+                this.camera.position.x =  0;
+                this.camera.position.y = 0;
+                this.camera.position.z = -1000;
+                break;
+            case 'b' :
+                this.camera.position.x =  0;
+                this.camera.position.y = 0;
+                this.camera.position.z = 1000;
+                break;
+            default:
+                this.camera.position.x =  this.camPos[0];
+                this.camera.position.y = this.camPos[1];
+                this.camera.position.z = this.camPos[2];
+                break;
+        }
+        this.camera.lookAt( this.scene.position );
+    }
+
     setCurrentLimb(addr) {
 	var node = this.scene.getObjectByName('biot-node-' + addr);
         this.currentLimb = node;            
@@ -506,6 +632,13 @@ export class ThreeDirective {
     setFloorVisibility(show) {
         var floor = this.scene.getObjectByName('scene-floor');
         floor.visible = show;
+    }
+
+    setLabelVisibility(show) {
+        this.scene.traverse(function(ob) {
+            if (ob.name.match(/^label-/))
+            	ob.visible = show;
+        });
     }
 
     setLimbLength(addr, len) {

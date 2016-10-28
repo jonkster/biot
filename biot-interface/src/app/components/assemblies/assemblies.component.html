@@ -3,7 +3,14 @@
     <div>Biotz Nodes detected: {{ getDetectedAddresses().length }} <button [disabled]="wantAll" (click)="showAll(true);">Show All</button></div> 
     <hr/>
     <div myThreeD  (onLimbClicked)="limbDialog.openDialog($event)">
-    <button (click)="toggleContext();">Show/Hide Environment</button>
+        <button class="right-button" (click)="toggleContext();">Show/Hide Environment</button>
+        <button class="right-button" (click)="toggleLabels();">Show/Hide Labels</button>
+        <button class="right-button" (click)="setCameraLook('n');">View North</button>
+        <button class="right-button" (click)="setCameraLook('s');">View South</button>
+        <button class="right-button" (click)="setCameraLook('e');">View East</button>
+        <button class="right-button" (click)="setCameraLook('w');">View West</button>
+        <button class="right-button" (click)="setCameraLook('t');">View Top</button>
+        <button class="right-button" (click)="setCameraLook('b');">View Bottom</button>
     </div>
     <hr/>
 
