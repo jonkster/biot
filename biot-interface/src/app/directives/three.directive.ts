@@ -8,10 +8,6 @@ import * as THREE from 'three';
 })
 export class ThreeDirective {
 
-    //Text2D = THREE_Text.Text2D;
-    //SpriteText2D = THREE_Text.SpriteText2D;
-    //textAlign = THREE_Text.textAlign;
-
     cursor = undefined;
     scene = undefined;
     camera = undefined;

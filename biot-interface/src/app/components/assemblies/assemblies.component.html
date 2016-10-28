@@ -1,8 +1,8 @@
-<h3>Assemblies of Biot Nodes</h3>
 <div assemblies>
+    <h4>Assemblies of Biot Nodes</h4>
     <div>Biotz Nodes detected: {{ getDetectedAddresses().length }} <button [disabled]="wantAll" (click)="showAll(true);">Show All</button></div> 
     <hr/>
-    <div myThreeD  (onLimbClicked)="limbDialog.openDialog($event)">
+    <div myThreeD  [sizeX]="1200" [sizeY]="400" (onLimbClicked)="limbDialog.openDialog($event)">
         <button class="right-button" (click)="toggleContext();">Show/Hide Environment</button>
         <button class="right-button" (click)="toggleLabels();">Show/Hide Labels</button>
         <button class="right-button" (click)="setCameraLook('def');">Default View</button>
@@ -15,9 +15,10 @@
     </div>
     <hr/>
 
-    <h3>Limb Assembly Details</h3>
-    <div>Currently Monitoring Biotz Nodes: <b>{{ monitoring }}</b></div>
-    <button [ngClass]="{'active': monitoring}" (click)="toggleMonitoring()">Toggle Movement</button>
+    <h4>Limb Assembly Details</h4>
+    <div>Currently Monitoring Biotz Nodes: <b>{{ monitoring }}</b>
+        <button [ngClass]="{'active': monitoring}" (click)="toggleMonitoring()">Toggle Movement</button>
+    </div>
     <table>
         <thead>
             <tr>
