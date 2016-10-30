@@ -279,21 +279,21 @@ export class ThreeDirective {
 
 	var labelProperties = {
 		fontsize: 100,
-		borderColor: {r:255, g:255, b:255, a:0.8},
-		backgroundColor: {r:127, g:127, b:127, a:0.3},
-		textColor: {r:255, g:255, b:255, a:0.3} 
+		borderColour: {r:80, g:80, b:80, a:0.8},
+		backgroundColour: {r:255, g:255, b:125, a:0.3},
+		textColour: {r:50, g:50, b:50, a:0.3} 
 	};
-	var label = this.makeTextSprite( "North", labelProperties, 400, 0, 0);
+	var label = this.makeTextSprite( "North", labelProperties, 500, 0, 0);
 	this.scene.add(label);
-	label = this.makeTextSprite( "East", labelProperties, 0, 400, 0);
+	label = this.makeTextSprite( "East", labelProperties, 0, 500, 0);
 	this.scene.add(label);
-	label = this.makeTextSprite( "South", labelProperties, -400, 0, 0);
+	label = this.makeTextSprite( "South", labelProperties, -500, 0, 0);
 	this.scene.add(label);
-	label = this.makeTextSprite( "West", labelProperties, 0, -400, 0);
+	label = this.makeTextSprite( "West", labelProperties, 0, -500, 0);
 	this.scene.add(label);
-	label = this.makeTextSprite( "Up", labelProperties, 0, 0, 400);
+	label = this.makeTextSprite( "Up", labelProperties, 0, 0, 500);
 	this.scene.add(label);
-	label = this.makeTextSprite( "Down", labelProperties, 0, 0, -400);
+	label = this.makeTextSprite( "Down", labelProperties, 0, 0, -500);
 	this.scene.add(label);
 
     }
@@ -308,7 +308,7 @@ export class ThreeDirective {
 	this.camera.updateProjectionMatrix();
     }
 
-    getCanvasColor ( color ) { 
+    getCanvasColour ( color ) { 
 	return "rgba(" + color.r + "," + color.g + "," + color.b + "," + color.a + ")"; 
     } 
 
@@ -382,14 +382,14 @@ export class ThreeDirective {
 	var borderThickness = parameters.hasOwnProperty("borderThickness") ? 
 	    parameters["borderThickness"] : 4;
 
-	var borderColor = parameters.hasOwnProperty("borderColor") ?
-	    parameters["borderColor"] : { r:0, g:0, b:0, a:1.0 };
+	var borderColour = parameters.hasOwnProperty("borderColour") ?
+	    parameters["borderColour"] : { r:0, g:0, b:0, a:1.0 };
 
-	var backgroundColor = parameters.hasOwnProperty("backgroundColor") ?
-	    parameters["backgroundColor"] : { r:255, g:255, b:255, a:1.0 };
+	var backgroundColour = parameters.hasOwnProperty("backgroundColour") ?
+	    parameters["backgroundColour"] : { r:255, g:255, b:255, a:1.0 };
 
-	var textColor = parameters.hasOwnProperty("textColor") ?
-	    parameters["textColor"] : { r:33, g:33, b:33, a:1.0 };
+	var textColour = parameters.hasOwnProperty("textColour") ?
+	    parameters["textColour"] : { r:33, g:33, b:33, a:1.0 };
 
 	var canvas = document.createElement('canvas');
 	var context = canvas.getContext('2d');
@@ -398,14 +398,14 @@ export class ThreeDirective {
 	var metrics = context.measureText( message );
 	var textWidth = metrics.width;
 
-	context.fillStyle = this.getCanvasColor(backgroundColor);
-	context.strokeStyle = this.getCanvasColor(borderColor);
+	context.fillStyle = this.getCanvasColour(backgroundColour);
+	context.strokeStyle = this.getCanvasColour(borderColour);
 
 	context.lineWidth = borderThickness;
 	this.roundRect(context, borderThickness/2, borderThickness/2, textWidth + borderThickness, fontsize * 1.4 + borderThickness, 20);
 	// 1.4 is extra height factor for text below baseline: g,j,p,q.
 
-	context.fillStyle = this.getCanvasColor(textColor);
+	context.fillStyle = this.getCanvasColour(textColour);
 	context.fillText( message, borderThickness, fontsize + borderThickness);
 
 	// canvas contents will be used for a texture
@@ -427,7 +427,8 @@ export class ThreeDirective {
         var tq = new THREE.Quaternion(q.x, q.y, q.z, q.w).normalize();
         var pAddr = node.userData['parent'];
 
-        if (pAddr != null) {
+        node.setRotationFromQuaternion(tq);
+        while (pAddr != null) {
             // undo parent rotation
 	    var pNode = this.scene.getObjectByName('biot-node-' + pAddr);
             if (! pNode) {
@@ -439,8 +440,7 @@ export class ThreeDirective {
                 newQ.multiply(tq).normalize();
                 node.setRotationFromQuaternion(newQ);
             }
-        } else {
-            node.setRotationFromQuaternion(tq);
+            pAddr = pNode.userData['parent'];
         }
         node.updateMatrix();
     }
