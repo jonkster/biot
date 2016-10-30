@@ -44,7 +44,7 @@
                     {{ getLimbLength(address) }}
                 </td>
                 <td>{{ getBiotProperty(address,'time') }}</td>
-                <td>{{ getBiotProperty(address,'status') }}</td>
+                <td [ngClass]="{'alert': getBiotProperty(address,'status') != 'active', 'ok': getBiotProperty(address,'status') == 'active'  }">{{ getBiotProperty(address,'status') }}</td>
             </tr>
         </tbody>
     </table>

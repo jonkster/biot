@@ -399,11 +399,11 @@ function getBiotAlive(req, res, next) {
 
         var timeDiff = (now - nodeStatus[address].ts) / 1000; // as seconds
 
-            if (timeDiff > 20) {
+            if (timeDiff > 10) {
                 nodeStatus[address] = undefined;
-            } else if (timeDiff > 10) {
-                nodeStatus[address].status = 'lost';
             } else if (timeDiff > 5) {
+                nodeStatus[address].status = 'lost';
+            } else if (timeDiff > 1) {
                 nodeStatus[address].status = 'inactive';
             } else {
                 nodeStatus[address].status = 'active';
@@ -427,11 +427,11 @@ function getBiotAliveStatus(req, res, next) {
 
             var timeDiff = (now - nodeStatus[address].ts) / 1000; // as seconds
 
-                if (timeDiff > 20) {
+                if (timeDiff > 10) {
                     nodeStatus[address] = undefined;
-                } else if (timeDiff > 10) {
-                    nodeStatus[address].status = 'lost';
                 } else if (timeDiff > 5) {
+                    nodeStatus[address].status = 'lost';
+                } else if (timeDiff > 1) {
                     nodeStatus[address].status = 'inactive';
                 } else {
                     nodeStatus[address].status = 'active';
@@ -469,11 +469,11 @@ function getBiotzStatus(req, res, next) {
         var address = addresses[i];
         var timeDiff = (now - nodeStatus[address].ts) / 1000; // as seconds
 
-        if (timeDiff > 20) {
+        if (timeDiff > 10) {
             nodeStatus[address] = undefined;
-        } else if (timeDiff > 10) {
-            nodeStatus[address].status = 'lost';
         } else if (timeDiff > 5) {
+            nodeStatus[address].status = 'lost';
+        } else if (timeDiff > 1) {
             nodeStatus[address].status = 'inactive';
         } else {
             nodeStatus[address].status = 'active';

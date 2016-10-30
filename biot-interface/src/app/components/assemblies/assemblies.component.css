@@ -27,6 +27,19 @@ h2, h3, h4 {
     color: red;
 }
 
+.alert {
+    background-color: #ffff7f;
+    color: red;
+    font-weight: bold;
+}
+
+.ok {
+    background-color: #557755;
+    color: #7fff7f;
+    font-weight: bold;
+}
+
+
 .flex {
     display: flex;
 }
